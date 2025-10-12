@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Dados do Simulado {% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Excluir Dados do Simulado</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning text-dark">
+                        <h5 class="alert-heading text-dark">Atenção! Esta ação não pode ser desfeita.</h5>
+                        <p class="text-dark">Você está prestes a excluir <strong class="text-dark">todos</strong> os dados relacionados ao simulado <strong class="text-dark">"{{ simulado.titulo }}"</strong> para a turma <strong class="text-dark">"{{ class.name }}"</strong>.</p>
+                        <p class="text-dark">Isso incluirá:</p>
+                        <ul class="text-dark">
+                            <li>Todas as respostas dos alunos</li>
+                            <li>Todos os desempenhos registrados</li>
+                            <li>Todos os resultados vindos do aplicativo</li>
+                        </ul>
+                        <p class="text-dark">Esta ação afetará somente os dados dos alunos desta turma específica para este simulado.</p>
+                    </div>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="confirmacao" id="confirmacao">
+                            <label class="form-check-label" for="confirmacao">
+                                Eu entendo que esta ação é irreversível e desejo prosseguir com a exclusão.
+                            </label>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'class_performance_dashboard' class.id simulado.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Excluir Dados
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Garantir que todo o texto no alerta seja preto */
+.alert-warning {
+    color: #000000 !important;
+}
+.alert-warning * {
+    color: #000000 !important;
+}
+</style>
+{% endblock %}

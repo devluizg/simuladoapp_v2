@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Adicionar Alunos à Turma {{ class.name }}{% endblock %}
+
+{% block content %}
+<div class="card bg-dark text-light">
+    <div class="card-header">
+        <h1>Adicionar Alunos à Turma: {{ class.name }}</h1>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                {{ form.email.label_tag }}
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="alert alert-danger mt-2">
+                        {{ form.email.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Adicionar Aluno
+            </button>
+        </form>
+
+        <h2 class="mt-4">Alunos na Turma</h2>
+        {% if students %}
+            <ul class="list-group">
+                {% for student in students %}
+                    <li class="list-group-item bg-dark text-light">
+                        {{ student.user.email }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nenhum aluno cadastrado nesta turma.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

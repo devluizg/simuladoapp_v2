@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}Desempenho de {{ student.name }} - {{ simulado.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Desempenho de {{ student.name }}</h1>
+        <div>
+            <a href="{% url 'student_dashboard' student.id %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+            </a>
+            <!-- Modificado para mostrar a versão corretamente -->
+            <span class="badge bg-info ml-2">Versão:
+    {% if fonte == "app" and resultado.versao %}
+        {% if resultado.versao|stringformat:"s"|slice:":6" == "versao" %}
+            {{ resultado.versao|stringformat:"s"|slice:"6:" }}
+        {% else %}
+            {{ resultado.versao }}
+        {% endif %}
+    {% elif performance.versao %}
+        {% if performance.versao|stringformat:"s"|slice:":6" == "versao" %}
+            {{ performance.versao|stringformat:"s"|slice:"6:" }}
+        {% else %}
+            {{ performance.versao }}
+        {% endif %}
+    {% else %}
+        Padrão
+    {% endif %}
+</span>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Informações do Simulado</h5>
+                </div>
+                <div class="card-body">
+                    <h4 class="text-white">{{ simulado.titulo }}</h4>
+                    <p class="text-muted">{{ simulado.descricao|default:"" }}</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-success text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Nota Final</h5>
+                                    <h2>{{ performance.score|floatformat:2 }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-info text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Acertos</h5>
+                                    <h2>{{ performance.correct_answers }}/{{ performance.total_questions }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Desempenho por Disciplina</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Disciplina</th>
+                                    <th>Acertos</th>
+                                    <th>Total</th>
+                                    <th>Percentual</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for estatistica in estatisticas_disciplina %}
+                                <tr>
+                                    <td>{{ estatistica.disciplina }}</td>
+                                    <td>{{ estatistica.acertos }}</td>
+                                    <td>{{ estatistica.total }}</td>
+                                    <td>{{ estatistica.percentual|floatformat:1 }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Desempenho por Assunto</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Assunto</th>
+                                    <th>Acertos</th>
+                                    <th>Total</th>
+                                    <th>Percentual</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for estatistica in estatisticas_assunto %}
+                                <tr>
+                                    <td>{{ estatistica.assunto }}</td>
+                                    <td>{{ estatistica.acertos }}</td>
+                                    <td>{{ estatistica.total }}</td>
+                                    <td>{{ estatistica.percentual|floatformat:1 }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Nova tabela: Desempenho por Nível e Disciplina (SIMPLIFICADA) -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">Desempenho por Nível de Dificuldade e Disciplina</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Disciplina</th>
+                        <th class="text-center">
+                            <span class="badge bg-success">Fácil</span>
+                        </th>
+                        <th class="text-center">
+                            <span class="badge bg-warning text-white">Médio</span>
+                        </th>
+                        <th class="text-center">
+                            <span class="badge bg-danger">Difícil</span>
+                        </th>
+                        <th class="text-center">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stats in estatisticas_nivel_disciplina %}
+                    <tr>
+                        <td>{{ stats.disciplina }}</td>
+                        <!-- Fácil -->
+                        <td class="text-center">
+                            {% if stats.facil.total > 0 %}
+                                {{ stats.facil.acertos }}/{{ stats.facil.total }}
+                                <small class="text-muted">({{ stats.facil.percentual|floatformat:0 }}%)</small>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <!-- Médio -->
+                        <td class="text-center">
+                            {% if stats.medio.total > 0 %}
+                                {{ stats.medio.acertos }}/{{ stats.medio.total }}
+                                <small class="text-muted">({{ stats.medio.percentual|floatformat:0 }}%)</small>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <!-- Difícil -->
+                        <td class="text-center">
+                            {% if stats.dificil.total > 0 %}
+                                {{ stats.dificil.acertos }}/{{ stats.dificil.total }}
+                                <small class="text-muted">({{ stats.dificil.percentual|floatformat:0 }}%)</small>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <!-- Total -->
+                        <td class="text-center">
+                            {{ stats.total_acertos }}/{{ stats.total_questoes }}
+                            <small class="text-muted">({{ stats.percentual_total|floatformat:0 }}%)</small>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">Nenhum dado disponível.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Detalhes das Respostas -->
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Detalhes das Respostas</h5>
+        <!-- Modificado para mostrar o gabarito da versão corretamente -->
+        <span class="badge bg-warning text-white">Gabarito Versão
+{% if fonte == "app" and resultado.versao %}
+    {% if resultado.versao|stringformat:"s"|slice:":6" == "versao" %}
+        {{ resultado.versao|stringformat:"s"|slice:"6:" }}
+    {% else %}
+        {{ resultado.versao }}
+    {% endif %}
+{% elif performance.versao %}
+    {% if performance.versao|stringformat:"s"|slice:":6" == "versao" %}
+        {{ performance.versao|stringformat:"s"|slice:"6:" }}
+    {% else %}
+        {{ performance.versao }}
+    {% endif %}
+{% else %}
+    Padrão
+{% endif %}
+</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Questão</th>
+                        <th>Disciplina</th>
+                        <th>Assunto</th>
+                        <th>Resposta Marcada</th>
+                        <th>Resposta Correta</th>
+                        <th>Nível</th>
+                        <th>Resultado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resposta in respostas %}
+                    <tr class="{% if resposta.acertou %}table-success{% else %}table-danger{% endif %}">
+                        <td>{{ resposta.ordem }}</td>
+                        <td>{{ resposta.disciplina }}</td>
+                        <td>{{ resposta.assunto }}</td>
+                        <td>{{ resposta.resposta_aluno }}</td>
+                        <td>{{ resposta.resposta_correta }}</td>
+                        <td>
+                            {% if resposta.nivel %}
+                                {% if resposta.nivel|lower == "facil" or resposta.nivel|lower == "fácil" or resposta.nivel|lower == "f" %}
+                                    <span class="badge bg-success">Fácil</span>
+                                {% elif resposta.nivel|lower == "medio" or resposta.nivel|lower == "médio" or resposta.nivel|lower == "m" %}
+                                    <span class="badge bg-warning text-white">Médio</span>
+                                {% elif resposta.nivel|lower == "dificil" or resposta.nivel|lower == "difícil" or resposta.nivel|lower == "d" %}
+                                    <span class="badge bg-danger">Difícil</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ resposta.nivel|title }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Não definido</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if resposta.acertou %}
+                            <span class="badge bg-success">Acerto ✓</span>
+                            {% else %}
+                            <span class="badge bg-danger">Erro ✗</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">Nenhuma resposta registrada.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

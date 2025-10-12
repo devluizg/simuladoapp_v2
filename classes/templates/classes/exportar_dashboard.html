@@ -1,0 +1,624 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatório da Turma - PDF{% endblock %}
+
+{% block extra_head %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* Corrigido para o tema escuro */
+    body {
+        font-family: 'Arial', sans-serif;
+        background: #1c1e2a; /* Fundo escuro */
+        color: #f0f0f0; /* Texto claro */
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Corrigido para o tema escuro */
+    .controls {
+        background: #252836; /* Fundo do painel escuro */
+        backdrop-filter: blur(10px);
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+        border: 1px solid #3a3f51;
+    }
+
+    /* Corrigido para o tema escuro */
+    .controls h2 {
+        margin-bottom: 20px;
+        color: #ffffff; /* Texto do título branco */
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        box-shadow: 0 4px 15px rgba(86, 171, 47, 0.3);
+    }
+
+    .btn-success:hover {
+        box-shadow: 0 6px 20px rgba(86, 171, 47, 0.4);
+    }
+
+    button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .data-source {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: #1565c0;
+        border-left: 4px solid #2196f3;
+        font-weight: 500;
+    }
+
+    .table-section {
+        page-break-before: always;
+        margin-top: 30px;
+    }
+
+    /* Estilos para o relatório PDF (fundo branco mantido para impressão) */
+    .pdf-report {
+        background: white;
+        color: #333; /* Texto escuro para o conteúdo do PDF */
+        width: 210mm;
+        min-height: 297mm;
+        margin: 20px auto;
+        padding: 15mm;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        position: relative;
+        border-radius: 10px;
+    }
+
+    .pdf-header {
+        text-align: center;
+        margin-bottom: 25px;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 20px;
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8f0fe 100%);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+    .pdf-header h1 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 28px;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .pdf-header h2, .chart-container h3, .table-section h3 {
+        color: #2c3e50; /* Texto escuro para títulos dentro do PDF */
+    }
+
+    .pdf-header .info, .stat-card .label {
+        color: #546e7a; /* Texto escuro para informações dentro do PDF */
+    }
+
+    .stats-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 15px;
+    }
+
+    .stat-card {
+        flex: 1;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .stat-card .number {
+        font-size: 24px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+    }
+
+    .charts-section { margin-bottom: 25px; }
+    .charts-row { display: flex; gap: 20px; margin-bottom: 20px; }
+
+    .chart-container {
+        flex: 1;
+        background: #fff;
+        border: 2px solid #f1f3f4;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .main-chart { width: 100%; height: 430px; margin-bottom: 20px; }
+    .side-chart { height: 140px; }
+
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-top: 15px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .results-table th, .results-table td {
+        border: 1px solid #e9ecef;
+        padding: 6px 10px;
+        text-align: left;
+    }
+
+    .results-table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .results-table tr:nth-child(even) { background: #f8f9ff; }
+    .results-table tr:hover { background: #e8f0fe; }
+
+    .position-medal {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 20px;
+        font-size: 10px;
+        font-weight: bold;
+        color: white;
+        margin-right: 5px;
+    }
+
+    .position-1 { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); }
+    .position-2 { background: linear-gradient(135deg, #c0c0c0 0%, #e5e5e5 100%); }
+    .position-3 { background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%); }
+    .position-other { background: linear-gradient(135deg, #6c757d 0%, #868e96 100%); }
+
+    @media print {
+        body { background: white; }
+        .controls, .sidebar, .navbar { display: none; }
+        .pdf-report { width: 100%; min-height: 100vh; margin: 0; padding: 10mm; box-shadow: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Controles -->
+    <div class="controls">
+        <h2>📊 Gerar Relatório da Turma</h2>
+        <div class="data-source" id="dataSource">
+            📊 Usando dados de exemplo - Para dados reais, integre com o Django template
+        </div>
+        <button onclick="generatePDF()" class="btn-success" id="pdfBtn">📁 Gerar PDF</button>
+        <button onclick="generateSampleData()">🔄 Recarregar Dados</button>
+        <button onclick="window.history.back()">↩️ Voltar</button>
+        <button onclick="window.debugInfo()">🐛 Debug Info</button>
+    </div>
+
+    <!-- Relatório PDF -->
+    <div class="pdf-report" id="pdfReport">
+        <!-- Cabeçalho -->
+        <div class="pdf-header">
+            <h1>📈 Relatório de Desempenho da Turma</h1>
+            <h2 id="reportSubtitle">3º Ano A - Simulado ENEM 2024</h2>
+            <div class="info">
+                <span>📅 Data: <span id="currentDate"></span></span> |
+                <span>🤖 Gerado automaticamente pelo sistema</span>
+            </div>
+        </div>
+
+        <!-- Estatísticas Gerais -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="number" id="totalParticipantes">0</div>
+                <div class="label">👥 Participantes</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="mediaTurma">0.0</div>
+                <div class="label">📊 Média da Turma</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="totalQuestoes">0</div>
+                <div class="label">❓ Total de Questões</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="totalDisciplinas">0</div>
+                <div class="label">📚 Disciplinas</div>
+            </div>
+        </div>
+
+        <!-- Seção de Gráficos -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <h3>📈 Desempenho Individual dos Alunos</h3>
+                <div id="mainChart" class="main-chart"></div>
+            </div>
+            <div class="charts-row">
+                <div class="chart-container">
+                    <h3>📚 Desempenho por Disciplina</h3>
+                    <div id="disciplinasChart" class="side-chart"></div>
+                </div>
+                <div class="chart-container">
+                    <h3>🎯 Desempenho por Assunto</h3>
+                    <div id="assuntosChart" class="side-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Resultados -->
+        <div class="table-section">
+            <h3>🏆 Resultados Individuais dos Alunos</h3>
+            <table class="results-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>🏅 Posição</th>
+                        <th>👤 Nome do Aluno</th>
+                        <th>✅ Acertos</th>
+                        <th>📊 Nota Final</th>
+                        <th>📈 Percentual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 20px;">Carregando dados dos alunos...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS DEVEM PERMANECER AQUI PARA NÃO QUEBRAR A LÓGICA -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    // Dados padrão do simulado
+    let dadosSimulado = {
+        alunos: [],
+        disciplinas: [],
+        assuntos: []
+    };
+
+    // Variável para controlar se estamos usando dados reais
+    let usingRealData = false;
+
+    // Função para processar nomes e evitar repetições
+    function processarNomesUnicos(alunos) {
+        console.log('🔍 Processando nomes únicos...');
+        const nomesProcessados = [];
+        const contadorNomes = {};
+        alunos.forEach(aluno => {
+            const nomeCompleto = aluno.nome.trim();
+            const partesNome = nomeCompleto.split(' ').filter(parte => parte.length > 0);
+            if (partesNome.length === 0) {
+                console.warn('⚠️ Nome vazio encontrado:', aluno);
+                return;
+            }
+            let nomeParaExibir;
+            if (partesNome.length >= 2) {
+                nomeParaExibir = `${partesNome[0]} ${partesNome[1]}`;
+            } else {
+                nomeParaExibir = partesNome[0];
+            }
+            if (contadorNomes[nomeParaExibir]) {
+                contadorNomes[nomeParaExibir]++;
+                if (partesNome.length >= 3) {
+                    nomeParaExibir = `${partesNome[0]} ${partesNome[1]} ${partesNome[2]}`;
+                } else if (partesNome.length >= 2) {
+                    nomeParaExibir = `${partesNome[0]} ${partesNome[1]}`;
+                } else {
+                    nomeParaExibir = `${partesNome[0]} (${contadorNomes[nomeParaExibir]})`;
+                }
+                if (contadorNomes[nomeParaExibir]) {
+                    nomeParaExibir = nomeCompleto;
+                }
+            } else {
+                contadorNomes[nomeParaExibir] = 1;
+            }
+            const alunoProcessado = { ...aluno, nomeOriginal: nomeCompleto, nomeExibicao: nomeParaExibir };
+            nomesProcessados.push(alunoProcessado);
+        });
+        return nomesProcessados;
+    }
+
+    window.addEventListener('load', function() {
+        setCurrentDate();
+        loadDjangoData();
+        setTimeout(() => {
+            generateCharts();
+            updateStatistics();
+            generateResultsTable();
+        }, 500);
+    });
+
+    function loadDjangoData() {
+        try {
+            let djangoAlunos = window.alunosJson || [];
+            let djangoDisciplinas = window.disciplinasJson || [];
+            let djangoAssuntos = window.assuntosJson || [];
+
+            if (djangoAlunos && djangoAlunos.length > 0) {
+                dadosSimulado.alunos = processarNomesUnicos(djangoAlunos);
+                usingRealData = true;
+            }
+            if (djangoDisciplinas && djangoDisciplinas.length > 0) {
+                dadosSimulado.disciplinas = djangoDisciplinas;
+            }
+            if (djangoAssuntos && djangoAssuntos.length > 0) {
+                dadosSimulado.assuntos = djangoAssuntos;
+            }
+            updateReportTitle();
+            updateDataSourceIndicator();
+            if (dadosSimulado.alunos.length === 0) {
+                generateSampleData();
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar dados Django:', error);
+            generateSampleData();
+        }
+    }
+
+    function updateReportTitle() {
+        const subtitle = document.getElementById('reportSubtitle');
+        let className = window.djangoClassName || '3º Ano A';
+        let simuladoName = window.djangoSimuladoName || 'Simulado ENEM 2024';
+        subtitle.textContent = `${className} - ${simuladoName}`;
+    }
+
+    function updateDataSourceIndicator() {
+        const dataSourceElement = document.getElementById('dataSource');
+        if (usingRealData) {
+            dataSourceElement.innerHTML = '✅ Usando dados reais do simulado';
+            dataSourceElement.style.background = 'linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)';
+            dataSourceElement.style.color = '#2e7d32';
+            dataSourceElement.style.borderLeft = '4px solid #4caf50';
+        } else {
+            dataSourceElement.innerHTML = '📊 Usando dados de exemplo - Para dados reais, integre com o Django template';
+            dataSourceElement.style.background = 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)';
+            dataSourceElement.style.color = '#1565c0';
+            dataSourceElement.style.borderLeft = '4px solid #2196f3';
+        }
+    }
+
+    function setCurrentDate() {
+        const dateFromDjango = window.djangoToday;
+        const currentDateElement = document.getElementById('currentDate');
+        if (dateFromDjango) {
+            currentDateElement.textContent = dateFromDjango;
+        } else {
+            currentDateElement.textContent = new Date().toLocaleDateString('pt-BR');
+        }
+    }
+
+    function generateSampleData() {
+        usingRealData = false;
+        const alunosExemplo = [
+            { nome: 'Ana Silva Santos', nota: 8.5, acertos: 34, total: 40, percentual: 85 },
+            { nome: 'Ana Costa Lima', nota: 7.8, acertos: 31, total: 40, percentual: 77.5 },
+            { nome: 'Bruno Santos', nota: 9.2, acertos: 37, total: 40, percentual: 92.5 },
+        ];
+        dadosSimulado = {
+            alunos: processarNomesUnicos(alunosExemplo),
+            disciplinas: [ { nome: 'Matemática', percentual: 72 }, { nome: 'Português', percentual: 68 } ],
+            assuntos: [ { nome: 'Funções', percentual: 65 }, { nome: 'Geometria', percentual: 78 } ]
+        };
+        dadosSimulado.alunos.sort((a, b) => b.nota - a.nota);
+        updateDataSourceIndicator();
+        setTimeout(() => {
+            generateCharts();
+            updateStatistics();
+            generateResultsTable();
+        }, 100);
+    }
+
+    function updateStatistics() {
+        if (window.djangoTotalParticipantes) {
+            document.getElementById('totalParticipantes').textContent = window.djangoTotalParticipantes;
+            document.getElementById('mediaTurma').textContent = (window.djangoMediaTurma || 0).toFixed(1);
+            document.getElementById('totalQuestoes').textContent = window.djangoTotalQuestoes || 0;
+            document.getElementById('totalDisciplinas').textContent = window.djangoTotalDisciplinas || 0;
+        } else if (dadosSimulado.alunos.length > 0) {
+            const totalParticipantes = dadosSimulado.alunos.length;
+            const mediaTotal = dadosSimulado.alunos.reduce((sum, aluno) => sum + aluno.nota, 0) / totalParticipantes;
+            document.getElementById('totalParticipantes').textContent = totalParticipantes;
+            document.getElementById('mediaTurma').textContent = mediaTotal.toFixed(1);
+            document.getElementById('totalQuestoes').textContent = dadosSimulado.alunos[0]?.total || 40;
+            document.getElementById('totalDisciplinas').textContent = dadosSimulado.disciplinas.length;
+        }
+    }
+
+    function generateCharts() {
+        if (dadosSimulado.alunos.length > 0) generateMainChart();
+        if (dadosSimulado.disciplinas.length > 0) generateDisciplinasChart();
+        if (dadosSimulado.assuntos.length > 0) generateAssuntosChart();
+    }
+
+    function generateMainChart() {
+        const nomes = dadosSimulado.alunos.map(aluno => aluno.nomeExibicao || aluno.nome);
+        const notas = dadosSimulado.alunos.map(a => a.nota);
+        const media = notas.reduce((sum, nota) => sum + nota, 0) / notas.length;
+        const trace = { x: nomes, y: notas, type: 'scatter', mode: 'lines+markers', line: { shape: 'spline' } };
+        const layout = { yaxis: { range: [0, Math.ceil(Math.max(...notas)) + 1] }, shapes: [{ type: 'line', x0: 0, x1: nomes.length, y0: media, y1: media, line: { dash: 'dash' } }], margin: { l: 60, r: 100, t: 40, b: 120 }, showlegend: false, plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)' };
+        Plotly.newPlot('mainChart', [trace], layout, { responsive: true, displayModeBar: false });
+    }
+
+    function generateDisciplinasChart() {
+        const nomes = dadosSimulado.disciplinas.map(d => d.nome);
+        const percentuais = dadosSimulado.disciplinas.map(d => d.percentual);
+        const trace = { x: nomes, y: percentuais, type: 'bar' };
+        const layout = { yaxis: { range: [0, 100] }, margin: { l: 50, r: 30, t: 30, b: 70 }, showlegend: false, plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)' };
+        Plotly.newPlot('disciplinasChart', [trace], layout, { responsive: true, displayModeBar: false });
+    }
+
+    function generateAssuntosChart() {
+        const nomes = dadosSimulado.assuntos.map(a => a.nome);
+        const percentuais = dadosSimulado.assuntos.map(a => a.percentual);
+        const trace = { x: nomes, y: percentuais, type: 'bar' };
+        const layout = { yaxis: { range: [0, 100] }, margin: { l: 50, r: 30, t: 30, b: 90 }, showlegend: false, plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)' };
+        Plotly.newPlot('assuntosChart', [trace], layout, { responsive: true, displayModeBar: false });
+    }
+
+    function generateResultsTable() {
+        const tbody = document.querySelector('#resultsTable tbody');
+        if (!dadosSimulado.alunos.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Nenhum dado disponível</td></tr>';
+            return;
+        }
+        tbody.innerHTML = '';
+        dadosSimulado.alunos.forEach((aluno, index) => {
+            const row = document.createElement('tr');
+            const percentual = aluno.percentual || ((aluno.acertos / aluno.total) * 100);
+            const posicao = index + 1;
+            let medalClass = 'position-other';
+            if (posicao === 1) medalClass = 'position-1';
+            else if (posicao === 2) medalClass = 'position-2';
+            else if (posicao === 3) medalClass = 'position-3';
+            row.innerHTML = `<td><span class="position-medal ${medalClass}">${posicao}</span>${posicao}º</td><td>${aluno.nomeExibicao || aluno.nome}</td><td>${aluno.acertos}/${aluno.total}</td><td>${aluno.nota.toFixed(1)}</td><td>${percentual.toFixed(1)}%</td>`;
+            tbody.appendChild(row);
+        });
+    }
+
+    async function generatePDF() {
+        if (!dadosSimulado.alunos || dadosSimulado.alunos.length === 0) {
+            alert('❌ Não há dados disponíveis para gerar o PDF.');
+            return;
+        }
+        const pdfBtn = document.getElementById('pdfBtn');
+        pdfBtn.disabled = true;
+        pdfBtn.textContent = '⏳ Gerando PDF...';
+        try {
+            const element = document.getElementById('pdfReport');
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            const fileName = `Relatorio_${(window.djangoSimuladoName || 'Simulado').replace(/\s/g, '_')}.pdf`;
+            pdf.save(fileName);
+            alert(`✅ PDF gerado com sucesso!`);
+        } catch (error) {
+            console.error('❌ Erro ao gerar PDF:', error);
+            alert('❌ Erro ao gerar o PDF.');
+        } finally {
+            pdfBtn.disabled = false;
+            pdfBtn.textContent = '📁 Gerar PDF';
+        }
+    }
+
+    window.injectRealData = function(data) {
+        if (data) {
+            usingRealData = true;
+            if (data.alunos) dadosSimulado.alunos = processarNomesUnicos(data.alunos);
+            if (data.disciplinas) dadosSimulado.disciplinas = data.disciplinas;
+            if (data.assuntos) dadosSimulado.assuntos = data.assuntos;
+            if (data.className) window.djangoClassName = data.className;
+            if (data.simuladoName) window.djangoSimuladoName = data.simuladoName;
+            if (data.today) window.djangoToday = data.today;
+            if (data.totalParticipantes) window.djangoTotalParticipantes = data.totalParticipantes;
+            if (data.mediaTurma) window.djangoMediaTurma = data.mediaTurma;
+            if (data.totalQuestoes) window.djangoTotalQuestoes = data.totalQuestoes;
+            if (data.totalDisciplinas) window.djangoTotalDisciplinas = data.totalDisciplinas;
+            updateReportTitle();
+            updateDataSourceIndicator();
+            setTimeout(() => {
+                generateCharts();
+                updateStatistics();
+                generateResultsTable();
+            }, 100);
+        }
+    };
+
+    window.debugInfo = function() { console.log('DEBUG INFO:', { usingRealData, dadosSimulado }); };
+</script>
+
+<!-- Integração com Django - Dados Reais -->
+<script>
+    window.addEventListener('load', function() {
+        try {
+            var djangoData = {
+                alunos: JSON.parse('{{ alunos_json|escapejs|default:"[]" }}'),
+                disciplinas: JSON.parse('{{ disciplinas_json|escapejs|default:"[]" }}'),
+                assuntos: JSON.parse('{{ assuntos_json|escapejs|default:"[]" }}'),
+                className: '{{ class_name|escapejs }}',
+                simuladoName: '{{ simulado_name|escapejs }}',
+                today: '{{ today|escapejs }}',
+                totalParticipantes: parseInt('{{ total_participantes|default:0 }}'),
+                mediaTurma: parseFloat('{{ media_turma|default:0 }}'),
+                totalQuestoes: parseInt('{{ total_questoes|default:0 }}'),
+                totalDisciplinas: parseInt('{{ total_disciplinas|default:0 }}')
+            };
+            if (typeof window.injectRealData === 'function') {
+                window.injectRealData(djangoData);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar dados Django:', error);
+        }
+    });
+</script>
+{% endblock %}

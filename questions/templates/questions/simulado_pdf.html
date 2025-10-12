@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    {% load custom_filters %}
+    <style>
+        /* ❌ SEM @page AQUI - será adicionado dinamicamente */
+
+        body, * {
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-size: 13px;
+            line-height: 1.3;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header-section {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 10px;
+            break-inside: avoid;
+        }
+
+        .cabecalho {
+            text-align: left !important;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .cabecalho *,
+        .cabecalho p,
+        .cabecalho div,
+        .cabecalho span,
+        .cabecalho table,
+        .cabecalho td,
+        .cabecalho th {
+            text-align: left !important;
+        }
+
+        .cabecalho [style*="text-align: center"],
+        .cabecalho [style*="text-align:center"] {
+            text-align: left !important;
+        }
+
+        .instrucoes {
+            text-align: justify;
+            margin-bottom: 15px;
+            padding: 8px;
+            border: 1px solid #000;
+            background-color: #f9f9f9;
+            break-inside: avoid;
+        }
+
+        .simulado-titulo {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 8px;
+            break-inside: avoid;
+        }
+
+        .content-wrapper {
+            column-count: 2;
+            column-gap: 15px;
+            column-rule: 1px solid #000;
+            column-fill: balance;
+        }
+
+        .questao {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .questao-numero {
+            font-weight: bold !important;
+            font-size: 12px;
+            margin-bottom: 5px;
+            display: block;
+            break-after: avoid;
+        }
+
+        .enunciado {
+            margin-bottom: 8px;
+            text-align: justify;
+            font-size: 13px !important;
+            line-height: 1.3 !important;
+            break-after: avoid;
+        }
+
+        .alternativas {
+            margin-left: 0;
+        }
+
+        .alternativa {
+            margin-bottom: 3px;
+            text-align: justify;
+            display: flex;
+            align-items: flex-start;
+            min-height: 18px;
+            break-inside: avoid;
+        }
+
+        .alternativa .item {
+            flex-shrink: 0;
+            margin-right: 8px;
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            text-align: center;
+            background-color: #000 !important;
+            color: #fff !important;
+            border-radius: 50%;
+            line-height: 16px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .alternativa .conteudo {
+            flex: 1;
+            line-height: 1.2;
+            font-size: 13px !important;
+            text-align: justify;
+            margin: 0;
+        }
+
+        .questao-imagem {
+            max-width: 280px !important;
+            max-height: 400px !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain;
+            display: block;
+            margin: 8px auto;
+            break-inside: avoid;
+        }
+
+        img {
+            max-width: 100% !important;
+            box-sizing: border-box;
+        }
+
+        p, .enunciado, .alternativa {
+            orphans: 2;
+            widows: 2;
+        }
+
+        /* 🆕 NAMED PAGE PARA ÚLTIMA QUESTÃO */
+        .ultima-questao {
+            page: ultima;
+        }
+
+        @supports not (display: flex) {
+            .alternativa {
+                display: table;
+                width: 100%;
+            }
+
+            .alternativa .item {
+                display: table-cell;
+                width: 24px;
+                vertical-align: top;
+            }
+
+            .alternativa .conteudo {
+                display: table-cell;
+                vertical-align: top;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulado-titulo">
+        {{ simulado.titulo }} - Tipo {{ tipo }}
+    </div>
+
+    <div class="header-section">
+        {% if simulado.cabecalho %}
+        <div class="cabecalho">
+            {{ simulado.cabecalho|safe }}
+        </div>
+        {% endif %}
+
+        {% if simulado.instrucoes %}
+        <div class="instrucoes">
+            <strong>INSTRUÇÕES:</strong><br>
+            {{ simulado.instrucoes|safe }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="content-wrapper">
+        {% for questao in questoes %}
+        {# 🆕 ADICIONAR CLASSE 'ultima-questao' NA ÚLTIMA QUESTÃO #}
+        <div class="questao {% if forloop.last %}ultima-questao{% endif %}">
+            <div class="questao-numero">
+                QUESTÃO {{ forloop.counter|stringformat:"02d" }}
+            </div>
+
+            <div class="enunciado">
+                {{ questao.enunciado|safe }}
+            </div>
+
+            {% if questao.imagem %}
+                {% if questao.imagem_redimensionada_b64 %}
+                    <img src="data:image/jpeg;base64,{{ questao.imagem_redimensionada_b64 }}"
+                         class="questao-imagem"
+                         alt="Imagem da questão {{ forloop.counter }}">
+                {% elif is_pythonanywhere and questao.imagem_otimizada %}
+                    <img src="data:image/jpeg;base64,{{ questao.imagem_otimizada|base64 }}"
+                         class="questao-imagem"
+                         alt="Imagem da questão {{ forloop.counter }}">
+                {% else %}
+                    <img src="file://{{ questao.imagem.path }}"
+                         class="questao-imagem"
+                         alt="Imagem da questão {{ forloop.counter }}">
+                {% endif %}
+            {% endif %}
+
+            <div class="alternativas">
+                <div class="alternativa">
+                    <span class="item">A</span>
+                    <div class="conteudo">{{ questao.alternativa_a|safe }}</div>
+                </div>
+                <div class="alternativa">
+                    <span class="item">B</span>
+                    <div class="conteudo">{{ questao.alternativa_b|safe }}</div>
+                </div>
+                <div class="alternativa">
+                    <span class="item">C</span>
+                    <div class="conteudo">{{ questao.alternativa_c|safe }}</div>
+                </div>
+                <div class="alternativa">
+                    <span class="item">D</span>
+                    <div class="conteudo">{{ questao.alternativa_d|safe }}</div>
+                </div>
+                <div class="alternativa">
+                    <span class="item">E</span>
+                    <div class="conteudo">{{ questao.alternativa_e|safe }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

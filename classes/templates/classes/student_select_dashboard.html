@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Selecionar Aluno para Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Dashboards de Alunos</h1>
+        <div>
+            <a href="{% url 'class_list' %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Voltar para Turmas
+            </a>
+            <a href="{% url 'app_resultados' %}" class="btn btn-info">
+                <i class="fas fa-mobile-alt"></i> Resultados do App
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Painel de seleção -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Selecionar Aluno</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Filtro por turma -->
+                    <form method="get" class="mb-4">
+                        <div class="row align-items-end">
+                            <div class="col-md-8">
+                                <label for="class_id" class="form-label"><i class="fas fa-filter"></i> Filtrar por Turma:</label>
+                                <select name="class_id" id="class_id" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Todas as Turmas</option>
+                                    {% for class in classes %}
+                                        <option value="{{ class.id }}" {% if selected_class == class.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ class.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                {% if selected_class %}
+                                <a href="{% url 'student_select_dashboard' %}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-times"></i> Limpar Filtro
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Seleção de aluno -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="student_id" class="form-label"><i class="fas fa-user"></i> Selecione um Aluno:</label>
+                            {% if students %}
+                                <select name="student_id" id="student_id" class="form-select form-select-lg">
+                                    {% for student in students %}
+                                        <option value="{{ student.id }}">
+                                            {{ student.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Nenhum aluno encontrado com os filtros selecionados.
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if students %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-chart-bar"></i> Ver Dashboard
+                            </button>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel informativo -->
+        <div class="col-md-4">
+            <div class="card bg-light mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Sobre os Dashboards</h5>
+                </div>
+                <div class="card-body text-white">
+                    <p>Os dashboards oferecem uma visão completa do desempenho de cada aluno, incluindo:</p>
+                    <ul>
+                        <li>Histórico de simulados realizados</li>
+                        <li>Gráficos de evolução</li>
+                        <li>Desempenho por disciplina e assunto</li>
+                        <li>Análise detalhada de acertos e erros</li>
+                    </ul>
+                    <hr>
+                    <p class="mb-0">
+                        <i class="fas fa-mobile-alt"></i> Também é possível ver resultados enviados pelo aplicativo móvel
+                        <a href="{% url 'app_resultados' %}" class="alert-link">clicando aqui</a>.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Dica Rápida</h5>
+                </div>
+                <div class="card-body text-white">
+                    <p>Para encontrar um aluno mais facilmente:</p>
+                    <ol>
+                        <li>Selecione primeiro a turma do aluno</li>
+                        <li>Use a pesquisa rápida do navegador (Ctrl+F)</li>
+                        <li>Digite o nome do aluno</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white text-center">
+                <div class="card-body">
+                    <h1 class="display-4">{{ students.count }}</h1>
+                    <p class="mb-0">Alunos Disponíveis</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white text-center">
+                <div class="card-body">
+                    <h1 class="display-4">{{ classes.count }}</h1>
+                    <p class="mb-0">Turmas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">Não encontrou o aluno?</h5>
+                            <p class="mb-0">Você pode adicionar um novo aluno ou importar vários de uma vez.</p>
+                        </div>
+                        <div class="ms-3">
+                            <a href="{% url 'student_form' %}" class="btn btn-light mb-2 w-100">
+                                <i class="fas fa-user-plus"></i> Novo Aluno
+                            </a>
+                            <a href="{% url 'import_students' %}" class="btn btn-light w-100">
+                                <i class="fas fa-file-import"></i> Importar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script para melhorar a experiência de seleção -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Foco automático no campo de seleção de aluno se disponível
+    const studentSelect = document.getElementById('student_id');
+    if (studentSelect) {
+        setTimeout(() => {
+            studentSelect.focus();
+        }, 500);
+    }
+
+    // Tecla Enter no select para enviar o formulário
+    studentSelect?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

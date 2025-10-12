@@ -1,0 +1,674 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Simulado - SimuladoApp{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<style>
+    #busca-questoes::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+        font-style: italic;
+    }
+
+    #busca-questoes {
+        color: white;
+    }
+
+    #busca-questoes:focus {
+        background-color: rgba(255, 255, 255, 0.1);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+    }
+
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card:hover {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    .questao-preview {
+        position: relative;
+        max-height: 3.6em;
+        overflow: hidden;
+        font-size: 0.9em;
+        color: #adb5bd;
+        margin-top: 0.5rem;
+        line-height: 1.2em;
+        width: 100%;
+    }
+
+    .questao-preview::after {
+        content: "...";
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        padding-left: 40px;
+        background: linear-gradient(to right, transparent, #343a40 50%);
+        color: #adb5bd;
+    }
+
+    .questao-item {
+        background: linear-gradient(145deg, rgba(30, 32, 58, 0.5), rgba(30, 32, 58, 0.2));
+        border: 1px solid var(--border-color) !important;
+        padding: 1rem;
+        transition: all 0.3s ease;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        width: 100%;
+        word-break: break-word;
+        display: block !important;
+    }
+
+    .questao-item:hover {
+        transform: translateX(5px);
+        border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    .questao-info {
+        flex-grow: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .questao-badges {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.3rem;
+        flex-wrap: wrap;
+    }
+
+    .nivel-badge {
+        font-size: 0.75em;
+    }
+
+    .badge-disciplina { background-color: var(--color-secondary); }
+    .badge-conteudo { background-color: var(--color-primary); color: var(--bg-dark); }
+
+    /* Badge para questões públicas */
+    .badge-publica {
+        background-color: #17a2b8 !important;
+        color: white !important;
+        font-weight: 600;
+    }
+
+    .badge-privada {
+        background-color: #6c757d !important;
+        color: white !important;
+    }
+
+    .nivel-facil { background-color: var(--color-success) !important; color: var(--bg-dark) !important; }
+    .nivel-medio { background-color: var(--color-warning) !important; color: var(--bg-dark) !important; }
+    .nivel-dificil { background-color: var(--color-danger) !important; color: var(--text-light) !important; }
+
+    .actions-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .drag-handle {
+        cursor: move;
+        color: #6c757d;
+        padding: 0.25rem;
+    }
+
+    .drag-handle:hover {
+        color: #fff;
+    }
+
+    #questoes-selecionadas .questao-item {
+        border-left: 3px solid #0d6efd !important;
+    }
+
+    #questoes-disponiveis .questao-item {
+        border-left: 3px solid #198754 !important;
+    }
+
+    /* Border especial para questões públicas */
+    .questao-publica {
+        border-left: 3px solid #17a2b8 !important;
+    }
+
+    .empty-state {
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        padding: 2rem;
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .adicionar-questao, .remover-questao {
+        min-width: 38px;
+        height: 38px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .adicionar-questao i, .remover-questao i {
+        font-size: 1.2rem;
+    }
+
+    .btn-action-icon.btn-add {
+        border-color: var(--color-success) !important;
+        color: var(--color-success) !important;
+    }
+    .btn-action-icon.btn-add:hover {
+        background-color: var(--color-success) !important;
+        color: var(--bg-dark) !important;
+    }
+    .btn-action-icon.btn-danger-custom {
+        border-color: var(--color-danger) !important;
+        color: var(--color-danger) !important;
+    }
+    .btn-action-icon.btn-danger-custom:hover {
+        background: var(--color-danger) !important;
+        color: var(--text-light) !important;
+    }
+
+    .questao-info {
+        padding-right: 10px;
+    }
+
+    .questao-item .d-flex {
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .col-questoes-simulado {
+        flex: 0 0 51%;
+        max-width: 51%;
+        padding: 0 15px;
+        margin-bottom: 30px;
+        float: left;
+    }
+
+    .col-banco-questoes {
+        flex: 0 0 51%;
+        max-width: 51%;
+        padding: 0 15px;
+        margin-bottom: 30px;
+        float: left;
+    }
+
+    .colunas-container {
+        display: flex;
+        flex-wrap: nowrap;
+        margin: 0 -15px;
+        width: 100%;
+        clear: both;
+    }
+
+    #questoes-selecionadas, #questoes-disponiveis {
+        width: 100%;
+        overflow-y: auto;
+        max-height: 60vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .list-group-item {
+        width: 100%;
+        position: relative;
+        display: block !important;
+    }
+
+    .questao-disponivel {
+        transition: all 0.3s ease;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        width: 100%;
+        word-break: break-word;
+        display: block !important;
+    }
+
+    .row.g-4::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    .questao-disponivel[style*="display: none"],
+    .questao-disponivel.hidden {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        position: absolute !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% csrf_token %}
+    <div id="simulado-container" data-simulado-id="{{ simulado.id }}" class="d-none"></div>
+
+    <!-- Informações do Simulado -->
+    <div class="row g-4">
+        <div class="col-12 mb-4">
+            <div class="card text-light">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">{{ simulado.titulo }} <small class="text-light">(ID: {{ simulado.id }})</small></h3>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success" id="salvar-simulado" data-simulado-id="{{ simulado.id }}">
+                                <i class="bi bi-save"></i> Salvar Alterações
+                            </button>
+                            <a href="{% url 'questions:progresso_pdf' pk=simulado.pk %}" class="btn btn-outline-light">
+                                <i class="bi bi-file-pdf"></i> Gerar PDF
+                            </a>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editarInfoModal">
+                                <i class="bi bi-pencil"></i> Editar Informações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="simulado-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="simulado_id" value="{{ simulado.id }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Questões:</strong> <span id="questoes-count">{{ simulado.questoes.count }}</span>/45</p>
+                                <p><strong>Criado em:</strong> {{ simulado.data_criacao|date:"d/m/Y" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Última modificação:</strong> {{ simulado.ultima_modificacao|date:"d/m/Y H:i" }}</p>
+                                <p class="text-light"><small>ID do Simulado: {{ simulado.id }}</small></p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="colunas-container">
+            <!-- Área de Questões do Simulado -->
+            <div class="col-questoes-simulado">
+                <div class="card text-light">
+                    <div class="card-header">
+                        <h4 class="mb-0"><i class="bi bi-list-check"></i> Questões do Simulado</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="questoes-selecionadas" class="list-group" data-simulado-id="{{ simulado.id }}">
+                            {% for questao in questoes_selecionadas %}
+                                <div class="list-group-item questao-item {% if questao.is_publica %}questao-publica{% endif %}"
+                                     data-id="{{ questao.id }}">
+                                    <div class="d-flex align-items-start">
+                                        <div class="questao-info">
+                                            <div class="questao-badges">
+                                                <span class="badge bg-secondary">{{ forloop.counter }}</span>
+                                                <!-- Badge para identificar tipo -->
+                                                {% if questao.is_publica %}
+                                                    <span class="badge badge-publica">
+                                                        <i class="bi bi-globe"></i> Pública
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-privada">
+                                                        <i class="bi bi-person"></i> Minha
+                                                    </span>
+                                                {% endif %}
+                                                <span class="badge badge-disciplina">{{ questao.disciplina }}</span>
+                                                <span class="badge badge-conteudo">{{ questao.conteudo }}</span>
+                                                <span class="badge nivel-badge
+                                                    {% if questao.nivel_dificuldade == 'F' %}nivel-facil
+                                                    {% elif questao.nivel_dificuldade == 'M' %}nivel-medio
+                                                    {% else %}nivel-dificil{% endif %}">
+                                                    {{ questao.get_nivel_dificuldade_display }}
+                                                </span>
+                                            </div>
+                                            <div class="questao-preview">
+                                                {{ questao.enunciado|striptags|safe|truncatechars:300 }}
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-action-icon btn-danger-custom remover-questao">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if not questoes_selecionadas %}
+                            <div class="empty-state" id="empty-state">
+                                <i class="bi bi-arrow-right-circle"></i>
+                                <p class="mb-0">Use o botão + para adicionar</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banco de Questões -->
+            <div class="col-banco-questoes">
+                <div class="card text-light">
+                    <div class="card-header">
+                        <h4 class="mb-0"><i class="bi bi-database"></i> Banco de Questões</h4>
+                        <div class="mt-2">
+                            <input type="text" id="busca-questoes" class="form-control bg-dark text-light"
+                                   placeholder="Buscar por disciplina, conteúdo ou nível...">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="questoes-disponiveis" class="list-group">
+                            {% for questao in questoes_disponiveis %}
+                                <div class="list-group-item questao-item questao-disponivel {% if questao.is_publica %}questao-publica{% endif %}"
+                                     data-id="{{ questao.id }}"
+                                     data-disciplina="{{ questao.disciplina|lower }}"
+                                     data-conteudo="{{ questao.conteudo|lower }}"
+                                     data-nivel="{{ questao.get_nivel_dificuldade_display|lower }}">
+                                     <div class="d-flex align-items-start">
+                                        <div class="questao-info">
+                                            <div class="questao-badges">
+                                                <!-- Badge para identificar tipo -->
+                                                {% if questao.is_publica %}
+                                                    <span class="badge badge-publica">
+                                                        <i class="bi bi-globe"></i> Pública
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-privada">
+                                                        <i class="bi bi-person"></i> Minha
+                                                    </span>
+                                                {% endif %}
+                                                <span class="badge badge-disciplina">{{ questao.disciplina }}</span>
+                                                <span class="badge badge-conteudo">{{ questao.conteudo }}</span>
+                                                <span class="badge nivel-badge
+                                                    {% if questao.nivel_dificuldade == 'F' %}nivel-facil
+                                                    {% elif questao.nivel_dificuldade == 'M' %}nivel-medio
+                                                    {% else %}nivel-dificil{% endif %}">
+                                                    {{ questao.get_nivel_dificuldade_display }}
+                                                </span>
+                                            </div>
+                                            <div class="questao-preview">
+                                                {{ questao.enunciado|striptags|safe|truncatechars:300 }}
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-action-icon btn-add adicionar-questao ms-2">
+                                            <i class="bi bi-plus-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição de Informações -->
+<div class="modal fade" id="editarInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Informações do Simulado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'questions:simulado_form_edit' simulado.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="simulado_id" value="{{ simulado.id }}">
+                    {{ form.as_p }}
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const questoesSelecionadas = document.getElementById('questoes-selecionadas');
+    const questoesDisponiveis = document.getElementById('questoes-disponiveis');
+    const emptyState = document.getElementById('empty-state');
+    const questoesCount = document.getElementById('questoes-count');
+    const salvarBtn = document.getElementById('salvar-simulado');
+    const buscaInput = document.getElementById('busca-questoes');
+
+    // Função para atualizar a numeração das questões selecionadas
+    function atualizarNumeracao() {
+        questoesSelecionadas.querySelectorAll('.questao-item').forEach((item, index) => {
+            let badge = item.querySelector('.badge.bg-secondary');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'badge bg-secondary';
+                const badgesContainer = item.querySelector('.questao-badges');
+                if (badgesContainer) {
+                    badgesContainer.insertBefore(badge, badgesContainer.firstChild);
+                }
+            }
+            badge.textContent = index + 1;
+        });
+    }
+
+    // Função para atualizar o contador de questões e o estado de vazio
+    function atualizarContador() {
+        const count = questoesSelecionadas.children.length;
+        if (questoesCount) {
+            questoesCount.textContent = count;
+        }
+        if (emptyState) {
+            emptyState.style.display = count === 0 ? 'block' : 'none';
+        }
+    }
+
+    // Função para preservar badges de tipo ao mover questões
+    function preservarBadgesTipo(questaoItem) {
+        const badgePublica = questaoItem.querySelector('.badge-publica');
+        const badgePrivada = questaoItem.querySelector('.badge-privada');
+        return {
+            temBadgePublica: !!badgePublica,
+            temBadgePrivada: !!badgePrivada,
+            htmlBadgePublica: badgePublica ? badgePublica.outerHTML : null,
+            htmlBadgePrivada: badgePrivada ? badgePrivada.outerHTML : null
+        };
+    }
+
+    function restaurarBadgesTipo(questaoItem, badgeInfo) {
+        const badgesContainer = questaoItem.querySelector('.questao-badges');
+        if (!badgesContainer) return;
+
+        // Remover badges de tipo existentes
+        const badgesExistentes = badgesContainer.querySelectorAll('.badge-publica, .badge-privada');
+        badgesExistentes.forEach(badge => badge.remove());
+
+        // Restaurar o badge correto na segunda posição (após numeração se existir)
+        if (badgeInfo.temBadgePublica && badgeInfo.htmlBadgePublica) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = badgeInfo.htmlBadgePublica;
+            const badge = tempDiv.firstChild;
+
+            const numeroBadge = badgesContainer.querySelector('.badge.bg-secondary');
+            if (numeroBadge && numeroBadge.nextSibling) {
+                badgesContainer.insertBefore(badge, numeroBadge.nextSibling);
+            } else if (numeroBadge) {
+                numeroBadge.insertAdjacentElement('afterend', badge);
+            } else {
+                badgesContainer.insertBefore(badge, badgesContainer.firstChild);
+            }
+        } else if (badgeInfo.temBadgePrivada && badgeInfo.htmlBadgePrivada) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = badgeInfo.htmlBadgePrivada;
+            const badge = tempDiv.firstChild;
+
+            const numeroBadge = badgesContainer.querySelector('.badge.bg-secondary');
+            if (numeroBadge && numeroBadge.nextSibling) {
+                badgesContainer.insertBefore(badge, numeroBadge.nextSibling);
+            } else if (numeroBadge) {
+                numeroBadge.insertAdjacentElement('afterend', badge);
+            } else {
+                badgesContainer.insertBefore(badge, badgesContainer.firstChild);
+            }
+        }
+    }
+
+    // Event listener para questões disponíveis (adicionar ao simulado)
+    questoesDisponiveis.addEventListener('click', function(e) {
+        const addButton = e.target.closest('.adicionar-questao');
+        if (!addButton) return;
+
+        const questaoItem = addButton.closest('.questao-item');
+        if (!questaoItem) return;
+
+        // Preservar badges de tipo antes de mover
+        const badgeInfo = preservarBadgesTipo(questaoItem);
+
+        // Mudar o botão para "remover"
+        addButton.innerHTML = '<i class="bi bi-trash"></i>';
+        addButton.classList.remove('btn-add', 'adicionar-questao');
+        addButton.classList.add('btn-danger-custom', 'remover-questao');
+        addButton.title = 'Remover';
+
+        // Mover o item para a lista de selecionadas
+        questoesSelecionadas.appendChild(questaoItem);
+
+        // Restaurar badges de tipo após mover
+        restaurarBadgesTipo(questaoItem, badgeInfo);
+
+        atualizarNumeracao();
+        atualizarContador();
+    });
+
+    // Event listener para questões selecionadas (remover do simulado)
+    questoesSelecionadas.addEventListener('click', function(e) {
+        const removeButton = e.target.closest('.remover-questao');
+        if (!removeButton) return;
+
+        const questaoItem = removeButton.closest('.questao-item');
+        if (!questaoItem) return;
+
+        // Preservar badges de tipo antes de mover
+        const badgeInfo = preservarBadgesTipo(questaoItem);
+
+        // Mudar o botão para "adicionar"
+        removeButton.innerHTML = '<i class="bi bi-plus-circle"></i>';
+        removeButton.classList.remove('btn-danger-custom', 'remover-questao');
+        removeButton.classList.add('btn-add', 'adicionar-questao');
+        removeButton.title = 'Adicionar';
+
+        // Remover a numeração
+        const numeroBadge = questaoItem.querySelector('.badge.bg-secondary');
+        if (numeroBadge) {
+            numeroBadge.remove();
+        }
+
+        // Mover o item de volta para a lista de disponíveis
+        questoesDisponiveis.appendChild(questaoItem);
+
+        // Restaurar badges de tipo após mover
+        restaurarBadgesTipo(questaoItem, badgeInfo);
+
+        atualizarNumeracao();
+        atualizarContador();
+    });
+
+    // Lógica de busca
+    buscaInput.addEventListener('input', function(e) {
+        const termo = e.target.value.toLowerCase().trim();
+        questoesDisponiveis.querySelectorAll('.questao-item').forEach(questao => {
+            const texto = questao.textContent.toLowerCase();
+            const corresponde = texto.includes(termo);
+            questao.style.display = corresponde ? '' : 'none';
+        });
+    });
+
+    // Lógica para salvar
+    salvarBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const questoes = Array.from(questoesSelecionadas.querySelectorAll('.questao-item'))
+            .map(item => item.dataset.id)
+            .filter(id => id);
+
+        if (questoes.length > 45) {
+            alert('O simulado não pode ter mais que 45 questões.');
+            return;
+        }
+
+        this.disabled = true;
+        this.textContent = "Salvando...";
+
+        fetch(`{% url 'questions:update_questoes_ordem' simulado.pk %}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ questoes: questoes })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Simulado salvo com sucesso!');
+                window.location.href = "{% url 'questions:simulado_list' %}";
+            } else {
+                alert('Erro ao salvar o simulado: ' + (data.message || 'Erro desconhecido'));
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao salvar o simulado.');
+        })
+        .finally(() => {
+            this.disabled = false;
+            this.textContent = "Salvar Alterações";
+        });
+    });
+
+    // Inicialização
+    function init() {
+        // Ocultar questões do banco que já estão no simulado
+        const selecionadasIds = new Set(Array.from(questoesSelecionadas.querySelectorAll('.questao-item')).map(el => el.dataset.id));
+        questoesDisponiveis.querySelectorAll('.questao-item').forEach(item => {
+            if (selecionadasIds.has(item.dataset.id)) {
+                item.remove();
+            }
+        });
+        atualizarNumeracao();
+        atualizarContador();
+    }
+
+    init();
+});
+</script>
+{% endblock %}

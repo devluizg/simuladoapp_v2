@@ -1,0 +1,36 @@
+/* Estilos para o número da questão */
+.questao_numero {
+    font-family: 'EnemFont';
+    font-size: 12pt;
+    font-weight: bold;
+    color: #000;
+}
+
+/* Estilos para as alternativas */
+.alternativa_item {
+    font-family: 'EnemFont';
+    font-size: 10pt;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+/* Estilos para o container de alternativas */
+.alternativas_container {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+/* Estilos para imagens */
+.questao_imagem {
+    max-width: 100%;
+    height: auto;
+    margin: 10px 0;
+}
+
+/* Estilos para o enunciado */
+.questao_enunciado {
+    font-size: 11pt;
+    line-height: 1.4;
+    text-align: justify;
+    margin-bottom: 10px;
+}

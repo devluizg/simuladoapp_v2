@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Resultados das Correções{% endblock %}
+
+{% block content %}
+<!-- No cabeçalho da página, junto com outros botões -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Resultados das Correções</h1>
+    <div>
+        <a href="{% url 'class_list' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Voltar para Turmas
+        </a>
+        <a href="{% url 'student_select_dashboard' %}" class="btn btn-info">
+            <i class="fas fa-chart-line"></i> Dashboards
+        </a>
+        <a href="{% url 'app_resultados_limpar' %}" class="btn btn-danger">
+            <i class="fas fa-trash-alt"></i> Limpar Todos os Dados
+        </a>
+    </div>
+</div>
+    <!-- Estatísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h1 class="display-4">{{ resultados.count }}</h1>
+                    <p class="mb-0">Correções</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h1 class="display-4">{{ alunos|length }}</h1>
+                    <p class="mb-0">Alunos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle"></i> Sobre os Resultados
+                    </h5>
+                    <p class="card-text">
+                        Esta página mostra todos os resultados enviados pelo aplicativo móvel.
+                        Você pode filtrar por turma e aluno específicos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtro de Resultados -->
+    <div class="card bg-dark text-white mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filtrar Resultados</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-0">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="form-group mb-3">
+                            <label for="turma_id" class="form-label">Turma:</label>
+                            <select name="turma_id" id="turma_id" class="form-select bg-dark text-white border-secondary">
+                                <option value="">Todas as turmas</option>
+                                {% for turma in turmas %}
+                                    <option value="{{ turma.id }}" {% if turma.id|stringformat:"i" == turma_id %}selected{% endif %}>
+                                        {{ turma.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group mb-3">
+                            <label for="aluno_id" class="form-label">Aluno:</label>
+                            <select name="aluno_id" id="aluno_id" class="form-select bg-dark text-white border-secondary">
+                                <option value="">Todos os alunos</option>
+                                {% for aluno in alunos %}
+                                    <option value="{{ aluno.id }}" {% if aluno.id|stringformat:"i" == aluno_id %}selected{% endif %}>
+                                        {{ aluno.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Lista de Resultados</h5>
+            <div class="input-group" style="max-width: 300px;">
+                <input type="text" id="searchResultado" class="form-control bg-dark text-white border-secondary" placeholder="Buscar resultado...">
+                <button class="btn btn-outline-light" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if resultados %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0" id="resultadosTable">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Aluno</th>
+                                <th>Simulado</th>
+                                <th>Versão</th>
+                                <th>Nota</th>
+                                <th>Acertos</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for resultado in resultados %}
+                            <tr>
+                                <td>{{ resultado.data_correcao|date:"d/m/Y H:i" }}</td>
+                                <td>{{ resultado.aluno.name }}</td>
+                                <td>{{ resultado.simulado.titulo }}</td>
+                                <td>{% if resultado.versao %}{{ resultado.versao }}{% else %}Padrão{% endif %}</td>
+                                <td>{{ resultado.pontuacao|floatformat:2 }}</td>
+                                <td>{{ resultado.acertos }}/{{ resultado.total_questoes }}</td>
+                                <td>
+                                    <div class="d-flex">
+                                        <a href="{% url 'resultado_detalhes' 'app' resultado.id %}" class="btn btn-primary btn-sm me-1">
+                                            Detalhes
+                                        </a>
+                                        <a href="{% url 'student_dashboard' resultado.aluno.id %}" class="btn btn-primary btn-sm">
+                                            Dashboard
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center my-5">
+                    <div class="mb-3">
+                        <i class="fas fa-clipboard-list fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="text-muted">Nenhum resultado encontrado</h5>
+                    <p class="text-muted mb-4">
+                        Não foram encontrados resultados com os filtros selecionados.
+                        Tente modificar os filtros ou verifique se há correções enviadas pelo aplicativo.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_head %}
+<style>
+    /* Tabela de Turmas - CORRIGIDO */
+    .table {
+        color: var(--text-light);
+        border-color: var(--border-color);
+    }
+    .table thead th {
+        color: var(--text-muted);
+        background-color: var(--bg-surface);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+    }
+    .table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--bg-dark); /* Fundo padrão escuro */
+    }
+    .table tbody tr td {
+        background-color: var(--bg-dark) !important; /* Força o fundo escuro */
+        color: var(--text-light) !important;
+    }
+    .table-striped>tbody>tr:nth-of-type(odd) {
+        background-color: rgba(30, 32, 58, 0.3) !important;
+    }
+    .table-striped>tbody>tr:nth-of-type(odd)>* {
+        background-color: rgba(30, 32, 58, 0.3) !important;
+        color: var(--text-light) !important;
+    }
+    .table-striped>tbody>tr:nth-of-type(even) {
+        background-color: var(--bg-dark) !important;
+    }
+    .table-striped>tbody>tr:nth-of-type(even)>* {
+        background-color: var(--bg-dark) !important;
+        color: var(--text-light) !important;
+    }
+    .table-hover>tbody>tr:hover {
+        background-color: var(--bg-surface) !important;
+    }
+    .table-hover>tbody>tr:hover>* {
+        background-color: var(--bg-surface) !important;
+        color: var(--text-light) !important;
+    }
+    .table td, .table th {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}
+
+<script>
+// Script para filtrar resultados na tabela
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchResultado');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase();
+            const table = document.getElementById('resultadosTable');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                const alunoCell = rows[i].getElementsByTagName('td')[1];
+                const simuladoCell = rows[i].getElementsByTagName('td')[2];
+                let shouldShow = false;
+
+                if (alunoCell && simuladoCell) {
+                    const aluno = alunoCell.textContent || alunoCell.innerText;
+                    const simulado = simuladoCell.textContent || simuladoCell.innerText;
+
+                    if (aluno.toLowerCase().indexOf(searchText) > -1 ||
+                        simulado.toLowerCase().indexOf(searchText) > -1) {
+                        shouldShow = true;
+                    }
+                }
+
+                rows[i].style.display = shouldShow ? '' : 'none';
+            }
+        });
+    }
+
+    // Habilitar filtragem dinâmica quando selecionar turma
+    const turmaSelect = document.getElementById('turma_id');
+    if (turmaSelect) {
+        turmaSelect.addEventListener('change', function() {
+            // Opcional: se quiser submeter o formulário automaticamente ao mudar a turma
+            // this.form.submit();
+        });
+    }
+});
+</script>
+{% endblock %}

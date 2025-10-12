@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Importar Alunos</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="file">Arquivo (PDF ou Excel)</label>
+            <input type="file" class="form-control" id="file" name="file" required
+                   accept=".pdf,.xlsx,.xls">
+            <small class="form-text text-white">
+                Selecione um arquivo PDF ou Excel contendo a lista de alunos.
+            </small>
+        </div>
+        <div>
+
+        </div>
+
+        <div class="form-group">
+            <label for="class_id">Turma *</label>
+            <select class="form-control" id="class_id" name="class_id" required>
+                <option value="">-- Selecione uma turma --</option>
+                {% for class in classes %}
+                <option value="{{ class.id }}">{{ class.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Importar</button>
+    </form>
+</div>
+{% endblock %}

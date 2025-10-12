@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Banco de Questões - SimuladoApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* --- Estilos Específicos para a Página do Banco de Questões --- */
+
+    /* Cabeçalho da Página */
+    .page-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 0.75rem;
+        margin-bottom: 2rem !important;
+        border-bottom: 2px solid;
+        border-image-slice: 1;
+        border-image-source: var(--accent-gradient);
+    }
+    .page-header h1 {
+        font-family: var(--font-title);
+        color: var(--text-light);
+        font-size: 2.5rem;
+        letter-spacing: 1px;
+        margin: 0;
+    }
+
+    /* Card de Filtro e Placeholders */
+    .filter-card .card-body {
+        padding: 1rem;
+    }
+    .filter-card .form-control::placeholder {
+        color: #ffffff;
+        opacity: 0.7;
+    }
+    .filter-card .form-select {
+        color: var(--color-secondary);
+    }
+    .filter-card .form-select:focus,
+    .filter-card .form-select option {
+        color: var(--text-light);
+    }
+    .filter-card .btn-secondary:hover {
+        background-color: var(--color-primary);
+        border-color: var(--color-primary);
+        color: var(--bg-dark);
+    }
+
+    /* Botão Limpar Filtros */
+    .btn-clear-filters {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        color: var(--text-light);
+        transition: all 0.3s ease;
+    }
+    .btn-clear-filters:hover {
+        background-color: var(--color-danger);
+        border-color: var(--color-danger);
+        color: #ffffff;
+    }
+
+    /* Item da Lista de Questão */
+    .questao-card .card-body {
+        padding: 0.75rem 1rem;
+    }
+    .questao-card {
+        transition: all 0.3s ease;
+        border-left: 3px solid var(--border-color);
+    }
+    .questao-card:hover {
+        transform: translateY(-5px);
+        border-left-color: var(--color-primary);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+    .questao-info {
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    /* Badges de Categoria */
+    .badge {
+        font-weight: 600;
+        padding: 0.3em 0.6em;
+        border-radius: 4px;
+    }
+    .badge-disciplina { background-color: var(--color-secondary); }
+    .badge-conteudo { background-color: var(--color-primary); color: var(--bg-dark); }
+
+    .nivel-badge { font-size: 0.8em; }
+    .nivel-facil { background-color: var(--color-success) !important; color: var(--bg-dark) !important; }
+    .nivel-medio { background-color: var(--color-warning) !important; color: var(--bg-dark) !important; }
+    .nivel-dificil { background-color: var(--color-danger) !important; color: var(--text-light) !important; }
+
+    /* Preview do Enunciado */
+    .questao-preview {
+        font-size: 0.9rem;
+        color: #ffffff;
+        margin-top: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Botões de Ação no Card */
+    .actions-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .btn-action-icon {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        padding: 0.4rem 0.7rem;
+        border-radius: 4px;
+        transition: all 0.2s ease-in-out;
+    }
+    .btn-action-icon:hover {
+        color: var(--bg-dark);
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        transform: scale(1.1);
+    }
+    .btn-action-icon.btn-add {
+        border-color: var(--color-success);
+        color: var(--color-success);
+    }
+    .btn-action-icon.btn-add:hover {
+        background-color: var(--color-success);
+        border-color: var(--color-success);
+        color: var(--bg-dark);
+    }
+    .btn-action-icon.btn-edit-custom {
+        border-color: var(--border-color);
+        color: var(--color-primary);
+    }
+    .btn-action-icon.btn-edit-custom:hover {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: var(--bg-dark);
+    }
+    .btn-action-icon.btn-danger-custom {
+        border-color: var(--border-color);
+        color: var(--color-danger);
+    }
+    .btn-action-icon.btn-danger-custom:hover {
+        background: var(--color-danger);
+        border-color: var(--color-danger);
+        color: var(--text-light);
+    }
+
+    /* Paginação */
+    .pagination .page-link {
+        background-color: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        margin: 0 2px;
+        border-radius: 4px;
+    }
+    .pagination .page-link:hover {
+        background-color: var(--bg-surface);
+        color: var(--text-light);
+        border-color: var(--color-primary);
+    }
+    .pagination .page-item.active .page-link {
+        background-image: var(--accent-gradient);
+        border-color: var(--color-primary);
+        color: var(--text-light);
+    }
+    .pagination .page-item.disabled .page-link {
+        background-color: transparent;
+        border-color: var(--border-color);
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Banco de Questões</h1>
+        <a href="{% url 'questions:questao_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Cadastrar Nova Questão
+        </a>
+    </div>
+
+    <div class="card filter-card mb-3">
+        <div class="card-body">
+            <form method="get" id="filterForm" class="row g-2 align-items-center">
+                <div class="col-md-12 mb-2">
+                    {{ form.busca }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.disciplina }}
+                </div>
+                <div class="col-md-3">
+                    {{ form.conteudo }}
+                </div>
+                <div class="col-md-2">
+                    {{ form.nivel_dificuldade }}
+                </div>
+                <div class="col-md-3 d-grid gap-2 d-md-flex">
+                    <button type="submit" class="btn btn-secondary flex-grow-1">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                    <button type="button" id="clearFiltersBtn" class="btn btn-clear-filters">
+                        <i class="bi bi-x-circle"></i> Limpar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        {% for questao in questoes %}
+            <div class="card questao-card mb-1">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div class="questao-info">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="badge badge-disciplina">{{ questao.disciplina }}</span>
+                            <span class="badge badge-conteudo">{{ questao.conteudo }}</span>
+                            <span class="badge nivel-badge
+                                {% if questao.nivel_dificuldade == 'F' %}nivel-facil
+                                {% elif questao.nivel_dificuldade == 'M' %}nivel-medio
+                                {% else %}nivel-dificil{% endif %}">
+                                {{ questao.get_nivel_dificuldade_display }}
+                            </span>
+                        </div>
+                        <div class="questao-preview" title="{{ questao.enunciado|striptags|escape }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                            {{ questao.enunciado|striptags|safe|truncatechars:100 }}
+                        </div>
+                    </div>
+                    <div class="actions-wrapper">
+                        <button class="btn btn-sm btn-action-icon btn-add" data-bs-toggle="modal" data-bs-target="#addToSimuladoModal" data-questao-id="{{ questao.pk }}" title="Adicionar ao Simulado">
+                            <i class="bi bi-plus-circle"></i>
+                        </button>
+                        <a href="{% url 'questions:questao_update' questao.pk %}" class="btn btn-sm btn-action-icon btn-edit-custom" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'questions:questao_delete' questao.pk %}" class="btn btn-sm btn-action-icon btn-danger-custom" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info">Nenhuma questão encontrada.</div>
+        {% endfor %}
+    </div>
+
+    {% if questoes.has_other_pages %}
+        <nav aria-label="Paginação das questões" class="mt-3">
+            <ul class="pagination justify-content-center">
+                {% if questoes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ questoes.previous_page_number }}{% if request.GET.busca %}&busca={{ request.GET.busca }}{% endif %}{% if request.GET.disciplina %}&disciplina={{ request.GET.disciplina }}{% endif %}{% if request.GET.conteudo %}&conteudo={{ request.GET.conteudo }}{% endif %}{% if request.GET.nivel_dificuldade %}&nivel_dificuldade={{ request.GET.nivel_dificuldade }}{% endif %}">Anterior</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Anterior</span>
+                    </li>
+                {% endif %}
+
+                {% for i in questoes.paginator.page_range %}
+                    {% if questoes.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ i }} <span class="sr-only">(atual)</span></span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% if request.GET.busca %}&busca={{ request.GET.busca }}{% endif %}{% if request.GET.disciplina %}&disciplina={{ request.GET.disciplina }}{% endif %}{% if request.GET.conteudo %}&conteudo={{ request.GET.conteudo }}{% endif %}{% if request.GET.nivel_dificuldade %}&nivel_dificuldade={{ request.GET.nivel_dificuldade }}{% endif %}">{{ i }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if questoes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ questoes.next_page_number }}{% if request.GET.busca %}&busca={{ request.GET.busca }}{% endif %}{% if request.GET.disciplina %}&disciplina={{ request.GET.disciplina }}{% endif %}{% if request.GET.conteudo %}&conteudo={{ request.GET.conteudo }}{% endif %}{% if request.GET.nivel_dificuldade %}&nivel_dificuldade={{ request.GET.nivel_dificuldade }}{% endif %}">Próxima</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Próxima</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+<!-- Modal para adicionar questão ao simulado -->
+<div class="modal fade" id="addToSimuladoModal" tabindex="-1" aria-labelledby="addToSimuladoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addToSimuladoModalLabel" style="font-family: var(--font-title);">Adicionar ao Simulado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addToSimuladoForm">
+                    <input type="hidden" id="questaoId" name="questaoId">
+                    <div class="mb-3">
+                        <label for="simuladoSelect" class="form-label">Selecione o Simulado:</label>
+                        <select class="form-select" id="simuladoSelect" name="simuladoId" required>
+                            <option value="">Escolha um simulado...</option>
+                            {% for simulado in simulados %}
+                                <option value="{{ simulado.id }}">{{ simulado.titulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="addToSimuladoBtn">Adicionar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ===================================================
+    // ✅ FUNÇÃO PARA DECODIFICAR HTML ENTITIES
+    // ===================================================
+    function decodeHtmlEntities(text) {
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = text;
+        return textarea.value;
+    }
+
+    // ===================================================
+    // ✅ DECODIFICA TODAS AS PREVIEWS DE QUESTÕES
+    // ===================================================
+    document.querySelectorAll('.questao-preview').forEach(preview => {
+        // Decodifica o texto visível
+        const textoCodificado = preview.textContent;
+        const textoDecodificado = decodeHtmlEntities(textoCodificado);
+        preview.textContent = textoDecodificado;
+
+        // Decodifica o título (tooltip)
+        const titleCodificado = preview.getAttribute('title');
+        if (titleCodificado) {
+            const titleDecodificado = decodeHtmlEntities(titleCodificado);
+            preview.setAttribute('title', titleDecodificado);
+        }
+    });
+
+    // ===================================================
+    // Adiciona classes do Bootstrap aos campos do formulário Django
+    // ===================================================
+    const formFields = [
+        'id_busca',
+        'id_disciplina',
+        'id_conteudo',
+        'id_nivel_dificuldade'
+    ];
+
+    formFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            if (field.tagName === 'SELECT') {
+                field.classList.add('form-select');
+            } else {
+                field.classList.add('form-control');
+            }
+        }
+    });
+
+    // ===================================================
+    // ✅ Botão Limpar Filtros
+    // ===================================================
+    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+        // Limpa todos os campos do formulário
+        document.getElementById('id_busca').value = '';
+        document.getElementById('id_disciplina').value = '';
+        document.getElementById('id_conteudo').value = '';
+        document.getElementById('id_nivel_dificuldade').value = '';
+
+        // Redireciona para a página sem parâmetros
+        window.location.href = '{% url "questions:questao_list" %}';
+    });
+
+    // ===================================================
+    // Modal Adicionar ao Simulado
+    // ===================================================
+    var addToSimuladoModal = document.getElementById('addToSimuladoModal');
+    if (addToSimuladoModal) {
+        addToSimuladoModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var questaoId = button.getAttribute('data-questao-id');
+            var modalQuestaoIdInput = addToSimuladoModal.querySelector('#questaoId');
+            modalQuestaoIdInput.value = questaoId;
+        });
+
+        document.getElementById('addToSimuladoBtn').addEventListener('click', function() {
+            var form = document.getElementById('addToSimuladoForm');
+            var questaoId = form.questaoId.value;
+            var simuladoId = form.simuladoId.value;
+
+            if (!simuladoId) {
+                alert('Por favor, selecione um simulado.');
+                return;
+            }
+
+            fetch('{% url "questions:adicionar_questao_simulado" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    questao_id: questaoId,
+                    simulado_id: simuladoId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Erro na resposta do servidor');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Questão adicionada com sucesso ao simulado!');
+                    var modal = bootstrap.Modal.getInstance(addToSimuladoModal);
+                    modal.hide();
+                } else {
+                    throw new Error(data.error || 'Erro desconhecido');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Ocorreu um erro ao adicionar a questão: ' + error.message);
+            });
+        });
+    }
+
+    // ===================================================
+    // Inicializa os tooltips do Bootstrap
+    // ===================================================
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+});
+</script>
+{% endblock %}

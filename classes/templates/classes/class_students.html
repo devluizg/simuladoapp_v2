@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+
+{% block title %}Alunos da Turma {{ class.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Cabeçalho da Página */
+    .page-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem !important;
+        border-bottom: 2px solid;
+        border-image-slice: 1;
+        border-image-source: var(--accent-gradient);
+    }
+    .page-header h1 {
+        font-family: var(--font-title);
+        color: var(--text-light);
+        font-size: 2.5rem;
+        letter-spacing: 1px;
+        margin: 0;
+    }
+
+    /* Cards de Informação */
+    .info-card {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-count {
+        background: linear-gradient(135deg, var(--color-primary) 0%, #0066cc 100%);
+        border: none;
+    }
+
+    .card-info {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+    }
+
+    /* Forçar texto branco no cabeçalho do card */
+    .card-header h5 {
+        color: #ffffff !important;
+    }
+
+    /* Tabela de Alunos */
+    .table {
+        color: var(--text-light);
+        border-color: var(--border-color);
+    }
+    .table thead th {
+        color: var(--text-muted);
+        background-color: var(--bg-surface);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+    }
+    .table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--bg-dark);
+        transition: all 0.2s ease;
+    }
+    .table tbody tr td {
+        background-color: var(--bg-dark) !important;
+        color: var(--text-light) !important;
+    }
+    .table-striped>tbody>tr:nth-of-type(odd) {
+        background-color: rgba(30, 32, 58, 0.3) !important;
+    }
+    .table-striped>tbody>tr:nth-of-type(odd)>* {
+        background-color: rgba(30, 32, 58, 0.3) !important;
+        color: var(--text-light) !important;
+    }
+    .table-striped>tbody>tr:nth-of-type(even) {
+        background-color: var(--bg-dark) !important;
+    }
+    .table-striped>tbody>tr:nth-of-type(even)>* {
+        background-color: var(--bg-dark) !important;
+        color: var(--text-light) !important;
+    }
+    .table-hover>tbody>tr:hover {
+        background-color: var(--bg-surface) !important;
+    }
+    .table-hover>tbody>tr:hover>* {
+        background-color: var(--bg-surface) !important;
+        color: var(--text-light) !important;
+    }
+    .table td, .table th {
+        vertical-align: middle;
+    }
+
+    /* Botões Modernizados */
+    .btn-compact {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .btn-text-white {
+        color: #FFFFFF !important;
+    }
+
+    /* Botão Excluir */
+    .btn-danger {
+        background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+        border: none;
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(244, 63, 94, 0.3);
+        transition: all 0.3s ease;
+    }
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4);
+        color: #ffffff;
+    }
+
+    /* Busca */
+    #searchStudent {
+        background-color: var(--bg-dark);
+        color: var(--text-light);
+        border: 1px solid var(--border-color);
+    }
+    #searchStudent::placeholder {
+        color: var(--text-muted);
+        opacity: 1;
+    }
+    #searchStudent:focus {
+        background-color: var(--bg-surface);
+        border-color: var(--color-primary);
+        color: var(--text-light);
+        box-shadow: 0 0 0 0.2rem rgba(0, 164, 217, 0.25);
+    }
+
+    /* Estado Vazio */
+    .empty-state {
+        padding: 3rem;
+    }
+    .empty-state i {
+        color: var(--border-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header">
+        <h1>Alunos da Turma {{ class.name }}</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'class_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+            <a href="{% url 'student_form' %}?class_pk={{ class.id }}" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Adicionar Aluno
+            </a>
+            <a href="{% url 'import_students' %}?class_id={{ class.id }}" class="btn btn-primary">
+                <i class="fas fa-file-import"></i> Importar Alunos
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Card com número de alunos -->
+        <div class="col-md-3" style="max-width: 200px;">
+            <div class="card card-count info-card text-white text-center">
+                <div class="card-body py-3">
+                    <h1 class="display-4 mb-0">{{ students.count }}</h1>
+                    <p class="mb-0">Alunos na Turma</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações da turma -->
+        <div class="col">
+            <div class="card card-info info-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title mb-1 text-white">Informações da Turma</h5>
+                            <p class="text-white mb-0">{{ class.description|default:"Sem descrição" }}</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'class_edit' class.id %}" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-edit"></i> Editar Turma
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Alunos -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-white">Lista de Alunos</h5>
+                <div class="input-group" style="max-width: 300px;">
+                    <input type="text" id="searchStudent" class="form-control" placeholder="Buscar aluno...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0" id="studentTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Nome</th>
+                                <th style="width: 30%;">Email</th>
+                                <th style="width: 30%;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>
+                                    <strong>{{ student.name }}</strong>
+                                </td>
+                                <td>{{ student.email|default:"--" }}</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'student_dashboard' student.id %}"
+                                           class="btn btn-primary btn-compact btn-text-white"
+                                           title="Ver Dashboard">
+                                            <i class="fas fa-chart-line"></i> Painel do Aluno
+                                        </a>
+                                        <a href="#"
+                                           class="btn btn-secondary btn-compact"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#editStudentModal{{ student.id }}"
+                                           title="Editar Aluno">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                        <form method="post"
+                                              action="{% url 'class_remove_student' class.id student.id %}"
+                                              class="d-inline"
+                                              onsubmit="return confirm('Tem certeza que deseja remover {{ student.name }} da turma?');">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="btn btn-danger btn-compact btn-text-white"
+                                                    title="Remover da Turma">
+                                                <i class="fas fa-trash"></i> Excluir
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center empty-state">
+                    <div class="mb-3">
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                    <h5>Nenhum aluno cadastrado nesta turma</h5>
+                    <p class="mb-4">Adicione alunos individualmente ou importe vários de uma vez.</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{% url 'student_form' %}?class_pk={{ class.id }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Adicionar Aluno
+                        </a>
+                        <a href="{% url 'import_students' %}?class_id={{ class.id }}" class="btn btn-primary">
+                            <i class="fas fa-file-import"></i> Importar Alunos
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modais para Edição de Alunos -->
+{% for student in students %}
+<div class="modal fade" id="editStudentModal{{ student.id }}" tabindex="-1"
+     aria-labelledby="editStudentModalLabel{{ student.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="editStudentModalLabel{{ student.id }}">
+                    <i class="fas fa-user-edit"></i> Editar Aluno
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'student_edit' student.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name{{ student.id }}" class="form-label">Nome</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary"
+                               id="name{{ student.id }}"
+                               name="name"
+                               value="{{ student.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="student_id{{ student.id }}" class="form-label">ID / Matrícula</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary"
+                               id="student_id{{ student.id }}"
+                               name="student_id"
+                               value="{{ student.student_id }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email{{ student.id }}" class="form-label">Email (opcional)</label>
+                        <input type="email" class="form-control bg-dark text-white border-secondary"
+                               id="email{{ student.id }}"
+                               name="email"
+                               value="{{ student.email|default:'' }}">
+                        <div class="form-text text-muted">O email é opcional.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+// Script para filtrar alunos na tabela (mantém ordem alfabética)
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchStudent');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase();
+            const table = document.getElementById('studentTable');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                const nameCell = rows[i].getElementsByTagName('td')[0];
+                if (nameCell) {
+                    const name = nameCell.textContent || nameCell.innerText;
+                    if (name.toLowerCase().indexOf(searchText) > -1) {
+                        rows[i].style.display = '';
+                    } else {
+                        rows[i].style.display = 'none';
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

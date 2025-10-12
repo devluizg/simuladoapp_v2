@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if simulado %}Editar Simulado{% else %}Novo Simulado{% endif %} - SimuladoApp
+{% endblock %}
+
+{% block extra_head %}
+    {{ form.media }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ titulo }}</h2>
+
+    <form method="post" action="{% if simulado.pk %}{% url 'questions:simulado_form_edit' pk=simulado.pk %}{% else %}{% url 'questions:simulado_form' %}{% endif %}">
+        {% csrf_token %}
+
+        <!-- Título -->
+        <div class="mb-3">
+            {{ form.titulo.label_tag }}
+            {{ form.titulo }}
+            {% if form.titulo.errors %}
+                <div class="invalid-feedback d-block">{{ form.titulo.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Descrição -->
+        <div class="mb-3">
+            {{ form.descricao.label_tag }}
+            {{ form.descricao }}
+            {% if form.descricao.errors %}
+                <div class="invalid-feedback d-block">{{ form.descricao.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Turmas -->
+        <div class="mb-3">
+            <h4>{{ form.turmas.label }}</h4>
+            <div class="d-flex flex-wrap gap-3">
+                {% for checkbox in form.turmas %}
+                    <div class="form-check">
+                        {{ checkbox.tag }}
+                        <label class="form-check-label text-light" for="{{ checkbox.id_for_label }}">
+                            {{ checkbox.choice_label }}
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Pontuação Total -->
+        <div class="mb-3">
+            <label for="pontuacao_total" class="form-label">Pontuação:</label>
+            <input type="number"
+                   name="pontuacao_total"
+                   id="pontuacao_total"
+                   class="form-control"
+                   value="{% if simulado.pontuacao_total %}{{ simulado.pontuacao_total }}{% else %}5{% endif %}"
+                   min="1"
+                   placeholder="10"
+                   style="max-width: 200px;">
+            <small class="text-muted">Digite um número inteiro positivo (ex: 2, 5, 10)</small>
+        </div>
+
+        <!-- Cabeçalho -->
+        <div class="mb-3">
+            {{ form.cabecalho.label_tag }}
+            <div style="text-align: left;">
+                {{ form.cabecalho }}
+            </div>
+            {% if form.cabecalho.errors %}
+                <div class="invalid-feedback d-block">{{ form.cabecalho.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Instruções -->
+        <div class="mb-3">
+            {{ form.instrucoes.label_tag }}
+            {{ form.instrucoes }}
+            {% if form.instrucoes.errors %}
+                <div class="invalid-feedback d-block">{{ form.instrucoes.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a href="{% url 'questions:simulado_list' %}" class="btn btn-secondary">Cancelar</a>
+            {% if simulado.id %}
+            <a href="{% url 'questions:progresso_pdf' pk=simulado.pk %}" class="btn btn-success">
+                <i class="bi bi-file-pdf"></i> Gerar PDF
+            </a>
+            <a href="{% url 'questions:simulado_edit' simulado.id %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Editar Questões
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Personaliza os campos do CKEditor para o tema escuro
+    const editors = document.querySelectorAll('.django-ckeditor-widget');
+    editors.forEach(editor => {
+        editor.style.width = '100%';
+    });
+
+    // Força alinhamento à esquerda para CKEditor do cabeçalho
+    const cabecalhoEditor = document.querySelector('#id_cabecalho');
+    if (cabecalhoEditor && cabecalhoEditor.nextElementSibling) {
+        const editorContainer = cabecalhoEditor.nextElementSibling;
+        editorContainer.style.textAlign = 'left';
+    }
+
+    // Configurações específicas do CKEditor quando disponível
+    if (typeof CKEDITOR !== 'undefined') {
+        CKEDITOR.on('instanceReady', function(evt) {
+            var editor = evt.editor;
+
+            // Se for o editor do cabeçalho, força alinhamento à esquerda
+            if (editor.element.getId() === 'id_cabecalho') {
+                editor.config.contentsCss = editor.config.contentsCss + '; body { text-align: left !important; }';
+
+                // Remove espaços em branco desnecessários
+                editor.on('mode', function() {
+                    if (editor.mode === 'wysiwyg') {
+                        var body = editor.document.getBody();
+                        body.setStyle('text-align', 'left');
+                        body.setStyle('margin', '0');
+                        body.setStyle('padding', '0');
+                    }
+                });
+            }
+
+            // Para o editor de instruções, garante que questões comecem imediatamente após
+            if (editor.element.getId() === 'id_instrucoes') {
+                editor.on('mode', function() {
+                    if (editor.mode === 'wysiwyg') {
+                        var body = editor.document.getBody();
+                        body.setStyle('margin-bottom', '0');
+                        body.setStyle('padding-bottom', '0');
+                    }
+                });
+            }
+        });
+    }
+});
+</script>
+
+<style>
+/* CSS para forçar alinhamento à esquerda do cabeçalho */
+#id_cabecalho_parent .cke_contents {
+    text-align: left !important;
+}
+
+#id_cabecalho + .cke {
+    text-align: left !important;
+}
+
+/* Remove espaços em branco desnecessários após instruções */
+#id_instrucoes + .cke .cke_contents {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Garante que questões comecem imediatamente após instruções */
+.questoes-container {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+</style>
+{% endblock %}

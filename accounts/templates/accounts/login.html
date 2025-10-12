@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - SimuladoApp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card bg-dark text-light">
+            <div class="card-header">
+                <h3 class="text-center">Login</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Erro!</strong> Email ou senha incorretos.
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Email</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger">
+                                {{ form.username.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">Senha</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger">
+                                {{ form.password.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            Entrar <i class="bi bi-box-arrow-in-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">
+                    <a href="{% url 'accounts:password_reset' %}" class="text-light">
+                        Esqueceu sua senha?
+                    </a>
+                </p>
+                <p class="mb-0">
+                    Não tem uma conta?
+                    <a href="{% url 'accounts:register' %}" class="text-light">
+                        Registre-se
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+    /* Estilo para os placeholders */
+    .form-control::placeholder {
+        color: #6c757d !important; /* Cinza claro ou qualquer cor que preferir */
+        opacity: 1;
+    }
+
+    /* Para compatibilidade com diferentes navegadores */
+    .form-control::-webkit-input-placeholder { color: #6c757d !important; }
+    .form-control::-moz-placeholder { color: #6c757d !important; }
+    .form-control:-ms-input-placeholder { color: #6c757d !important; }
+    .form-control:-moz-placeholder { color: #6c757d !important; }
+
+    /* Estilo para o container de senha */
+    .password-container {
+        position: relative;
+    }
+
+    /* Estilo para o botão de mostrar/esconder senha */
+    .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        color: #6c757d;
+        cursor: pointer;
+    }
+
+    .password-toggle:hover {
+        color: #adb5bd;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adiciona classes do Bootstrap aos campos do formulário
+    var emailField = document.getElementById('{{ form.username.id_for_label }}');
+    var passwordField = document.getElementById('{{ form.password.id_for_label }}');
+
+    if (emailField) {
+        emailField.classList.add('form-control', 'bg-dark', 'text-light');
+        emailField.placeholder = 'Digite seu email';
+    }
+
+    if (passwordField) {
+        passwordField.classList.add('form-control', 'bg-dark', 'text-light');
+        passwordField.placeholder = 'Digite sua senha';
+
+        // Envolver o campo de senha com um div para posicionamento relativo
+        var passwordWrapper = document.createElement('div');
+        passwordWrapper.className = 'password-container';
+        passwordField.parentNode.insertBefore(passwordWrapper, passwordField);
+        passwordWrapper.appendChild(passwordField);
+
+        // Criar o botão de toggle
+        var toggleButton = document.createElement('button');
+        toggleButton.type = 'button';
+        toggleButton.className = 'password-toggle';
+        toggleButton.innerHTML = '<i class="bi bi-eye"></i>'; // Bootstrap Icons
+        toggleButton.title = 'Mostrar senha';
+
+        // Adicionar o botão ao wrapper
+        passwordWrapper.appendChild(toggleButton);
+
+        // Adicionar o evento de clique
+        toggleButton.addEventListener('click', function() {
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                this.innerHTML = '<i class="bi bi-eye-slash"></i>';
+                this.title = 'Esconder senha';
+            } else {
+                passwordField.type = 'password';
+                this.innerHTML = '<i class="bi bi-eye"></i>';
+                this.title = 'Mostrar senha';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

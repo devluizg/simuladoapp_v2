@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SimuladoApp{% endblock %}</title>
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    {% block extra_head %}{% endblock %}
+
+    <style>
+        /* --- Importação da Fonte Customizada 'Beatcarb' --- */
+        @font-face {
+            font-family: 'Beatcarb';
+            src: url("{% static 'fonts/Beatcarb.woff2' %}") format('woff2'),
+                 url("{% static 'fonts/Beatcarb.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* --- NOVA PALETA DE CORES E DESIGN --- */
+        :root {
+            --color-primary: #00a4d9;   /* Ciano vibrante (Principal) */
+            --color-secondary: #434891; /* Índigo profundo (Secundária) */
+
+            --bg-dark: #121425;         /* Fundo ultra escuro com tom azulado */
+            --bg-surface: #1d203a;      /* Superfícies (cards, navbar) com tom índigo */
+            --border-color: #31355b;    /* Bordas sutis */
+
+            --text-light: #e0e6f1;      /* Texto claro e legível */
+            --text-muted: #8c96c3;      /* Texto secundário, mais suave */
+
+            --accent-gradient: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+
+            /* Cores de feedback alinhadas à paleta */
+            --color-success: #2dd8a3;
+            --color-danger: #e94b6a;
+            --color-warning: #f2a93b;
+
+            /* Tipografia */
+            --font-title: 'Beatcarb', sans-serif;
+            --font-body: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: var(--font-body);
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            padding: 0.5rem 0;
+        }
+
+        .navbar-brand {
+            font-family: var(--font-title);
+            font-size: 2rem;
+            letter-spacing: 2px;
+
+            /* Efeito de texto em gradiente */
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -moz-background-clip: text;
+            background-clip: text;
+            color: transparent;
+
+            transition: color 0.3s ease;
+        }
+
+        .navbar-brand i {
+            /* O ícone herda o gradiente do pai */
+            vertical-align: middle;
+        }
+
+        .navbar-brand:hover {
+            background: none;
+            -webkit-background-clip: initial;
+            -moz-background-clip: initial;
+            background-clip: initial;
+            color: var(--color-secondary);
+        }
+
+        .navbar-dark .navbar-nav .nav-link {
+            color: var(--text-muted);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            position: relative;
+        }
+
+        .navbar-dark .navbar-nav .nav-link:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--accent-gradient);
+            transition: all 0.3s ease-out;
+        }
+
+        .navbar-dark .navbar-nav .nav-link:hover:after,
+        .navbar-dark .navbar-nav .nav-link.active:after {
+            width: 100%;
+            left: 0;
+        }
+
+        .navbar-dark .navbar-nav .nav-link:hover,
+        .navbar-dark .navbar-nav .nav-link.active {
+            color: var(--text-light);
+        }
+
+        .dropdown-menu {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .dropdown-item {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background-image: var(--accent-gradient);
+            color: var(--text-light);
+        }
+
+        .dropdown-divider {
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* --- Cards --- */
+        .card {
+            background-color: transparent !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, rgba(30, 32, 58, 0.5), rgba(30, 32, 58, 0.2));
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border-color: var(--color-primary);
+        }
+
+        .card-header,
+        .card-footer {
+            background-color: rgba(0,0,0,0.2) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        h2,
+        h5.card-title {
+            font-family: var(--font-title);
+            color: var(--color-primary);
+            letter-spacing: 1px;
+        }
+
+        /* --- Formulários --- */
+        .form-control,
+        .form-select {
+            background-color: var(--bg-dark) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-light) !important;
+            border-radius: 4px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--color-primary) !important;
+            box-shadow: 0 0 0 0.25rem rgba(0, 164, 217, 0.25) !important;
+            background-color: var(--bg-surface) !important;
+        }
+
+        /* --- Botões --- */
+        .btn {
+            border-radius: 4px;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary {
+            background-image: var(--accent-gradient);
+            color: var(--text-light);
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 164, 217, 0.3);
+        }
+
+        .btn-primary:hover {
+            color: var(--text-light);
+            box-shadow: 0 6px 20px rgba(0, 164, 217, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-surface);
+            color: var(--text-light);
+            border: 2px solid var(--border-color);
+        }
+
+        /* Regra corrigida para o hover do botão secundário */
+        .btn-secondary:hover {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            color: var(--text-light);
+            transform: translateY(-2px);
+        }
+
+        /* --- Modais --- */
+        .modal-content {
+            background-color: var(--bg-surface) !important;
+            border: 1px solid var(--color-primary) !important;
+            border-radius: 8px;
+        }
+
+        .modal-header,
+        .modal-footer {
+            border-color: var(--border-color) !important;
+        }
+
+        /* --- Alertas --- */
+        .alert {
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            background-color: rgba(45, 216, 163, 0.1);
+            border-color: var(--color-success);
+            color: var(--color-success);
+        }
+
+        .alert-danger {
+            background-color: rgba(233, 75, 106, 0.1);
+            border-color: var(--color-danger);
+            color: var(--color-danger);
+        }
+
+        .alert-warning {
+            background-color: rgba(242, 169, 59, 0.1);
+            border-color: var(--color-warning);
+            color: var(--color-warning);
+        }
+
+        /* --- Links e Utilidades --- */
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--text-light);
+            text-decoration: none;
+        }
+
+        /* --- Scrollbar --- */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-secondary);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-primary);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'questions:questions_dashboard' %}">
+                <i class="bi bi-display me-2"></i>SimuladoApp
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if user.is_authenticated %}
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'class_list' in request.resolver_match.view_name %}active{% endif %}"
+                            href="{% url 'class_list' %}">
+                                <i class="bi bi-people"></i> Turmas
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'simulado_list' in request.resolver_match.view_name %}active{% endif %}"
+                            href="{% url 'questions:simulado_list' %}">
+                                <i class="bi bi-file-text"></i> Simulados
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'questao_list' in request.resolver_match.view_name %}active{% endif %}"
+                            href="{% url 'questions:questao_list' %}">
+                                <i class="bi bi-question-circle"></i> Questões
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'creditos:' in request.resolver_match.view_name %}active{% endif %}"
+                            href="{% url 'creditos:pagina_creditos' %}">
+                                <i class="bi bi-credit-card"></i> Créditos
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i>
+                                {{ user.get_full_name|default:user.email }}
+                                {% if not user.email_verified %}
+                                    <span class="badge bg-warning">Não Verificado</span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'accounts:dashboard' %}">
+                                        <i class="bi bi-speedometer2"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#editProfileModal">
+                                        <i class="bi bi-person-gear"></i> Editar Perfil
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'accounts:password_reset' %}">
+                                        <i class="bi bi-key"></i> Alterar Senha
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'accounts:logout' %}" class="dropdown-item p-0">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="bi bi-box-arrow-right"></i> Sair
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                {% else %}
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:login' %}">
+                                <i class="bi bi-box-arrow-in-right"></i> Entrar
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:register' %}">
+                                <i class="bi bi-person-plus-fill"></i> Registrar
+                            </a>
+                        </li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

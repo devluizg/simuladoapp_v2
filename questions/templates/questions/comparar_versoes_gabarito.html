@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comparar Versões de Gabarito - {{ simulado.titulo }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .version-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: #f8f9fa;
+    }
+
+    .version-card.selected {
+        border-color: #007bff;
+        background: #e3f2fd;
+    }
+
+    .comparison-table {
+        font-size: 0.9em;
+    }
+
+    .difference-highlight {
+        background-color: #fff3cd;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+
+    .added-question {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .removed-question {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .changed-question {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .no-differences {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-code-branch"></i> Comparar Versões de Gabarito</h2>
+                    <p class="text-muted mb-0">{{ simulado.titulo }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'questions:simulado_gabaritos_historico' simulado.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar ao Histórico
+                    </a>
+                    <a href="{% url 'questions:simulado_detail' simulado.pk %}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> Ver Simulado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seleção de Versões -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-sliders-h"></i> Selecionar Versões para Comparação</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="comparison-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="versao1" class="form-label">Versão 1:</label>
+                                <select name="versao1" id="versao1" class="form-control" required>
+                                    <option value="">Selecione a primeira versão</option>
+                                    {% for versao in versoes_disponiveis %}
+                                        <option value="{{ versao.versao_id }}"
+                                                {% if versao1_selecionada == versao.versao_id|stringformat:"s" %}selected{% endif %}>
+                                            Versão {{ versao.get_versao_curta }} - {{ versao.data_geracao|date:"d/m/Y H:i" }}
+                                            {% if versao.is_oficial %} (OFICIAL){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="versao2" class="form-label">Versão 2:</label>
+                                <select name="versao2" id="versao2" class="form-control" required>
+                                    <option value="">Selecione a segunda versão</option>
+                                    {% for versao in versoes_disponiveis %}
+                                        <option value="{{ versao.versao_id }}"
+                                                {% if versao2_selecionada == versao.versao_id|stringformat:"s" %}selected{% endif %}>
+                                            Versão {{ versao.get_versao_curta }} - {{ versao.data_geracao|date:"d/m/Y H:i" }}
+                                            {% if versao.is_oficial %} (OFICIAL){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Comparar Versões
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if versao1 and versao2 %}
+    <!-- Informações das Versões Selecionadas -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="version-card">
+                <h6><i class="fas fa-file-alt"></i> Versão 1: {{ versao1.get_versao_curta }}</h6>
+                <p class="mb-2"><strong>Data:</strong> {{ versao1.data_geracao|date:"d/m/Y às H:i" }}</p>
+                <p class="mb-2"><strong>Motivo:</strong> {{ versao1.motivo_geracao }}</p>
+                <p class="mb-0">
+                    <strong>Status:</strong>
+                    {% if versao1.is_oficial %}
+                        <span class="badge badge-success">OFICIAL</span>
+                    {% else %}
+                        <span class="badge badge-secondary">Histórico</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="version-card">
+                <h6><i class="fas fa-file-alt"></i> Versão 2: {{ versao2.get_versao_curta }}</h6>
+                <p class="mb-2"><strong>Data:</strong> {{ versao2.data_geracao|date:"d/m/Y às H:i" }}</p>
+                <p class="mb-2"><strong>Motivo:</strong> {{ versao2.motivo_geracao }}</p>
+                <p class="mb-0">
+                    <strong>Status:</strong>
+                    {% if versao2.is_oficial %}
+                        <span class="badge badge-success">OFICIAL</span>
+                    {% else %}
+                        <span class="badge badge-secondary">Histórico</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas da Comparação -->
+    {% if diferencas %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stats-card">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h3 class="mb-1">{{ diferencas.total_diferencas }}</h3>
+                        <p class="mb-0">Diferenças Totais</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="mb-1">{{ diferencas.questoes_diferentes|length }}</h3>
+                        <p class="mb-0">Questões Alteradas</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="mb-1">{{ diferencas.questoes_adicionadas|length }}</h3>
+                        <p class="mb-0">Questões Adicionadas</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="mb-1">{{ diferencas.questoes_removidas|length }}</h3>
+                        <p class="mb-0">Questões Removidas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados da Comparação -->
+    {% if diferencas.total_diferencas > 0 %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list-alt"></i> Diferenças Encontradas</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Questões Alteradas -->
+                    {% if diferencas.questoes_diferentes %}
+                    <h6 class="changed-question"><i class="fas fa-edit"></i> Questões com Respostas Alteradas ({{ diferencas.questoes_diferentes|length }})</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Questão</th>
+                                    <th>Versão 1 ({{ versao1.get_versao_curta }})</th>
+                                    <th>Versão 2 ({{ versao2.get_versao_curta }})</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for questao in diferencas.questoes_diferentes %}
+                                <tr>
+                                    <td><strong>{{ questao.questao }}</strong></td>
+                                    <td>
+                                        <span class="difference-highlight">{{ questao.resposta_v1|default:"-" }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="difference-highlight">{{ questao.resposta_v2|default:"-" }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    <!-- Questões Adicionadas -->
+                    {% if diferencas.questoes_adicionadas %}
+                    <h6 class="added-question"><i class="fas fa-plus"></i> Questões Adicionadas na Versão 2 ({{ diferencas.questoes_adicionadas|length }})</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Questão</th>
+                                    <th>Resposta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for questao in diferencas.questoes_adicionadas %}
+                                <tr class="added-question">
+                                    <td><strong>{{ questao.questao }}</strong></td>
+                                    <td>{{ questao.resposta|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    <!-- Questões Removidas -->
+                    {% if diferencas.questoes_removidas %}
+                    <h6 class="removed-question"><i class="fas fa-minus"></i> Questões Removidas na Versão 2 ({{ diferencas.questoes_removidas|length }})</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Questão</th>
+                                    <th>Resposta (da Versão 1)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for questao in diferencas.questoes_removidas %}
+                                <tr class="removed-question">
+                                    <td><strong>{{ questao.questao }}</strong></td>
+                                    <td>{{ questao.resposta|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="no-differences">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h4>Nenhuma Diferença Encontrada</h4>
+                        <p>As duas versões selecionadas possuem gabaritos idênticos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Prevenir seleção da mesma versão em ambos os selects
+    $('#versao1, #versao2').on('change', function() {
+        var selectedValue = $(this).val();
+        var otherSelect = $(this).attr('id') === 'versao1' ? '#versao2' : '#versao1';
+
+        // Reabilitar todas as opções do outro select
+        $(otherSelect + ' option').prop('disabled', false);
+
+        // Desabilitar a opção selecionada no outro select
+        if (selectedValue) {
+            $(otherSelect + ' option[value="' + selectedValue + '"]').prop('disabled', true);
+        }
+    });
+
+    // Aplicar a lógica inicial se já houver valores selecionados
+    $('#versao1, #versao2').trigger('change');
+});
+</script>
+{% endblock %}
+{% endblock %}

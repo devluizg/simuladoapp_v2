@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Simulado - SimuladoApp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card bg-dark text-light">
+            <div class="card-header">
+                <h3 class="card-title text-center mb-0">
+                    <i class="bi bi-exclamation-triangle text-danger"></i> Excluir Simulado
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-trash display-1 text-danger"></i>
+                </div>
+                
+                <h4 class="text-center mb-4">
+                    Tem certeza que deseja excluir o simulado "{{ simulado.titulo }}"?
+                </h4>
+
+                <div class="alert alert-danger">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-exclamation-circle"></i> Atenção!
+                    </h5>
+                    <p class="mb-0">
+                        Esta ação não pode ser desfeita. Todos os dados relacionados a este simulado serão permanentemente excluídos.
+                    </p>
+                </div>
+
+                <div class="card bg-dark border-secondary mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Informações do Simulado:</h5>
+                        <ul class="list-unstyled">
+                            <li>
+                                <i class="bi bi-calendar-event me-2"></i>
+                                Criado em: {{ simulado.data_criacao|date:"d/m/Y" }}
+                            </li>
+                            <li>
+                                <i class="bi bi-question-circle me-2"></i>
+                                Questões: {{ simulado.questoes.count }}
+                            </li>
+                            {% if simulado.ultima_modificacao %}
+                            <li>
+                                <i class="bi bi-clock-history me-2"></i>
+                                Última modificação: {{ simulado.ultima_modificacao|date:"d/m/Y H:i" }}
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+
+                <form method="post" class="d-flex justify-content-center gap-2">
+                    {% csrf_token %}
+                    <a href="{% url 'questions:simulado_list' %}" class="btn btn-outline-light">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Confirmar Exclusão
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adiciona confirmação adicional no botão de submit
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!confirm('Tem certeza absoluta que deseja excluir este simulado?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

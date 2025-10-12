@@ -1,0 +1,541 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Histórico de Gabaritos - {{ simulado.titulo }}{% endblock %}
+
+{% block extra_head %}
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* Estilos específicos da página adaptados para o tema escuro de base.html */
+
+        /* CABEÇALHO */
+        .page-header {
+            background: var(--accent-gradient); /* Usa o gradiente do base.html */
+            color: var(--text-light);
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-radius: 0 0 15px 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .page-header h2 {
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .page-header .text-muted {
+            color: rgba(224, 230, 241, 0.8) !important; /* --text-light com alpha */
+        }
+
+        /* CARDS DO RESUMO */
+        .stats-card {
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            color: var(--text-light);
+            background: linear-gradient(145deg, var(--bg-surface), #2a2d4f);
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border-color: var(--color-primary);
+        }
+
+        .stats-card .fa-3x {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* TABELA */
+        .table-container {
+            background-color: var(--bg-surface);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .table {
+            margin: 0;
+            color: var(--text-light); /* Texto da tabela branco */
+        }
+
+        .table thead th {
+            background: var(--accent-gradient);
+            color: var(--text-light);
+            font-weight: 600;
+            border: none;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .table td {
+            padding: 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-light); /* Texto das células branco */
+        }
+
+        .table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(0, 164, 217, 0.1); /* --color-primary com alpha */
+        }
+
+        /* COLUNAS "DATA" E "GERADO POR" COM TEXTO PRETO */
+        .table tbody td:nth-child(3),
+        .table tbody td:nth-child(4),
+        .table tbody td:nth-child(3) *,
+        .table tbody td:nth-child(4) * {
+            color: #000000 !important; /* Força a cor preta */
+        }
+
+        /* BADGES */
+        .badge-oficial {
+            background-color: var(--color-success) !important;
+            color: var(--bg-dark) !important;
+        }
+
+        .badge-historico {
+            background-color: var(--text-muted) !important;
+            color: var(--bg-dark) !important;
+        }
+
+        /* BOTÕES DE AÇÃO */
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            margin: 0 3px;
+            transition: all 0.3s ease;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-visualizar {
+            background-color: var(--color-primary) !important;
+            color: var(--text-light) !important;
+        }
+        .btn-visualizar:hover {
+            filter: brightness(1.2);
+        }
+
+        .btn-oficial {
+            background-color: var(--color-success) !important;
+            color: var(--text-light) !important;
+        }
+        .btn-oficial:hover {
+            filter: brightness(1.2);
+        }
+
+        .btn-excluir {
+            background-color: var(--color-danger) !important;
+            color: var(--text-light) !important;
+        }
+        .btn-excluir:hover {
+            filter: brightness(1.2);
+        }
+
+        .btn-protegido {
+            background-color: var(--color-warning) !important;
+            color: var(--bg-dark) !important;
+            cursor: not-allowed !important;
+        }
+
+        .acoes-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            padding: 10px;
+            background-color: transparent !important; /* Fundo transparente */
+            border-radius: 10px;
+        }
+
+        /* PAGINAÇÃO */
+        .pagination .page-link {
+            background-color: var(--bg-surface);
+            color: var(--text-muted);
+            border-color: var(--border-color);
+        }
+        .pagination .page-item.active .page-link {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            color: var(--text-light);
+        }
+        .pagination .page-link:hover {
+            background-color: var(--color-secondary);
+        }
+
+        /* MODAL */
+        .modal-header {
+            background: var(--accent-gradient);
+        }
+        #confirmMessage, #confirmDetails {
+            color: #FFFFFF !important; /* Força a cor branca para o texto do popup */
+        }
+
+        /* SPINNER */
+        .loading-spinner {
+            border-top: 2px solid var(--color-primary);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Cabeçalho da Página -->
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-history me-3"></i>Histórico de Gabaritos</h2>
+                    <p class="text-muted mb-0 fs-5">{{ simulado.titulo }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'questions:simulado_detail' simulado.pk %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Voltar</a>
+                    <a href="{% url 'questions:comparar_versoes_gabarito' simulado.pk %}" class="btn btn-secondary"><i class="fas fa-balance-scale me-2"></i>Comparar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="container mb-5">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card stats-card h-100">
+                    <div class="card-body text-center"><i class="fas fa-layer-group fa-3x mb-3"></i>
+                        <h3 class="fw-bold">{{ total_versoes }}</h3>
+                        <p class="mb-0 fs-6">Total de Versões</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card h-100">
+                    <div class="card-body text-center"><i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <h3 class="fw-bold">{{ versao_oficial.get_versao_curta|default:"--" }}</h3>
+                        <p class="mb-0 fs-6">Versão Oficial</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card h-100">
+                    <div class="card-body text-center"><i class="fas fa-question-circle fa-3x mb-3"></i>
+                        <h3 class="fw-bold">{{ total_questoes }}</h3>
+                        <p class="mb-0 fs-6">Questões</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Principal -->
+    <div class="container">
+        <div class="table-container">
+            <div class="card-header bg-transparent py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2"></i>Versões de Gabarito</h5>
+            </div>
+
+            {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Versão</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Data</th>
+                            <th class="text-center">Gerado por</th>
+                            <th class="text-center">Questões</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for versao in page_obj %}
+                        <tr data-versao-id="{{ versao.versao_id }}">
+                            <td class="text-center">
+                                <strong class="fs-6" style="color: var(--color-primary);">{{ versao.get_versao_curta }}</strong><br>
+                                <small class="text-muted font-monospace">{{ versao.versao_id|truncatechars:12 }}...</small>
+                            </td>
+                            <td class="text-center">
+                                {% if simulado.versao_gabarito_oficial == versao %}
+                                <span class="badge badge-oficial">OFICIAL</span>
+                                {% else %}
+                                <span class="badge badge-historico">HISTÓRICO</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <strong>{{ versao.data_geracao|date:"d/m/Y" }}</strong><br>
+                                <small class="text-muted">{{ versao.data_geracao|date:"H:i" }}</small>
+                            </td>
+                            <td class="text-center">
+                                {% if versao.usuario_geracao %}
+                                <strong>{{ versao.usuario_geracao.get_full_name|default:versao.usuario_geracao.username }}</strong><br>
+                                <small class="text-muted">@{{ versao.usuario_geracao.username }}</small>
+                                {% else %}
+                                <span class="text-muted"><i class="fas fa-robot me-1"></i>Sistema</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge fs-6" style="background-color: var(--color-secondary); color: var(--text-light);">{{ versao.total_questoes }}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="acoes-container">
+                                    <a href="{% url 'questions:visualizar_gabarito_versao' simulado.pk versao.versao_id %}" class="btn btn-sm btn-action btn-visualizar" title="Visualizar" data-bs-toggle="tooltip"><i class="fas fa-eye"></i></a>
+                                    {% if simulado.versao_gabarito_oficial.versao_id != versao.versao_id %}
+                                    <button class="btn btn-sm btn-action btn-oficial definir-oficial" data-versao-id="{{ versao.versao_id }}" data-versao-curta="{{ versao.get_versao_curta }}" title="Definir como oficial" data-bs-toggle="tooltip"><i class="fas fa-star"></i></button>
+                                    {% endif %}
+                                    {% if simulado.versao_gabarito_oficial.versao_id != versao.versao_id and not versao.tem_resultados_vinculados %}
+                                    <button class="btn btn-sm btn-action btn-excluir excluir-versao" data-versao-id="{{ versao.versao_id }}" data-versao-curta="{{ versao.get_versao_curta }}" title="Excluir" data-bs-toggle="tooltip"><i class="fas fa-trash"></i></button>
+                                    {% endif %}
+                                    {% if versao.tem_resultados_vinculados and simulado.versao_gabarito_oficial.versao_id != versao.versao_id %}
+                                    <span class="btn btn-sm btn-action btn-protegido" title="Versão protegida" data-bs-toggle="tooltip"><i class="fas fa-shield-alt"></i></span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-transparent py-3">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="fas fa-chevron-left"></i></a></li>
+                        {% endif %}
+                        {% for num in page_obj.paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="fas fa-chevron-right"></i></a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-4"></i>
+                <h4 class="fw-bold">Nenhum gabarito gerado</h4>
+                <p class="text-muted mb-4">Gere o primeiro PDF para criar o histórico.</p>
+                <a href="{% url 'questions:progresso_pdf' pk=simulado.pk %}" class="btn btn-primary btn-lg"><i class="fas fa-plus me-2"></i>Gerar Primeiro Gabarito</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalLabel"><i class="fas fa-question-circle me-2"></i>Confirmar Ação</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3"><i id="confirmIcon" class="fas fa-star fa-3x text-warning"></i></div>
+                        <div>
+                            <p id="confirmMessage" class="mb-2 fw-bold"></p>
+                            <small id="confirmDetails" class="text-muted"></small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i>Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="confirmAction">
+                        <span class="loading-spinner me-2" style="display: none;"></span>
+                        <span class="btn-text"><i class="fas fa-check me-1"></i>Confirmar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container para Alertas Flutuantes -->
+    <div id="alertContainer" class="position-fixed" style="top: 80px; right: 20px; z-index: 1060;"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- SCRIPT ORIGINAL MANTIDO PARA PRESERVAR A FUNCIONALIDADE -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    let currentAction = null;
+
+    document.querySelectorAll('.definir-oficial').forEach((button) => {
+        button.addEventListener('click', function() {
+            const versaoId = this.dataset.versaoId;
+            const versaoCurta = this.dataset.versaoCurta;
+            currentAction = () => definirOficial(versaoId);
+
+            document.getElementById('confirmIcon').className = 'fas fa-star fa-3x text-warning';
+            document.getElementById('confirmMessage').textContent = `Definir a versão ${versaoCurta} como oficial?`;
+            document.getElementById('confirmDetails').textContent = 'Isso substituirá a versão oficial atual e afetará todas as correções futuras.';
+            document.getElementById('confirmAction').className = 'btn btn-success';
+            document.getElementById('confirmAction').querySelector('.btn-text').innerHTML = '<i class="fas fa-star me-1"></i> Definir como Oficial';
+            confirmModal.show();
+        });
+    });
+
+    // A funcionalidade de exclusão também é mantida como estava
+    document.querySelectorAll('.excluir-versao').forEach((button) => {
+        button.addEventListener('click', function() {
+            const versaoId = this.dataset.versaoId;
+            const versaoCurta = this.dataset.versaoCurta;
+            currentAction = () => excluirVersao(versaoId);
+
+            document.getElementById('confirmIcon').className = 'fas fa-trash fa-3x text-danger';
+            document.getElementById('confirmMessage').textContent = `Excluir a versão ${versaoCurta}?`;
+            document.getElementById('confirmDetails').textContent = 'Esta ação não pode ser desfeita e a versão não pode ter resultados vinculados.';
+            document.getElementById('confirmAction').className = 'btn btn-danger';
+            document.getElementById('confirmAction').querySelector('.btn-text').innerHTML = '<i class="fas fa-trash me-1"></i> Excluir Versão';
+            confirmModal.show();
+        });
+    });
+
+    document.getElementById('confirmAction').addEventListener('click', function() {
+        if (currentAction) {
+            this.disabled = true;
+            this.querySelector('.loading-spinner').style.display = 'inline-block';
+            this.querySelector('.btn-text').style.opacity = '0.7';
+            currentAction();
+        }
+    });
+
+    function getSimuladoId() {
+        const pathParts = window.location.pathname.split('/').filter(part => part);
+        const simuladoIndex = pathParts.indexOf('simulado');
+        if (simuladoIndex !== -1 && simuladoIndex + 1 < pathParts.length) {
+            return pathParts[simuladoIndex + 1];
+        }
+        return null;
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function resetModalButton() {
+        const actionBtn = document.getElementById('confirmAction');
+        actionBtn.disabled = false;
+        actionBtn.querySelector('.loading-spinner').style.display = 'none';
+        actionBtn.querySelector('.btn-text').style.opacity = '1';
+    }
+
+    function showFloatingAlert(type, message) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertDiv = document.createElement('div');
+        const bgClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        alertDiv.className = `alert ${bgClass} alert-dismissible fade show alert-floating shadow`;
+        alertDiv.innerHTML = `<div>${message}</div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>`;
+        alertContainer.appendChild(alertDiv);
+        setTimeout(() => { if (alertDiv) alertDiv.remove(); }, 5000);
+    }
+
+    function definirOficial(versaoId) {
+        const simuladoId = getSimuladoId();
+        const url = `/simulado/${simuladoId}/gabaritos/definir-oficial/`;
+        const formData = new FormData();
+        formData.append('versao_id', versaoId);
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+        fetch(url, { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFloatingAlert('success', data.message);
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showFloatingAlert('danger', data.error);
+                    resetModalButton();
+                }
+                confirmModal.hide();
+            })
+            .catch(error => {
+                showFloatingAlert('danger', 'Erro de comunicação com o servidor.');
+                resetModalButton();
+                confirmModal.hide();
+            });
+    }
+
+    function excluirVersao(versaoId) {
+        const simuladoId = getSimuladoId();
+        const url = `/simulado/${simuladoId}/gabaritos/${versaoId}/excluir/`;
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || 'Erro no servidor'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            confirmModal.hide();
+            resetModalButton();
+            if (data.success) {
+                showFloatingAlert('success', data.message || 'Versão excluída com sucesso!');
+
+                // Remove a linha da tabela dinamicamente
+                const rowToRemove = document.querySelector(`tr[data-versao-id="${versaoId}"]`);
+                if (rowToRemove) {
+                    rowToRemove.style.transition = 'opacity 0.5s ease';
+                    rowToRemove.style.opacity = '0';
+                    setTimeout(() => rowToRemove.remove(), 500);
+                }
+            } else {
+                showFloatingAlert('danger', data.error || 'Ocorreu um erro ao excluir a versão.');
+            }
+        })
+        .catch(error => {
+            console.error("Fetch Error:", error);
+            confirmModal.hide();
+            resetModalButton();
+            showFloatingAlert('danger', error.message || 'Erro de comunicação com o servidor.');
+        });
+    }
+});
+</script>
+{% endblock %}

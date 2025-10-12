@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Confirmar Nova Versão - {{ simulado.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Questões Alteradas Detectadas
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>
+                            O que aconteceu?
+                        </h5>
+                        <p class="mb-0">
+                            Detectamos que as questões do simulado <strong>"{{ simulado.titulo }}"</strong> foram modificadas desde a última geração do PDF.
+                        </p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-pdf fa-2x text-primary mb-2"></i>
+                                    <h6>Versão Atual</h6>
+                                    {% if versao_atual %}
+                                        <p class="mb-0">
+                                            <strong>{{ versao_atual.get_versao_curta }}</strong><br>
+                                            <small class="text-muted">
+                                                Gerada em {{ versao_atual.data_geracao|date:"d/m/Y \à\s H:i" }}
+                                            </small>
+                                        </p>
+                                    {% else %}
+                                        <p class="mb-0 text-muted">Nenhuma versão anterior</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                                    <h6>Nova Versão</h6>
+                                    <p class="mb-0">
+                                        Será gerada automaticamente<br>
+                                        <small>Com as modificações atuais</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Importante:
+                        </h6>
+                        <ul class="mb-0">
+                            <li>Uma nova versão do gabarito será criada</li>
+                            <li>Esta nova versão se tornará a <strong>oficial</strong> para correções</li>
+                            <li>A versão anterior será mantida no histórico</li>
+                            <li>Se houver resultados vinculados à versão anterior, eles não serão afetados</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'questions:simulado_detail' simulado.pk %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Voltar
+                        </a>
+                        <a href="{{ redirect_url }}" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>
+                            Confirmar e Gerar Nova Versão
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações Técnicas -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Detalhes Técnicos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Total de Questões:</strong> {{ simulado.questoes.count }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Questões Alteradas:</strong>
+                            <span class="badge bg-warning text-dark">
+                                {% if questoes_alteradas %}Sim{% else %}Não{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

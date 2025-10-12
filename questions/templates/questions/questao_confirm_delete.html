@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão - SimuladoApp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card bg-dark text-light">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-trash"></i> Confirmar Exclusão
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+
+                <p class="mb-4">
+                    Você tem certeza que deseja excluir a questão:
+                    <strong>"{{ object.enunciado|striptags|truncatewords:10 }}"</strong>?
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'questions:questao_list' %}" class="btn btn-outline-light">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Confirmar Exclusão
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: 1px solid #2d3436;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+        background: #2d3436;
+        border-bottom: 2px solid #e74c3c;
+    }
+
+    .alert-danger {
+        background-color: rgba(231, 76, 60, 0.2);
+        border-color: #e74c3c;
+        color: #fff;
+    }
+
+    .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+
+    .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+
+    .btn-outline-light:hover {
+        background-color: #4a5c66;
+        border-color: #4a5c66;
+    }
+</style>
+{% endblock %}

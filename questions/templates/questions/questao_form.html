@@ -1,0 +1,514 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if questao %}Editar Questão{% else %}Nova Questão{% endif %} - SimuladoApp
+{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    {{ form.media }}
+    <style>
+        /* Inputs e selects seguindo o padrão do base.html */
+        input[type="text"],
+        select,
+        .form-control:not([type="file"]),
+        .form-select {
+            background-color: var(--bg-dark) !important;
+            color: var(--text-light) !important;
+            border: 1px solid var(--border-color) !important;
+            padding: 0.6rem 1rem;
+            border-radius: 4px;
+            font-family: var(--font-body);
+            transition: all 0.3s ease;
+        }
+
+        /* Hover state apenas para campos não-CKEditor */
+        input[type="text"]:not(.cke_source):hover,
+        select:not(.cke_combo_text):hover,
+        .form-control:not([type="file"]):not(.cke_source):hover,
+        .form-select:not(.cke_combo_text):hover {
+            border-color: var(--color-primary) !important;
+            background-color: var(--bg-surface) !important;
+        }
+
+        /* Focus state apenas para campos não-CKEditor */
+        input[type="text"]:not(.cke_source):focus,
+        select:not(.cke_combo_text):focus,
+        .form-control:not([type="file"]):not(.cke_source):focus,
+        .form-select:not(.cke_combo_text):focus {
+            background-color: var(--bg-surface) !important;
+            border-color: var(--color-primary) !important;
+            box-shadow: 0 0 0 0.25rem rgba(0, 164, 217, 0.25) !important;
+        }
+
+        /* Opções do select */
+        select option,
+        .form-select option {
+            background-color: var(--bg-dark) !important;
+            color: var(--text-light) !important;
+        }
+
+        /* Labels seguindo o padrão */
+        .form-label {
+            color: var(--text-light) !important;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-family: var(--font-body);
+        }
+
+        /* Card header com gradiente */
+        .card-header {
+            background: var(--accent-gradient) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+        }
+
+        .card-header h4 {
+            font-family: var(--font-title) !important;
+            color: var(--text-light) !important;
+            letter-spacing: 1px;
+        }
+
+        /* Mantendo as configurações originais do CKEditor */
+        [id^="cke_id_alternativa_"] .cke_contents {
+            min-height: 40px !important;
+            height: 40px !important;
+            transition: height 0.3s ease;
+        }
+
+        [id^="cke_id_alternativa_"].cke_focus .cke_contents,
+        [id^="cke_id_alternativa_"].has-content .cke_contents {
+            height: auto !important;
+            max-height: 200px !important;
+        }
+
+        /* Ajustes para o CKEditor ocupar a largura total */
+        .django-ckeditor-widget {
+            width: 100% !important;
+            display: block !important;
+        }
+
+        .cke_chrome {
+            border: 1px solid var(--border-color) !important;
+            width: 100% !important;
+            background-color: var(--bg-surface) !important;
+        }
+
+        /* Estilo da barra de ferramentas do CKEditor */
+        .cke_top {
+            background: var(--bg-dark) !important; /* Fundo escuro */
+            border-bottom: 1px solid var(--border-color) !important;
+        }
+
+        .cke_toolgroup {
+            background: white !important; /* Fundo azul para os grupos */
+            border: 1px solid var(--border-color) !important;
+            border-radius: 4px;
+        }
+
+        .cke_button {
+            background: transparent !important;
+        }
+
+        .cke_button:hover {
+            background: rgba(255, 255, 255, 0.1) !important; /* Hover mais sutil */
+        }
+
+        .cke_button_on {
+            background: rgba(255, 255, 255, 0.2) !important; /* Botão ativo */
+        }
+
+        /* Labels e textos do CKEditor - TODOS BRANCOS */
+        .cke_chrome .cke_top span,
+        .cke_chrome .cke_top a,
+        .cke_chrome .cke_toolgroup a.cke_button span.cke_button_label,
+        .cke_chrome .cke_toolgroup a.cke_button .cke_button_icon,
+        .cke_chrome .cke_combo_text {
+            color: #ffffff !important; /* Letras e ícones brancos */
+        }
+
+        /* Cor específica para os ícones dos botões */
+        .cke_button .cke_button_icon {
+            color: #ffffff !important; /* Ícones brancos */
+        }
+
+        /* Cor do texto nos dropdowns */
+        .cke_combo_text {
+            color: #ffffff !important; /* Texto branco nos combos */
+        }
+
+        /* Hover nos botões - mantém as letras brancas */
+        .cke_button:hover .cke_button_icon,
+        .cke_button:hover .cke_button_label {
+            color: #ffffff !important; /* Cor branca no hover */
+        }
+
+        /* Botões ativos/pressionados - mantém as letras brancas */
+        .cke_button_on .cke_button_icon,
+        .cke_button_on .cke_button_label {
+            color: #ffffff !important; /* Cor branca quando o botão está ativo */
+        }
+
+        /* Área de conteúdo do CKEditor */
+        .cke_contents {
+            background: var(--color-secondary) !important;
+        }
+
+        /* Estilo para o container da alternativa */
+        .alternativa-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+
+        .alternativa-label {
+            min-width: 120px;
+            padding-top: 8px;
+            font-weight: 500;
+            color: var(--text-light);
+            font-family: var(--font-body);
+        }
+
+        /* Ajuste para o CKEditor ficar na mesma linha */
+        .alternativa-container .django-ckeditor-widget {
+            flex: 1;
+            width: 100% !important;
+        }
+
+        /* Ocultar mensagens de ajuda */
+        .editor-help-text {
+            display: none !important;
+        }
+
+        /* Alertas seguindo o padrão */
+        .alert-danger {
+            background-color: rgba(233, 75, 106, 0.1) !important;
+            border: 1px solid var(--color-danger) !important;
+            color: var(--color-danger) !important;
+            border-radius: 4px;
+        }
+
+        /* Botão de arquivo */
+        input[type="file"] {
+            background-color: var(--bg-dark) !important;
+            color: var(--text-light) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 4px;
+            padding: 0.6rem 1rem;
+        }
+
+        input[type="file"]:hover {
+            border-color: var(--color-primary) !important;
+            background-color: var(--bg-surface) !important;
+        }
+
+        /* Botão de limpeza de formatação destacado */
+        .cke_button__cleanformatting {
+            background: var(--color-primary) !important;
+            border-radius: 3px;
+            padding: 2px 5px !important;
+        }
+
+        .cke_button__cleanformatting:hover {
+            background: var(--color-secondary) !important;
+        }
+
+        /* Garantir que os ícones do botão de limpeza também sejam brancos */
+        .cke_button__cleanformatting .cke_button_icon {
+            color: #ffffff !important;
+        }
+
+        /* Área de texto do CKEditor */
+        .cke_wysiwyg_frame {
+            background-color: var(--bg-dark) !important;
+        }
+
+        /* Dropdown do CKEditor */
+        .cke_panel {
+            background-color: var(--bg-surface) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+
+        .cke_panel_listItem a {
+            color: var(--text-light) !important;
+        }
+
+        .cke_panel_listItem a:hover {
+            background-color: var(--color-primary) !important;
+        }
+
+        /* Estilo para o título da página */
+        .page-title {
+            font-family: var(--font-title);
+            color: var(--color-primary);
+            letter-spacing: 1px;
+            margin-bottom: 2rem;
+        }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="page-title mb-4">
+        {% if questao %}
+            <i class="bi bi-pencil-square me-2"></i>Editar Questão
+        {% else %}
+            <i class="bi bi-plus-circle me-2"></i>Nova Questão
+        {% endif %}
+    </h2>
+
+    <div class="card shadow-lg">
+        <div class="card-header">
+            <h4 class="mb-0">
+                {% if questao %}Editar Questão{% else %}Nova Questão{% endif %}
+            </h4>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong><i class="bi bi-exclamation-triangle me-2"></i>Erro!</strong>
+                        Por favor, corrija os erros abaixo.
+                        {{ form.errors }}
+                    </div>
+                {% endif %}
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.disciplina.id_for_label }}" class="form-label">
+                            <i class="bi bi-book me-1"></i>Disciplina
+                        </label>
+                        {{ form.disciplina }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.conteudo.id_for_label }}" class="form-label">
+                            <i class="bi bi-bookmark me-1"></i>Conteúdo
+                        </label>
+                        {{ form.conteudo }}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.enunciado.id_for_label }}" class="form-label">
+                        <i class="bi bi-card-text me-1"></i>Enunciado
+                    </label>
+                    {{ form.enunciado }}
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="text-muted mb-3">
+                        <i class="bi bi-list-check me-1"></i>Alternativas
+                    </h5>
+                    {% for field in form %}
+                        {% if field.name|slice:":12" == "alternativa_" %}
+                            <div class="alternativa-container">
+                                <label for="{{ field.id_for_label }}" class="form-label alternativa-label">
+                                    <i class="bi bi-circle me-1"></i>{{ field.label }}
+                                </label>
+                                {{ field }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="{{ form.resposta_correta.id_for_label }}" class="form-label">
+                            <i class="bi bi-check-circle me-1"></i>Resposta Correta
+                        </label>
+                        {{ form.resposta_correta }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.nivel_dificuldade.id_for_label }}" class="form-label">
+                            <i class="bi bi-speedometer me-1"></i>Nível de Dificuldade
+                        </label>
+                        {{ form.nivel_dificuldade }}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'questions:questao_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adiciona classe para input de arquivo
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.classList.add('form-control');
+    }
+
+    if (typeof CKEDITOR !== 'undefined') {
+        // Define uma função de limpeza de texto global
+        function stripFormattingExceptImages(html) {
+            // Extrai todas as imagens primeiro
+            let images = [];
+            const imgRegex = /<img[^>]+>/gi;
+            let match;
+            let imgCounter = 0;
+
+            // Armazena todas as imagens com placeholders
+            while (match = imgRegex.exec(html)) {
+                const placeholder = `###IMG_PLACEHOLDER_${imgCounter}###`;
+                images.push({
+                    placeholder: placeholder,
+                    html: match[0]
+                });
+                imgCounter++;
+            }
+
+            // Substitui imagens por placeholders
+            for (const img of images) {
+                html = html.replace(img.html, img.placeholder);
+            }
+
+            // Converte para texto puro mantendo apenas estrutura básica
+            let plainText = html
+                .replace(/<\/p>/gi, '\n')
+                .replace(/<\/li>/gi, '\n')
+                .replace(/<\/tr>/gi, '\n')
+                .replace(/<\/td>/gi, ' ')
+                .replace(/<\/th>/gi, ' ')
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<[^>]+>/g, '');
+
+            // Remove espaços em branco e quebras de linha extras
+            plainText = plainText
+                .replace(/&nbsp;/gi, ' ')
+                .replace(/\n\s*\n/g, '\n')
+                .trim();
+
+            // Adiciona parágrafos básicos
+            let result = '<p>' + plainText.replace(/\n/g, '</p><p>') + '</p>';
+            result = result.replace(/<p><\/p>/g, '');
+
+            // Restaura as imagens
+            for (const img of images) {
+                result = result.replace(img.placeholder, img.html);
+            }
+
+            return result;
+        }
+
+        // Adiciona lógica para interceptar colagem em todos os editores
+        CKEDITOR.on('instanceReady', function(evt) {
+            const editor = evt.editor;
+
+            // Intercepta a colagem
+            editor.on('paste', function(evt) {
+                // Se for uma colagem com formatação
+                if (evt.data.type === 'html') {
+                    const html = evt.data.dataValue;
+                    const cleanedHtml = stripFormattingExceptImages(html);
+                    evt.data.dataValue = cleanedHtml;
+                }
+            });
+
+            // Adiciona botão de limpeza de formatação à barra de ferramentas
+            editor.ui.addButton('CleanFormatting', {
+                label: 'Limpar Formatação',
+                command: 'removeFormat',
+                toolbar: 'cleanup,1'
+            });
+
+            // Remover mensagens de ajuda existentes
+            const helpTexts = document.querySelectorAll('.editor-help-text');
+            helpTexts.forEach(function(el) {
+                el.parentNode.removeChild(el);
+            });
+        });
+
+        // Configuração para as alternativas
+        document.querySelectorAll('[id^="id_alternativa_"]').forEach(function(textarea) {
+            const editor = CKEDITOR.replace(textarea, {
+                toolbar: [
+                    ['Bold'],
+                    ['Image'],
+                    ['CleanFormatting'],
+                    ['PasteText']
+                ],
+                allowedContent: true,
+                extraPlugins: 'pastetools',
+                pasteFilter: 'p; b; strong; img[!src,alt,width,height]',
+                forcePasteAsPlainText: false,
+                removePlugins: 'pastefromword,pastefromgdocs,sourcearea',
+                pasteFromWordRemoveFontStyles: true,
+                pasteFromWordRemoveStyles: true,
+                width: '100%',
+                skin: 'moono-lisa',
+                uiColor: '#1d203a'
+            });
+
+            // Configuração para ajuste automático de altura
+            editor.config.autoGrow_minHeight = 50;
+            editor.config.autoGrow_maxHeight = 200;
+            editor.config.autoGrow_bottomSpace = 10;
+            editor.config.autoGrow_onStartup = true;
+        });
+
+        // Configuração para o enunciado
+        const enunciadoEditor = CKEDITOR.replace('id_enunciado', {
+            toolbar: [
+                ['Bold'],
+                ['Image'],
+                ['CleanFormatting'],
+                ['PasteText']
+            ],
+            allowedContent: true,
+            extraPlugins: 'pastetools',
+            pasteFilter: 'p; b; strong; img[!src,alt,width,height]; table; tr; td; th',
+            forcePasteAsPlainText: false,
+            removePlugins: 'pastefromword,pastefromgdocs,sourcearea',
+            pasteFromWordRemoveFontStyles: true,
+            pasteFromWordRemoveStyles: true,
+            width: '100%',
+            skin: 'moono-lisa',
+            uiColor: '#1d203a'
+        });
+
+        enunciadoEditor.config.autoGrow_onStartup = true;
+
+        // Aguarda um pouco para aplicar estilos adicionais
+        setTimeout(function() {
+            // Remove mensagens de ajuda
+            const helpTexts = document.querySelectorAll('.editor-help-text');
+            helpTexts.forEach(function(el) {
+                if (el && el.parentNode) {
+                    el.parentNode.removeChild(el);
+                }
+            });
+
+            // Aplica estilo aos iframes do CKEditor
+            document.querySelectorAll('.cke_wysiwyg_frame').forEach(function(iframe) {
+                try {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (doc) {
+                        doc.body.style.backgroundColor = 'var(--bg-dark)';
+                        doc.body.style.color = 'var(--text-light)';
+                        doc.body.style.fontFamily = 'var(--font-body)';
+                    }
+                } catch (e) {
+                    console.log('Não foi possível acessar o iframe do CKEditor');
+                }
+            });
+        }, 1000);
+    }
+});
+</script>
+{% endblock %}

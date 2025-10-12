@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Página inicial -->
+  <url>
+    <loc>https://simuladoapp.com.br/</loc>
+    <lastmod>2025-08-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Política de Privacidade -->
+  <url>
+    <loc>https://simuladoapp.com.br/privacy-policy/</loc>
+    <lastmod>2025-08-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Créditos -->
+  <url>
+    <loc>https://simuladoapp.com.br/creditos/</loc>
+    <lastmod>2025-08-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Resultados do App (se for público) -->
+  <url>
+    <loc>https://simuladoapp.com.br/classes/app-resultados/</loc>
+    <lastmod>2025-08-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+</urlset>

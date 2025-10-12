@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Limpar Dados do Aplicativo{% endblock %}
+
+{% block extra_head %}
+<style>
+    .card-body, .card-body p, .card-body li, .card-body label {
+        color: var(--text-muted) !important;
+    }
+    .alert-warning h5, .alert-warning p {
+        color: #664d03 !important;
+    }
+    .alert-info p {
+        color: #0c5460 !important;
+    }
+    .card-title {
+        color: var(--text-light) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Cabeçalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Limpar Dados do Aplicativo</h1>
+                <a href="{% url 'app_resultados' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Voltar para Resultados
+                </a>
+            </div>
+
+            <!-- Card principal -->
+            <div class="card border-danger mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Atenção: Operação Irreversível
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5 class="text-dark"><i class="fas fa-exclamation-circle"></i> Esta ação não pode ser desfeita!</h5>
+                        <p class="text-dark">Você está prestes a excluir <strong>todos os dados de simulados</strong> enviados pelo aplicativo móvel.</p>
+                    </div>
+
+                    <p>Esta operação irá remover permanentemente:</p>
+                    <ul>
+                        <li>Todos os resultados de simulados enviados pelo aplicativo</li>
+                        <li>Todas as respostas detalhadas</li>
+                        <li>Todo o histórico de desempenho relacionado a esses simulados</li>
+                        <li>Todos os dados de gráficos e relatórios gerados a partir destes resultados</li>
+                    </ul>
+
+                    <div class="alert alert-info">
+                        <p class="text-dark"><i class="fas fa-info-circle"></i> <strong>Nota:</strong> Esta ação só afeta dados enviados pelo aplicativo. Simulados realizados na plataforma web não serão afetados.</p>
+                    </div>
+
+                    <!-- Estatísticas -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Resumo dos dados que serão excluídos:</h5>
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="py-3">
+                                        <h2 class="text-danger mb-0">{{ total_resultados }}</h2>
+                                        <p class="mb-0">Resultados de Simulados</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="py-3">
+                                        <h2 class="text-danger mb-0">{{ total_detalhes }}</h2>
+                                        <p class="mb-0">Respostas Detalhadas</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="py-3">
+                                        <h2 class="text-danger mb-0">{{ alunos_afetados }}</h2>
+                                        <p class="mb-0">Alunos Afetados</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de confirmação -->
+                    <form method="post" id="limparDadosForm">
+                        {% csrf_token %}
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="confirmacao" name="confirmacao" required>
+                            <label class="form-check-label" for="confirmacao">
+                                Confirmo que desejo excluir <strong>permanentemente</strong> todos os dados de simulados enviados pelo aplicativo.
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="limparCache" name="limpar_cache">
+                            <label class="form-check-label" for="limparCache">
+                                Também desejo limpar o cache do navegador para garantir que dados antigos não apareçam (recomendado).
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg" id="btnExcluir">
+                                <i class="fas fa-trash-alt"></i> Excluir Todos os Dados do Aplicativo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informações adicionais -->
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-question-circle"></i> Precisa de ajuda?</h5>
+                    <p>Se você está tentando apenas remover resultados específicos, considere usar a <a href="{% url 'class_list' %}" class="text-info">página de simulados</a> para excluir apenas os dados desejados.</p>
+                    <p class="mb-0">Após a exclusão, você será redirecionado para a página de simulados e todas as páginas exibirão os dados atualizados.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading overlay para feedback visual durante a exclusão -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 9999; text-align: center; padding-top: 20%;">
+    <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Excluindo dados...</span>
+    </div>
+    <h4 class="text-white mt-3">Excluindo dados e atualizando sistema...</h4>
+    <p class="text-white">Por favor, aguarde. Isso pode levar alguns segundos.</p>
+</div>
+
+<!-- Script de confirmação e limpeza de cache -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('#limparDadosForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    form.addEventListener('submit', function(e) {
+        const confirmed = confirm('ATENÇÃO: Você está prestes a excluir TODOS os dados de simulados do aplicativo. Esta ação não pode ser desfeita. Deseja continuar?');
+
+        if (!confirmed) {
+            e.preventDefault();
+            return;
+        }
+
+        // Mostrar overlay de carregamento durante o processo
+        loadingOverlay.style.display = 'block';
+
+        // Se a opção de limpar cache estiver marcada
+        const limparCache = document.getElementById('limparCache').checked;
+        if (limparCache) {
+            // Armazenar flag para limpar cache após o redirecionamento
+            localStorage.setItem('limparCacheAposExclusao', 'true');
+        }
+
+        // A submissão continua normalmente
+        setTimeout(() => {
+            form.submit();
+        }, 500);
+    });
+});
+
+// Verificar se precisamos limpar o cache após o redirecionamento
+window.onload = function() {
+    if (localStorage.getItem('limparCacheAposExclusao') === 'true') {
+        // Limpar o cache do navegador para esta origem
+        window.location.reload(true); // Force reload from server
+
+        // Limpar a flag
+        localStorage.removeItem('limparCacheAposExclusao');
+    }
+}
+</script>
+{% endblock %}

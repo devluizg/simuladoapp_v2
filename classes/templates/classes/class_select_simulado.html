@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Selecionar Simulado - {{ class.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Desempenho da Turma {{ class.name }}</h1>
+        <a href="{% url 'class_students' class.id %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Voltar para Lista de Alunos
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Informações da turma -->
+        <div class="col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-users"></i> Informações da Turma</h5>
+                    <p class="card-text">{{ class.description|default:"Sem descrição" }}</p>
+                    <div class="d-flex justify-content-between mt-3">
+                        <div class="text-center">
+                            <h2>{{ students_count }}</h2>
+                            <p class="mb-0">Alunos</p>
+                        </div>
+                        <div class="text-center">
+                            <h2>{{ simulados|length }}</h2>
+                            <p class="mb-0">Simulados</p>
+                        </div>
+                        <div class="text-center">
+                            <h2>{{ total_resultados }}</h2>
+                            <p class="mb-0">Resultados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <h5 class="card-title text-white"><i class="fas fa-info-circle"></i> Como utilizar</h5>
+                    <p class="text-white">
+                        Selecione um simulado abaixo para visualizar o desempenho completo da turma.
+                        São exibidos todos os simulados associados a esta turma.
+                    </p>
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-lightbulb"></i> O relatório mostrará tanto resultados da plataforma web quanto do aplicativo móvel.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Simulados -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Selecione um Simulado para Ver o Desempenho</h5>
+                <div class="input-group" style="max-width: 300px;">
+                    <input type="text" id="searchSimulado" class="form-control bg-dark text-white border-secondary" placeholder="Buscar simulado...">
+                    <span class="input-group-text bg-dark border-secondary">
+                        <i class="fas fa-search text-white"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            {% if simulados %}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="simuladosContainer">
+                    {% for simulado in simulados %}
+                    <div class="col simulado-card">
+                        <div class="card h-100 border-dark">
+                            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">{{ simulado.titulo }}</h6>
+                                <span class="badge bg-info rounded-pill">{{ simulado.data_criacao|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <small class="text-muted d-block mb-1">Descrição:</small>
+                                    <p class="text-white mb-0">{{ simulado.descricao|default:"Sem descrição"|truncatechars:100 }}</p>
+                                </div>
+
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div>
+                                        <small class="text-muted d-block">Participação:</small>
+                                        <span class="text-white">{{ simulado.participantes|default:0 }}/{{ students_count }} alunos</span>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted d-block">Média da turma:</small>
+                                        <span class="text-white">{{ simulado.media|default:"--" }}</span>
+                                    </div>
+                                </div>
+
+                                <a href="{% url 'class_performance_dashboard' class.id simulado.id %}" class="btn btn-info w-100">
+                                    <i class="fas fa-chart-bar"></i> Ver Desempenho Completo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center my-5">
+                    <div class="mb-3">
+                        <i class="fas fa-clipboard-list fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="text-muted">Nenhum simulado encontrado para esta turma</h5>
+                    <p class="text-muted mb-4">
+                        Para ver o desempenho da turma, é necessário que existam simulados associados a ela.
+                    </p>
+                    <a href="{% url 'simulado_create' %}" class="btn btn-primary">
+                        Criar Novo Simulado
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilo para cores e aparência consistentes */
+.card {
+    background-color: #2c3034;
+    border-color: #373b3e;
+    transition: transform 0.2s;
+}
+
+.simulado-card .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.card-header {
+    background-color: #212529;
+    border-color: #373b3e;
+}
+
+/* Ajustes para o input de busca */
+#searchSimulado::placeholder {
+    color: #adb5bd;
+}
+
+/* Botões consistentes */
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+</style>
+
+<script>
+// Script para filtrar simulados
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchSimulado');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase();
+            const simuladosCards = document.querySelectorAll('.simulado-card');
+
+            simuladosCards.forEach(card => {
+                const titulo = card.querySelector('.card-header h6').textContent.toLowerCase();
+                const descricao = card.querySelector('.card-body p').textContent.toLowerCase();
+
+                if (titulo.includes(searchText) || descricao.includes(searchText)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+<!-- templates/admin/adicionar_creditos_lote.html -->
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}Adicionar Créditos em Lote{% endblock %}
+
+{% block content %}
+<div class="content-main">
+    <h1>Adicionar Créditos em Lote</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-row">
+            <div>
+                <label for="{{ form.quantidade.id_for_label }}">{{ form.quantidade.label }}:</label>
+                {{ form.quantidade }}
+                {% if form.quantidade.help_text %}
+                    <p class="help">{{ form.quantidade.help_text }}</p>
+                {% endif %}
+                {{ form.quantidade.errors }}
+            </div>
+        </div>
+
+        <h3>Usuários Selecionados ({{ usuarios|length }}):</h3>
+        <ul>
+            {% for usuario in usuarios %}
+                <li>
+                    <strong>{{ usuario.user.get_full_name|default:usuario.user.username }}</strong>
+                    ({{ usuario.user.email }}) -
+                    Créditos atuais: {{ usuario.creditos_restantes }}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="submit-row">
+            <input type="hidden" name="action" value="adicionar_creditos_lote">
+            <input type="hidden" name="{{ action_checkbox_name }}" value="1">
+            {% for usuario in usuarios %}
+                <input type="hidden" name="{{ action_checkbox_name }}" value="{{ usuario.pk }}">
+            {% endfor %}
+            <input type="submit" name="apply" value="Adicionar Créditos" class="default">
+            <a href="../" class="button cancel-link">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

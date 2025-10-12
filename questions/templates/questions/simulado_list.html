@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Estilos específicos para a página de listagem de simulados, alinhados ao novo design */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem !important;
+        /* Borda com o novo gradiente */
+        border-bottom: 2px solid;
+        border-image-slice: 1;
+        border-image-source: var(--accent-gradient);
+    }
+
+    .page-header h2 {
+        font-family: var(--font-title);
+        color: var(--text-light);
+        font-size: 2.5rem;
+        letter-spacing: 1px;
+        margin: 0;
+    }
+
+    /* O estilo base do card já é herdado, aqui apenas um ajuste fino */
+    .simulado-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .simulado-card .card-text i {
+        color: var(--color-primary);
+    }
+
+    .simulado-card .card-text span {
+        color: #ffffff;
+        font-weight: 500;
+    }
+
+
+    /* Estilização dos botões de ação para consistência */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .action-buttons .btn {
+        flex-grow: 1;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: #ffffff;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .action-buttons .btn:hover {
+        color: var(--bg-dark);
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        transform: translateY(-2px);
+    }
+
+    .action-buttons .btn-danger-custom {
+        border-color: var(--color-danger);
+        color: var(--color-danger);
+    }
+
+    .action-buttons .btn-danger-custom:hover {
+        background: var(--color-danger);
+        border-color: var(--color-danger);
+        color: var(--text-light);
+    }
+
+    /* Alerta de "Nenhum simulado" estilizado */
+    .alert.alert-info {
+        background-color: rgba(0, 164, 217, 0.1);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+        font-weight: 500;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="page-header mb-4">
+        <h2>Simulados</h2>
+        <div>
+            <a href="{% url 'questions:archived_simulado_list' %}" class="btn btn-secondary">
+                <i class="bi bi-archive"></i> Ver Arquivados
+            </a>
+            <a href="{% url 'questions:simulado_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Novo Simulado
+            </a>
+        </div>
+    </div>
+
+    <div id="simulados-container">
+        {% if simulados %}
+        <div class="row">
+            {% for simulado in simulados %}
+            <div class="col-lg-6 mb-4" id="simulado-col-{{ simulado.id }}">
+                <div class="card simulado-card" data-simulado-id="{{ simulado.id }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ simulado.titulo }}</h5>
+                        <div class="card-text mt-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-question-circle me-2"></i>
+                                <span>{{ simulado.questoes.count }} questões</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar me-2"></i>
+                                <span>Criado em {{ simulado.data_criacao|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="action-buttons">
+                            <a href="{% url 'questions:simulado_detail' simulado.id %}" class="btn btn-sm">
+                                <i class="bi bi-eye"></i> Gabaritos
+                            </a>
+                            <a href="{% url 'questions:simulado_form_edit' simulado.id %}" class="btn btn-sm">
+                                <i class="bi bi-file-earmark-text"></i> Editar
+                            </a>
+                            <a href="{% url 'questions:simulado_edit' simulado.id %}" class="btn btn-sm">
+                                <i class="bi bi-pencil"></i> Questões
+                            </a>
+                            <a href="{% url 'questions:progresso_pdf' pk=simulado.pk %}" class="btn btn-sm">
+                                <i class="bi bi-file-pdf"></i> Baixar PDF
+                            </a>
+                            <a href="{% url 'questions:simulado_delete' simulado.id %}"
+                               class="btn btn-sm btn-danger-custom delete-simulado"
+                               data-simulado-id="{{ simulado.id }}"
+                               data-bs-toggle="modal"
+                               data-bs-target="#confirmacaoModal"
+                               title="Excluir simulado">
+                                <i class="bi bi-trash"></i>
+                                <span class="visually-hidden">Excluir</span>
+                            </a>
+                            <button class="btn btn-sm btn-secondary archive-simulado"
+                                    data-simulado-id="{{ simulado.id }}"
+                                    title="Arquivar simulado">
+                                <i class="bi bi-archive"></i>
+                                <span class="visually-hidden">Arquivar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Nenhum simulado cadastrado ainda. Clique em "Novo Simulado" para criar um.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal fade" id="confirmacaoModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="font-family: var(--font-title);">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este simulado?</p>
+                <p class="text-muted"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmacaoModal = document.getElementById('confirmacaoModal');
+    let urlParaDeletar = '';
+    let idParaDeletar = '';
+
+    // Evento para preparar o modal quando ele for acionado
+    confirmacaoModal.addEventListener('show.bs.modal', function (event) {
+        // Pega o botão que acionou o modal
+        const button = event.relatedTarget;
+        // Extrai a URL e o ID dos atributos data-* do botão
+        urlParaDeletar = button.getAttribute('href');
+        idParaDeletar = button.getAttribute('data-simulado-id');
+    });
+
+    // Evento de clique no botão de confirmação DENTRO do modal
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (!urlParaDeletar) return;
+
+        fetch(urlParaDeletar, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Esconde o modal
+                const modalInstance = bootstrap.Modal.getInstance(confirmacaoModal);
+                modalInstance.hide();
+
+                // Remove o card do simulado da tela com uma animação
+                const cardColuna = document.getElementById(`simulado-col-${idParaDeletar}`);
+                if (cardColuna) {
+                    cardColuna.style.transition = 'opacity 0.5s ease';
+                    cardColuna.style.opacity = '0';
+                    setTimeout(() => cardColuna.remove(), 500);
+                }
+
+                // Se não houver mais simulados, mostra a mensagem
+                setTimeout(() => {
+                    const container = document.getElementById('simulados-container');
+                    if (container.querySelectorAll('.simulado-card').length === 0) {
+                        container.innerHTML = `
+                            <div class="alert alert-info" role="alert">
+                                Nenhum simulado cadastrado ainda. Clique em "Novo Simulado" para criar um.
+                            </div>
+                        `;
+                    }
+                }, 550);
+
+            } else {
+                alert('Erro ao excluir o simulado: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro de conexão ao tentar excluir o simulado.');
+        });
+    });
+
+    // Evento para arquivar simulado
+    document.querySelectorAll('.archive-simulado').forEach(button => {
+        button.addEventListener('click', function() {
+            const simuladoId = this.getAttribute('data-simulado-id');
+            const url = `/api/simulados/${simuladoId}/archive/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'simulado arquivado' || data.status === 'simulado já arquivado') {
+                    // Remove o card do simulado da tela com uma animação
+                    const cardColuna = document.getElementById(`simulado-col-${simuladoId}`);
+                    if (cardColuna) {
+                        cardColuna.style.transition = 'opacity 0.5s ease';
+                        cardColuna.style.opacity = '0';
+                        setTimeout(() => cardColuna.remove(), 500);
+                    }
+                } else {
+                    alert('Erro ao arquivar o simulado.');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro de conexão ao tentar arquivar o simulado.');
+            });
+        });
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão de Aluno{% endblock %}
+
+{% block content %}
+<div class="card bg-dark text-light">
+    <div class="card-header">
+        <h1>Confirmar Exclusão</h1>
+    </div>
+    <div class="card-body">
+        <p>Você tem certeza que deseja excluir a turma?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Confirmar Exclusão
+            </button>
+            <a href="{% url 'student_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

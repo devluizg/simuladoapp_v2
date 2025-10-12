@@ -1,0 +1,568 @@
+{% extends 'base.html' %}
+
+{% block title %}Painel do Aluno{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ student.name }}</h1>
+    </div>
+
+    <!-- Estatísticas Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total de Simulados</h5>
+                <h1>{{ total_simulados }}</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Média Geral</h5>
+                <h1>{{ media_geral|floatformat:2 }}</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">Turmas</h5>
+                <h1>{{ classes.count }}</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simulados Recentes -->
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Simulados Recentes</h5>
+        <div>
+            <select id="area-filter" class="form-select form-select-sm" style="width: auto; display: inline-block;">
+                <option value="todos">Todas as Áreas</option>
+                <option value="linguagens">Linguagens</option>
+                <option value="humanas">Humanas</option>
+                <option value="natureza">Natureza</option>
+                <option value="matematica">Matemática</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Simulado</th>
+                        <th>Área</th>
+                        <th>Nota</th>
+                        <th>Acertos</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="simulados-tbody">
+                    {% for simulado in simulados_recentes %}
+                    <tr data-area="{{ simulado.area|default:'todos' }}" data-id="{{ simulado.id }}" data-fonte="{{ simulado.fonte }}">
+                        <td>{{ simulado.data|date:"d/m/Y H:i" }}</td>
+                        <td>{{ simulado.simulado }}</td>
+                        <td>
+                            <select class="form-select form-select-sm area-selector" data-id="{{ simulado.id }}" data-fonte="{{ simulado.fonte }}">
+                                <option value="todos" {% if simulado.area == 'todos' or not simulado.area %}selected{% endif %}>Geral</option>
+                                <option value="linguagens" {% if simulado.area == 'linguagens' %}selected{% endif %}>Linguagens</option>
+                                <option value="humanas" {% if simulado.area == 'humanas' %}selected{% endif %}>Humanas</option>
+                                <option value="natureza" {% if simulado.area == 'natureza' %}selected{% endif %}>Natureza</option>
+                                <option value="matematica" {% if simulado.area == 'matematica' %}selected{% endif %}>Matemática</option>
+                            </select>
+                        </td>
+                        <td>{{ simulado.nota|floatformat:2 }}</td>
+                        <td>{{ simulado.acertos }}/{{ simulado.total }}</td>
+                        <td>
+                            <a href="{% url 'resultado_detalhes' simulado.fonte simulado.id %}" class="btn btn-sm btn-info">
+                                Ver Detalhes
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="no-results">
+                        <td colspan="6" class="text-center">Nenhum simulado realizado ainda.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico de Progresso Simplificado -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Notas por Simulado</h5>
+    </div>
+    <div class="card-body">
+        <!-- Gráfico -->
+        <canvas id="progressChart" height="300"></canvas>
+
+        <!-- Mensagem de nenhum simulado (inicialmente oculta) -->
+        <div id="no-data-message" class="alert alert-warning mb-0 text-center text-dark" style="display: none;">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="no-data-text">Nenhum simulado foi realizado ainda. Realize simulados para visualizar seu progresso.</span>
+        </div>
+    </div>
+</div>
+
+<!-- Lista Unificada de Todos os Simulados -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Histórico de Simulados</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Simulado</th>
+                        <th>Área</th>
+                        <th>Nota</th>
+                        <th>Acertos</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for simulado in todos_simulados %}
+                    <tr data-area="{{ simulado.area|default:'todos' }}" data-id="{{ simulado.id }}" data-fonte="{{ simulado.fonte }}">
+                        <td>{{ simulado.data|date:"d/m/Y" }}</td>
+                        <td>{{ simulado.simulado }}</td>
+                        <td>
+                            <select class="form-select form-select-sm area-selector" data-id="{{ simulado.id }}" data-fonte="{{ simulado.fonte }}">
+                                <option value="todos" {% if simulado.area == 'todos' or not simulado.area %}selected{% endif %}>Geral</option>
+                                <option value="linguagens" {% if simulado.area == 'linguagens' %}selected{% endif %}>Linguagens</option>
+                                <option value="humanas" {% if simulado.area == 'humanas' %}selected{% endif %}>Humanas</option>
+                                <option value="natureza" {% if simulado.area == 'natureza' %}selected{% endif %}>Natureza</option>
+                                <option value="matematica" {% if simulado.area == 'matematica' %}selected{% endif %}>Matemática</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span class="badge {% if simulado.nota >= 7 %}bg-success{% elif simulado.nota >= 5 %}bg-warning{% else %}bg-danger{% endif %} rounded-pill px-3">
+                                {{ simulado.nota|floatformat:2 }}
+                            </span>
+                        </td>
+                        <td>{{ simulado.acertos }}/{{ simulado.total }}</td>
+                        <td>
+                            <a href="{% url 'resultado_detalhes' simulado.fonte simulado.id %}" class="btn btn-sm btn-info">
+                                Ver Detalhes
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">Nenhum simulado realizado ainda.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Todos os dados do gráfico em um único script -->
+<script id="progresso-data" type="application/json">{{ progresso_json|safe }}</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        // Obter os dados do elemento script JSON
+        var progressoScript = document.getElementById('progresso-data');
+
+        if (!progressoScript) {
+            console.error("Elemento progresso-data não encontrado");
+            return;
+        }
+
+        // Analisar o JSON com todos os dados do progresso
+        var progressoData = {};
+        try {
+            progressoData = JSON.parse(progressoScript.textContent);
+            console.log("Dados de progresso carregados com sucesso:", progressoData);
+        } catch (e) {
+            console.error("Erro ao analisar dados do progresso:", e);
+            progressoData = {
+                labels: [],
+                valores: [],
+                simulados_info: []
+            };
+        }
+
+        // Extrair os dados necessários
+        var labels = progressoData.labels || [];
+        var values = progressoData.valores || [];
+        var simuladosInfo = progressoData.simulados_info || [];
+
+        // Variáveis para o gráfico
+        var chart = null;
+        var currentArea = 'todos';
+
+        // Função para filtrar simulados por área
+        function filterByArea(area) {
+            currentArea = area;
+
+            // Filtrar simulados pela área
+            var filteredIndices = [];
+            var filteredLabels = [];
+            var filteredValues = [];
+
+            if (area === 'todos') {
+                // Se for "todos", usamos todos os dados
+                filteredIndices = [...Array(simuladosInfo.length).keys()];
+                filteredLabels = simuladosInfo.map(s => s.simulado || 'Simulado');
+                filteredValues = values;
+            } else {
+                // Filtrar por área específica
+                for (var i = 0; i < simuladosInfo.length; i++) {
+                    if (simuladosInfo[i].area === area) {
+                        filteredIndices.push(i);
+                        filteredLabels.push(simuladosInfo[i].simulado || 'Simulado');
+                        filteredValues.push(values[i]);
+                    }
+                }
+            }
+
+            // Obter os elementos
+            var chartCanvas = document.getElementById('progressChart');
+            var noDataMessage = document.getElementById('no-data-message');
+            var noDataText = document.getElementById('no-data-text');
+
+            // Verificar se temos dados após a filtragem
+            if (filteredIndices.length === 0) {
+                // Ocultar o canvas e mostrar a mensagem
+                chartCanvas.style.display = 'none';
+                noDataMessage.style.display = 'block';
+                noDataText.textContent = `Nenhum simulado da área "${area}" foi realizado ainda.`;
+
+                // Destruir o gráfico para liberar recursos
+                if (chart) {
+                    chart.destroy();
+                    chart = null;
+                }
+            } else {
+                // Mostrar o canvas e ocultar a mensagem
+                chartCanvas.style.display = 'block';
+                noDataMessage.style.display = 'none';
+
+                // Atualizar o gráfico
+                updateChart(filteredLabels, filteredValues);
+            }
+
+            // Também filtrar a tabela de simulados recentes
+            filterSimuladosTable(area);
+        }
+
+        // Verificar se temos dados para mostrar o gráfico
+        if (labels.length === 0) {
+            // Nenhum simulado realizado
+            var chartCanvas = document.getElementById('progressChart');
+            var noDataMessage = document.getElementById('no-data-message');
+            var noDataText = document.getElementById('no-data-text');
+
+            chartCanvas.style.display = 'none';
+            noDataMessage.style.display = 'block';
+            noDataText.textContent = 'Nenhum simulado foi realizado ainda. Realize simulados para visualizar seu progresso.';
+
+            return;
+        }
+        // Função para atualizar o gráfico com novos dados
+        function updateChart(chartLabels, chartValues) {
+            var ctx = document.getElementById('progressChart').getContext('2d');
+
+            // Destruir o gráfico anterior se existir
+            if (chart) {
+                chart.destroy();
+            }
+
+            // Configurações do gráfico
+            var chartOptions = {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        title: {
+                            display: true,
+                            text: 'Nota (0-10)',
+                            color: '#FFFFFF'  // Título do eixo Y em branco
+                        },
+                        ticks: {
+                            color: '#FFFFFF'  // Números do eixo Y em branco
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'  // Linhas da grade mais suaves
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Simulados',
+                            color: '#FFFFFF'  // Título do eixo X em branco
+                        },
+                        ticks: {
+                            color: '#FFFFFF'  // Labels dos simulados em branco
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'  // Linhas da grade mais suaves
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                var index = context[0].dataIndex;
+                                return chartLabels[index] || 'Simulado';
+                            },
+                            label: function(context) {
+                                return 'Nota: ' + context.raw.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            };
+
+            // Criar o gráfico com os dados filtrados
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartValues,
+                        borderColor: '#3861fb',
+                        backgroundColor: 'rgba(56, 97, 251, 0.1)',
+                        pointBackgroundColor: '#3861fb',
+                        pointBorderColor: '#fff',
+                        pointRadius: 5,
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        // Função para filtrar a tabela de simulados recentes
+        function filterSimuladosTable(area) {
+            var rows = document.querySelectorAll('#simulados-tbody tr:not(.no-results)');
+            var noResultsRow = document.querySelector('#simulados-tbody tr.no-results');
+            var visibleCount = 0;
+
+            // Esconder a linha "Nenhum simulado" inicialmente
+            if (noResultsRow) {
+                noResultsRow.style.display = 'none';
+            }
+
+            // Filtrar as linhas da tabela
+            rows.forEach(function(row) {
+                var rowArea = row.getAttribute('data-area');
+                if (area === 'todos' || rowArea === area) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Se nenhum resultado for encontrado, mostrar a mensagem
+            if (visibleCount === 0 && noResultsRow) {
+                noResultsRow.style.display = '';
+                noResultsRow.querySelector('td').textContent = `Nenhum simulado da área "${area}" foi realizado ainda.`;
+            }
+        }
+
+        // Verificar se temos dados para mostrar o gráfico
+        if (labels.length === 0) {
+            // Nenhum simulado realizado
+            var chartContainer = document.getElementById('progressChart').parentNode;
+            chartContainer.innerHTML = `
+                <div class="alert alert-warning mb-0 text-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Nenhum simulado foi realizado ainda. Realize simulados para visualizar seu progresso.
+                </div>
+            `;
+            return;
+        }
+
+        // Inicializar o gráfico com todos os dados
+        updateChart(
+            simuladosInfo.map(s => s.simulado || 'Simulado'),
+            values
+        );
+
+        // Registrar o evento de mudança no filtro de área
+        var areaFilter = document.getElementById('area-filter');
+        if (areaFilter) {
+            areaFilter.addEventListener('change', function() {
+                filterByArea(this.value);
+            });
+        }
+
+        // Configurar os seletores de área
+        const areaSelectors = document.querySelectorAll('.area-selector');
+
+        areaSelectors.forEach(selector => {
+            selector.addEventListener('change', function() {
+                const simuladoId = this.getAttribute('data-id');
+                const fonte = this.getAttribute('data-fonte');
+                const newArea = this.value;
+
+                // Atualizar o atributo data-area da linha
+                const row = this.closest('tr');
+                row.setAttribute('data-area', newArea);
+
+                // Enviar requisição AJAX para atualizar a área no banco de dados
+                fetch('{% url "update_simulado_area" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        simulado_id: simuladoId,
+                        fonte: fonte,
+                        area: newArea
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Mensagem de sucesso
+                        showToast('Área atualizada com sucesso', 'success');
+
+                        // Atualizar todas as instâncias deste simulado na página
+                        document.querySelectorAll(`tr[data-id="${simuladoId}"][data-fonte="${fonte}"]`).forEach(row => {
+                            row.setAttribute('data-area', newArea);
+                            row.querySelector('.area-selector').value = newArea;
+                        });
+
+                        // Atualizar área nos dados de progresso
+                        updateSimuladoAreaInProgressData(simuladoId, fonte, newArea);
+
+                        // Atualizar gráfico se estiver filtrando por área
+                        if (currentArea !== 'todos') {
+                            filterByArea(currentArea);
+                        }
+                    } else {
+                        // Mensagem de erro
+                        showToast(data.error || 'Erro ao atualizar a área', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao atualizar área:', error);
+                    showToast('Erro ao atualizar a área', 'error');
+                });
+            });
+        });
+
+        // Função para obter o token CSRF dos cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Função para exibir mensagens toast
+        function showToast(message, type) {
+            // Implementação simples usando alert
+            if (type === 'error') {
+                alert('Erro: ' + message);
+            } else {
+                // Verificar se Bootstrap está disponível
+                if (typeof bootstrap !== 'undefined') {
+                    // Criar um toast Bootstrap
+                    const toastContainer = document.createElement('div');
+                    toastContainer.style.position = 'fixed';
+                    toastContainer.style.top = '20px';
+                    toastContainer.style.right = '20px';
+                    toastContainer.style.zIndex = '9999';
+
+                    const toast = document.createElement('div');
+                    toast.className = `toast bg-${type === 'success' ? 'success' : 'warning'} text-white`;
+                    toast.setAttribute('role', 'alert');
+                    toast.setAttribute('aria-live', 'assertive');
+                    toast.setAttribute('aria-atomic', 'true');
+
+                    const toastBody = document.createElement('div');
+                    toastBody.className = 'toast-body d-flex align-items-center';
+                    toastBody.innerHTML = `
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        ${message}
+                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    `;
+
+                    toast.appendChild(toastBody);
+                    toastContainer.appendChild(toast);
+                    document.body.appendChild(toastContainer);
+
+                    // Inicializar e mostrar o toast
+                    const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+                    bsToast.show();
+
+                    // Remover o toast do DOM após ser ocultado
+                    toast.addEventListener('hidden.bs.toast', function() {
+                        document.body.removeChild(toastContainer);
+                    });
+                } else {
+                    // Fallback para alert se o Bootstrap não estiver disponível
+                    alert(message);
+                }
+            }
+        }
+
+        // Função para atualizar a área do simulado nos dados de progresso
+        function updateSimuladoAreaInProgressData(simuladoId, fonte, newArea) {
+            try {
+                // Atualizar a área no objeto simuladosInfo
+                for (let i = 0; i < simuladosInfo.length; i++) {
+                    if (simuladosInfo[i].id == simuladoId && simuladosInfo[i].fonte === fonte) {
+                        simuladosInfo[i].area = newArea;
+                        break;
+                    }
+                }
+
+                // Atualizar o script element com os dados atualizados
+                progressoData.simulados_info = simuladosInfo;
+                progressoScript.textContent = JSON.stringify(progressoData);
+            } catch (e) {
+                console.error('Erro ao atualizar área nos dados de progresso:', e);
+            }
+        }
+    } catch (error) {
+        console.error("Erro ao processar dados do gráfico:", error);
+        var chartContainer = document.getElementById('progressChart');
+        if (chartContainer && chartContainer.parentNode) {
+            chartContainer.parentNode.innerHTML = `
+                <div class="alert alert-danger text-center">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Ocorreu um erro ao carregar o gráfico: ${error.message}
+                </div>
+            `;
+        }
+    }
+});
+</script>
+{% endblock %}

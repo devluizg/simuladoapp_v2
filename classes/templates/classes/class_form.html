@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Criar{% endif %} Turma{% endblock %}
+
+{% block content %}
+<div class="card bg-dark text-light">
+    <div class="card-header">
+        <h1>{% if form.instance.pk %}Editar{% else %}Criar{% endif %} Turma</h1>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-3">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Salvar
+            </button>
+            <a href="{% url 'class_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

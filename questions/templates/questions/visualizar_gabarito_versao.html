@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Visualizar Gabarito - Versão {{ versao.get_versao_curta }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .version-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .version-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        font-weight: bold;
+        margin-right: 1rem;
+    }
+
+    .official-badge {
+        background: #28a745;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+
+    .gabarito-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .gabarito-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        text-align: center;
+        padding: 1rem;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .gabarito-table td {
+        text-align: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .gabarito-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .resposta-cell {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .resposta-A { color: #dc3545; }
+    .resposta-B { color: #007bff; }
+    .resposta-C { color: #28a745; }
+    .resposta-D { color: #ffc107; }
+    .resposta-E { color: #6f42c1; }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card h5 {
+        color: #495057;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .warning-alert {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .warning-alert i {
+        margin-right: 0.5rem;
+    }
+
+    .btn-action {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: #007bff;
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    .btn-success {
+        background: #28a745;
+        color: white;
+        border: none;
+    }
+
+    .btn-success:hover {
+        background: #1e7e34;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+        color: #6c757d;
+        border: 2px solid #6c757d;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #6c757d;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .actions-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .version-header {
+            padding: 1rem;
+        }
+
+        .gabarito-table {
+            font-size: 0.9rem;
+        }
+
+        .gabarito-table th,
+        .gabarito-table td {
+            padding: 0.5rem;
+        }
+
+        .btn-action {
+            display: block;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho da Versão -->
+    <div class="version-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>
+                    <i class="fas fa-clipboard-list"></i>
+                    {{ simulado.titulo }}
+                </h2>
+                <div class="mt-2">
+                    <span class="version-badge">Versão {{ versao.get_versao_curta }}</span>
+                    {% if is_oficial %}
+                        <span class="official-badge">
+                            <i class="fas fa-star"></i> OFICIAL
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-white-50">
+                    <small>Gerado em {{ versao.data_geracao|date:"d/m/Y" }} às {{ versao.data_geracao|time:"H:i" }}</small>
+                </div>
+                {% if versao.usuario_geracao %}
+                    <div class="text-white-50">
+                        <small>por {{ versao.usuario_geracao.get_full_name|default:versao.usuario_geracao.username }}</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    {% if tem_resultados %}
+        <div class="warning-alert">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Atenção:</strong> Esta versão possui resultados vinculados e não pode ser excluída.
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Informações da Versão -->
+        <div class="col-md-4">
+            <div class="info-card">
+                <h5><i class="fas fa-info-circle"></i> Informações da Versão</h5>
+
+                <div class="info-item">
+                    <span class="info-label">ID da Versão:</span>
+                    <span class="info-value">{{ versao.get_versao_curta }}</span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Data de Geração:</span>
+                    <span class="info-value">{{ versao.data_geracao|date:"d/m/Y H:i" }}</span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Total de Questões:</span>
+                    <span class="info-value">{{ versao.total_questoes }}</span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">
+                        {% if is_oficial %}
+                            <span class="badge badge-success">Oficial</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Histórico</span>
+                        {% endif %}
+                    </span>
+                </div>
+
+                {% if versao.motivo_geracao %}
+                    <div class="info-item">
+                        <span class="info-label">Motivo:</span>
+                        <span class="info-value">{{ versao.motivo_geracao }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Ações -->
+            <div class="actions-container">
+                <h5><i class="fas fa-cogs"></i> Ações</h5>
+
+                {% if not is_oficial %}
+                    <button class="btn-action btn-success" onclick="definirOficial('{{ versao.versao_id }}')">
+                        <i class="fas fa-star"></i> Definir como Oficial
+                    </button>
+                {% endif %}
+
+                <a href="{% url 'questions:comparar_versoes_gabarito' simulado.pk %}?versao1={{ versao.versao_id }}" class="btn-action btn-primary">
+                    <i class="fas fa-exchange-alt"></i> Comparar Versões
+                </a>
+
+                {% if not is_oficial and not tem_resultados %}
+                    <button class="btn-action btn-danger" onclick="excluirVersao('{{ versao.versao_id }}')">
+                        <i class="fas fa-trash"></i> Excluir Versão
+                    </button>
+                {% endif %}
+
+                <a href="{% url 'questions:simulado_gabaritos_historico' simulado.pk %}" class="btn-action btn-outline-secondary">
+                    <i class="fas fa-history"></i> Ver Histórico
+                </a>
+
+                <a href="{% url 'questions:simulado_detail' simulado.pk %}" class="btn-action btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Simulado
+                </a>
+            </div>
+        </div>
+
+        <!-- Gabarito -->
+        <div class="col-md-8">
+            <div class="info-card">
+                <h5><i class="fas fa-clipboard-check"></i> Gabarito das Versões</h5>
+
+                {% if gabaritos_processados %}
+                    <div class="table-responsive">
+                        <table class="table gabarito-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Questão</th>
+                                    <th>Versão 1</th>
+                                    <th>Versão 2</th>
+                                    <th>Versão 3</th>
+                                    <th>Versão 4</th>
+                                    <th>Versão 5</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for gabarito in gabaritos_processados %}
+                                    <tr>
+                                        <td class="font-weight-bold">{{ gabarito.questao_idx }}</td>
+                                        <td class="resposta-cell resposta-{{ gabarito.versao_1 }}">{{ gabarito.versao_1 }}</td>
+                                        <td class="resposta-cell resposta-{{ gabarito.versao_2 }}">{{ gabarito.versao_2 }}</td>
+                                        <td class="resposta-cell resposta-{{ gabarito.versao_3 }}">{{ gabarito.versao_3 }}</td>
+                                        <td class="resposta-cell resposta-{{ gabarito.versao_4 }}">{{ gabarito.versao_4 }}</td>
+                                        <td class="resposta-cell resposta-{{ gabarito.versao_5 }}">{{ gabarito.versao_5 }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-circle fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Nenhum gabarito encontrado para esta versão.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar Ação</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                <!-- Conteúdo será inserido via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function definirOficial(versaoId) {
+    $('#confirmModalLabel').text('Definir como Oficial');
+    $('#confirmModalBody').html(`
+        <p>Tem certeza que deseja definir esta versão como oficial?</p>
+        <p><strong>Versão:</strong> ${versaoId.substring(0, 8).toUpperCase()}</p>
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Atenção:</strong> Esta ação irá substituir a versão oficial atual e será usada para todas as correções futuras.
+        </div>
+    `);
+
+    $('#confirmButton').removeClass().addClass('btn btn-success').text('Definir como Oficial');
+    $('#confirmButton').off('click').on('click', function() {
+        $.ajax({
+            url: '{% url "questions:definir_gabarito_oficial" simulado.pk %}',
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || '{{ csrf_token }}'
+            },
+            data: JSON.stringify({
+                'versao_id': versaoId
+            }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    $('#confirmModal').modal('hide');
+
+                    // Mostrar mensagem de sucesso
+                    $('body').prepend(`
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+                            <i class="fas fa-check-circle"></i> ${response.message}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    `);
+
+                    // Recarregar a página após 2 segundos
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    alert('Erro: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('Erro ao definir versão como oficial.');
+            }
+        });
+    });
+
+    $('#confirmModal').modal('show');
+}
+
+function excluirVersao(versaoId) {
+    $('#confirmModalLabel').text('Excluir Versão');
+    $('#confirmModalBody').html(`
+        <p>Tem certeza que deseja excluir esta versão?</p>
+        <p><strong>Versão:</strong> ${versaoId.substring(0, 8).toUpperCase()}</p>
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Atenção:</strong> Esta ação não pode ser desfeita.
+        </div>
+    `);
+
+    $('#confirmButton').removeClass().addClass('btn btn-danger').text('Excluir');
+    $('#confirmButton').off('click').on('click', function() {
+        $.ajax({
+            url: '{% url "questions:excluir_versao_gabarito" simulado.pk "00000000-0000-0000-0000-000000000000" %}'.replace('00000000-0000-0000-0000-000000000000', versaoId),
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#confirmModal').modal('hide');
+
+                    // Mostrar mensagem de sucesso
+                    $('body').prepend(`
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+                            <i class="fas fa-check-circle"></i> ${response.message}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    `);
+
+                    // Redirecionar para o histórico após 2 segundos
+                    setTimeout(function() {
+                        window.location.href = '{% url "questions:simulado_gabaritos_historico" simulado.pk %}';
+                    }, 2000);
+                } else {
+                    alert('Erro: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('Erro ao excluir versão.');
+            }
+        });
+    });
+
+    $('#confirmModal').modal('show');
+}
+
+// Auto-hide alerts after 5 seconds
+$(document).ready(function() {
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
+});
+</script>
+{% endblock %}

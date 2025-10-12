@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ative sua conta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .footer {
+            font-size: 0.9em;
+            color: #777;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Olá {{ user.get_full_name|default:user.email }},</h2>
+    <p>Obrigado por se registrar em nossa plataforma!</p>
+    <p>Para ativar sua conta, por favor clique no botão abaixo:</p>
+    <p>
+        <a href="{{ activation_link }}" class="button">Ativar Conta</a>
+    </p>
+    <p>Ou copie e cole o seguinte link em seu navegador:</p>
+    <p><a href="{{ activation_link }}">{{ activation_link }}</a></p>
+    <p>Este link expirará em {{ expiry_days }} dia(s).</p>
+    <p>Se você não se registrou em nossa plataforma, por favor ignore este email.</p>
+    <div class="footer">
+        <p>Equipe SimuladoApp</p>
+    </div>
+</body>
+</html>

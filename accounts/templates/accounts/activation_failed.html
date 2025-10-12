@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Falha na Ativação{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="card-title mb-4 text-danger">Falha na Ativação</h2>
+                    <p class="mb-4">Desculpe, o link de ativação é inválido ou expirou. Por favor, tente se registrar novamente ou entre em contato com o suporte.</p>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary mb-3">Voltar para Registro</a>
+                    <p class="text-muted">Ainda precisa de ajuda? <a href="{% url 'support:contact' %}">Entre em contato com o suporte</a>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerando PDF - {{ simulado.titulo }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; background: #1d203a; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); border: 1px solid #31355b;">
+    <h1 style="color: #00a4d9; margin-bottom: 20px; text-align: center; font-family: 'Beatcarb', sans-serif;">🔄 Gerando PDF do Simulado</h1>
+
+    <div style="background: #121425; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #31355b; color: #e0e6f1;">
+        <strong>{{ simulado.titulo }}</strong><br>
+        <small>{{ simulado.questoes.count }} questões</small>
+    </div>
+
+    <!-- Barra de progresso moderna e bonita -->
+    <div style="width: 100%; height: 40px; background-color: #121425; border: 3px solid #00a4d9; border-radius: 20px; position: relative; margin: 30px 0; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 164, 217, 0.3);">
+        <div id="progress-bar" style="height: 100%; background: linear-gradient(90deg, #00a4d9, #ffffff, #00a4d9); width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 17px; box-shadow: 0 0 20px rgba(0, 164, 217, 0.6); position: relative;">
+            <!-- Efeito de brilho animado -->
+            <div style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shine 2s infinite;"></div>
+        </div>
+        <div id="progress-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #FFD700; font-weight: bold; font-size: 16px; z-index: 100; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); pointer-events: none;">0%</div>
+    </div>
+
+    <div id="progress-status" style="margin: 30px 0; padding: 20px; background: #121425; border-radius: 8px; border-left: 4px solid #00a4d9; color: #e0e6f1; transition: all 0.3s ease;">
+        <div id="progress-message">Preparando geração do PDF...</div>
+    </div>
+
+    <div id="completed-actions" style="display: none; text-align: center; margin-top: 20px;">
+        <button id="back-button" style="padding: 12px 24px; background: linear-gradient(45deg, #00a4d9, #434891); color: #e0e6f1; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 164, 217, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 164, 217, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 164, 217, 0.3)';">
+            Voltar para Lista de Simulados
+        </button>
+    </div>
+</div>
+
+<style>
+    @keyframes shine {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+
+    .loading-pulse {
+        animation: pulse 2s infinite;
+    }
+</style>
+
+<script>
+    let progressInterval;
+    let simuladoPk = "{{ pk|escapejs }}";
+
+    const statusUrl = "{% url 'questions:status_progresso' pk=999 %}".replace('999', simuladoPk);
+    const generateUrl = "{% url 'questions:gerar_pdf' pk=999 %}".replace('999', simuladoPk);
+    const backUrl = "{% url 'questions:simulado_list' %}";
+
+    function updateProgress() {
+        fetch(statusUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Progress data:', data);
+
+                // Atualizar barra de progresso
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+
+                if (progressBar && progressText) {
+                    progressBar.style.width = data.percent + '%';
+                    progressText.textContent = data.percent + '%';
+                }
+
+                // Atualizar mensagem
+                document.getElementById('progress-message').textContent = data.message;
+
+                const statusDiv = document.getElementById('progress-status');
+                statusDiv.classList.remove('loading-pulse');
+
+                if (data.completed) {
+                    if (data.error) {
+                        statusDiv.style.borderLeftColor = '#e94b6a';
+                        statusDiv.style.background = 'rgba(233, 75, 106, 0.1)';
+                        document.getElementById('progress-message').textContent = '❌ Erro: ' + data.error;
+                    } else {
+                        statusDiv.style.borderLeftColor = '#2dd8a3';
+                        statusDiv.style.background = 'rgba(45, 216, 163, 0.1)';
+                        document.getElementById('progress-message').textContent = '✅ PDF gerado com sucesso!';
+                        document.getElementById('completed-actions').style.display = 'block';
+
+                        // Download automático
+                        if (data.download_url) {
+                            setTimeout(() => {
+                                window.location.href = data.download_url;
+                            }, 1000);
+                        }
+                    }
+                    clearInterval(progressInterval);
+                } else {
+                    statusDiv.classList.add('loading-pulse');
+                }
+            })
+            .catch(error => {
+                console.error('Erro de conexão:', error);
+                const statusDiv = document.getElementById('progress-status');
+                statusDiv.style.borderLeftColor = '#e94b6a';
+                statusDiv.style.background = 'rgba(233, 75, 106, 0.1)';
+                statusDiv.classList.remove('loading-pulse');
+                document.getElementById('progress-message').textContent = '⚠️ Erro de conexão: ' + error.message;
+                clearInterval(progressInterval);
+            });
+    }
+
+    function startGeneration() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const force = urlParams.get('force');
+
+        let url = generateUrl;
+        if (force) {
+            url += '?force=true';
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erro ao iniciar geração: HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Geração iniciada:', data);
+        })
+        .catch(error => {
+            console.error('Erro ao iniciar geração:', error);
+            document.getElementById('progress-message').textContent = '❌ Erro ao iniciar: ' + error.message;
+            document.getElementById('progress-status').style.borderLeftColor = '#e94b6a';
+            document.getElementById('progress-status').style.background = 'rgba(233, 75, 106, 0.1)';
+        });
+    }
+
+    // Configurar eventos
+    document.addEventListener('DOMContentLoaded', function() {
+        const backButton = document.getElementById('back-button');
+        if (backButton) {
+            backButton.addEventListener('click', function() {
+                window.location.href = backUrl;
+            });
+        }
+
+        // Adicionar animação de carregamento inicial
+        document.getElementById('progress-status').classList.add('loading-pulse');
+    });
+
+    // Iniciar processo quando a página carregar
+    window.addEventListener('load', function() {
+        console.log('Iniciando progresso para simulado:', simuladoPk);
+        progressInterval = setInterval(updateProgress, 1000);
+        startGeneration();
+    });
+
+    // Cleanup ao sair da página
+    window.addEventListener('beforeunload', function() {
+        if (progressInterval) {
+            clearInterval(progressInterval);
+        }
+    });
+</script>
+{% endblock %}

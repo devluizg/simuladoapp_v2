@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Conta Ativada com Sucesso{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="card-title mb-4 text-success">Conta Ativada com Sucesso!</h2>
+                    <p class="mb-4">Sua conta foi ativada com sucesso. Agora você pode fazer login e começar a usar nossa plataforma.</p>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-success">Ir para Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
