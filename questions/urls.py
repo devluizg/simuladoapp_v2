@@ -4,8 +4,11 @@ from . import views
 app_name = 'questions'
 
 urlpatterns = [
+
+    path('', views.pagina_de_vendas, name='pagina_de_vendas'),
+
     # Dashboard
-    path('', views.dashboard, name='questions_dashboard'),
+    path('home/', views.dashboard, name='questions_dashboard'),
 
     # Questões
     path('questoes/', views.questao_list, name='questao_list'),

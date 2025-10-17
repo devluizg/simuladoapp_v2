@@ -2,14 +2,13 @@
 
 {% block content %}
 <style>
-    /* Estilos específicos para a página de listagem de simulados, alinhados ao novo design */
+    /* Estilos específicos para a página de listagem de simulados arquivados */
     .page-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding-bottom: 1rem;
         margin-bottom: 2.5rem !important;
-        /* Borda com o novo gradiente */
         border-bottom: 2px solid;
         border-image-slice: 1;
         border-image-source: var(--accent-gradient);
@@ -17,15 +16,19 @@
 
     .page-header h2 {
         font-family: var(--font-title);
-        color: var(--text-light);
+        color: var(--text-primary);
         font-size: 2.5rem;
         letter-spacing: 1px;
         margin: 0;
     }
 
-    /* O estilo base do card já é herdado, aqui apenas um ajuste fino */
+    /* Card de simulado */
     .simulado-card .card-body {
         padding: 1.5rem;
+    }
+
+    .simulado-card .card-title {
+        color: var(--color-primary);
     }
 
     .simulado-card .card-text i {
@@ -33,12 +36,11 @@
     }
 
     .simulado-card .card-text span {
-        color: #ffffff;
+        color: var(--text-primary);
         font-weight: 500;
     }
 
-
-    /* Estilização dos botões de ação para consistência */
+    /* Estilização dos botões de ação */
     .action-buttons {
         display: flex;
         flex-wrap: wrap;
@@ -51,29 +53,34 @@
         font-weight: 600;
         background: transparent;
         border: 1px solid var(--border-color);
-        color: #ffffff;
+        color: var(--text-primary);
         padding: 0.4rem 0.6rem;
     }
 
     .action-buttons .btn:hover {
-        color: var(--bg-dark);
+        color: white !important;
         background: var(--color-primary);
         border-color: var(--color-primary);
         transform: translateY(-2px);
     }
 
+    .action-buttons .btn i {
+        color: inherit;
+    }
+
+    /* Botão de desarquivar */
     .action-buttons .btn-success-custom {
         border-color: var(--color-success);
-        color: var(--color-success);
+        color: var(--color-success) !important;
     }
 
     .action-buttons .btn-success-custom:hover {
         background: var(--color-success);
         border-color: var(--color-success);
-        color: var(--bg-dark);
+        color: white !important;
     }
 
-    /* Alerta de "Nenhum simulado" estilizado */
+    /* Alerta de "Nenhum simulado" */
     .alert.alert-info {
         background-color: rgba(0, 164, 217, 0.1);
         border-color: var(--color-primary);
@@ -147,13 +154,24 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'simulado desarquivado') {
-                    // Remove o card do simulado da tela com uma animação
                     const cardColuna = document.getElementById(`simulado-col-${simuladoId}`);
                     if (cardColuna) {
                         cardColuna.style.transition = 'opacity 0.5s ease';
                         cardColuna.style.opacity = '0';
                         setTimeout(() => cardColuna.remove(), 500);
                     }
+
+                    // Verifica se ainda há simulados arquivados
+                    setTimeout(() => {
+                        const container = document.getElementById('simulados-container');
+                        if (container.querySelectorAll('.simulado-card').length === 0) {
+                            container.innerHTML = `
+                                <div class="alert alert-info" role="alert">
+                                    Nenhum simulado arquivado.
+                                </div>
+                            `;
+                        }
+                    }, 550);
                 } else {
                     alert('Erro ao desarquivar o simulado.');
                 }

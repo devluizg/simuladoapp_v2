@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from classes.models import Class, Student
 from questions.models import Questao, Simulado, QuestaoSimulado
+from api.models import Resultado, DetalhesResposta
 
 class ClassSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,9 +9,12 @@ class ClassSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'created_at', 'updated_at']
 
 class StudentSerializer(serializers.ModelSerializer):
+    data_nascimento = serializers.DateField(format="%d/%m/%Y", required=False)
+    classes = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Student
-        fields = ['id', 'name', 'email', 'student_id', 'classes']
+        fields = ['id', 'name', 'email', 'student_id', 'data_nascimento', 'classes']
 
 class QuestaoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,25 +49,37 @@ class CartaoRespostaSerializer(serializers.Serializer):
     simulado_id = serializers.IntegerField(required=False)
     respostas = serializers.DictField(child=serializers.CharField())
 
-class DetalhesRespostaSerializer(serializers.Serializer):
+# ✅ CORREÇÃO: DetalhesRespostaSerializer usando ModelSerializer
+class DetalhesRespostaSerializer(serializers.ModelSerializer):
     """Serializer para os detalhes das respostas de uma questão"""
-    ordem = serializers.CharField()
-    questao_id = serializers.IntegerField()
-    disciplina = serializers.CharField()
-    resposta_aluno = serializers.CharField()
-    resposta_correta = serializers.CharField()
-    acertou = serializers.BooleanField()
+    disciplina = serializers.CharField(source='questao.disciplina', read_only=True)
+    questao_id = serializers.IntegerField(source='questao.id', read_only=True)
 
-class ResultadoSerializer(serializers.Serializer):
+    class Meta:
+        model = DetalhesResposta
+        fields = ['ordem', 'questao_id', 'disciplina', 'resposta_aluno', 'resposta_correta', 'acertou']
+
+# ✅ CORREÇÃO: ResultadoSerializer usando ModelSerializer
+class ResultadoSerializer(serializers.ModelSerializer):
     """Serializer para os resultados de um simulado"""
-    id = serializers.IntegerField(read_only=True)
-    aluno = serializers.CharField(read_only=True)
-    simulado = serializers.CharField(read_only=True)
-    pontuacao = serializers.FloatField(read_only=True)
-    acertos = serializers.IntegerField(read_only=True)
-    total_questoes = serializers.IntegerField(read_only=True)
-    data_correcao = serializers.DateTimeField(read_only=True)
-    detalhes = DetalhesRespostaSerializer(many=True, read_only=True)
+    aluno = serializers.CharField(source='aluno.name', read_only=True)
+    simulado = serializers.CharField(source='simulado.titulo', read_only=True)
+    simulado_id = serializers.IntegerField(source='simulado.id', read_only=True)
+    detalhes = DetalhesRespostaSerializer(source='detalhesresposta_set', many=True, read_only=True)
+
+    class Meta:
+        model = Resultado
+        fields = [
+            'id',
+            'aluno',
+            'simulado',
+            'simulado_id',
+            'pontuacao',
+            'acertos',
+            'total_questoes',
+            'data_correcao',
+            'detalhes'
+        ]
 
 class DashboardDisciplinaSerializer(serializers.Serializer):
     """Serializer para o desempenho por disciplina no dashboard"""

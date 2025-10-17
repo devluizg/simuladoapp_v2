@@ -45,6 +45,10 @@ from django.db import models
 
 logger = logging.getLogger(__name__)
 
+def pagina_de_vendas(request):
+    """Página inicial visível a todos"""
+    return render(request, 'questions/pagina_de_vendas.html')
+
 @login_required
 def dashboard(request):
     """View para o dashboard principal do professor."""

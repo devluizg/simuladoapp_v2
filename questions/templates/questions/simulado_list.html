@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 
+{% block title %}SimuladoApp{% endblock %}
 {% block content %}
 <style>
-    /* Estilos específicos para a página de listagem de simulados, alinhados ao novo design */
+    /* Estilos específicos para a página de listagem de simulados */
     .page-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding-bottom: 1rem;
         margin-bottom: 2.5rem !important;
-        /* Borda com o novo gradiente */
         border-bottom: 2px solid;
         border-image-slice: 1;
         border-image-source: var(--accent-gradient);
@@ -17,15 +17,19 @@
 
     .page-header h2 {
         font-family: var(--font-title);
-        color: var(--text-light);
+        color: var(--text-primary);
         font-size: 2.5rem;
         letter-spacing: 1px;
         margin: 0;
     }
 
-    /* O estilo base do card já é herdado, aqui apenas um ajuste fino */
+    /* Card de simulado */
     .simulado-card .card-body {
         padding: 1.5rem;
+    }
+
+    .simulado-card .card-title {
+        color: var(--color-primary);
     }
 
     .simulado-card .card-text i {
@@ -33,12 +37,11 @@
     }
 
     .simulado-card .card-text span {
-        color: #ffffff;
+        color: var(--text-primary);
         font-weight: 500;
     }
 
-
-    /* Estilização dos botões de ação para consistência */
+    /* Estilização dos botões de ação */
     .action-buttons {
         display: flex;
         flex-wrap: wrap;
@@ -51,29 +54,46 @@
         font-weight: 600;
         background: transparent;
         border: 1px solid var(--border-color);
-        color: #ffffff;
+        color: var(--text-primary);
         padding: 0.4rem 0.6rem;
     }
 
     .action-buttons .btn:hover {
-        color: var(--bg-dark);
+        color: white !important;
         background: var(--color-primary);
         border-color: var(--color-primary);
         transform: translateY(-2px);
     }
 
+    .action-buttons .btn i {
+        color: inherit;
+    }
+
+    /* Botão de excluir */
     .action-buttons .btn-danger-custom {
         border-color: var(--color-danger);
-        color: var(--color-danger);
+        color: var(--color-danger) !important;
     }
 
     .action-buttons .btn-danger-custom:hover {
         background: var(--color-danger);
         border-color: var(--color-danger);
-        color: var(--text-light);
+        color: white !important;
     }
 
-    /* Alerta de "Nenhum simulado" estilizado */
+    /* Botão de arquivar */
+    .action-buttons .btn-secondary {
+        border-color: var(--border-color-dark);
+        color: var(--text-secondary) !important;
+    }
+
+    .action-buttons .btn-secondary:hover {
+        background: var(--color-secondary);
+        border-color: var(--color-secondary);
+        color: white !important;
+    }
+
+    /* Alerta de "Nenhum simulado" */
     .alert.alert-info {
         background-color: rgba(0, 164, 217, 0.1);
         border-color: var(--color-primary);
@@ -116,16 +136,16 @@
                     </div>
                     <div class="card-footer">
                         <div class="action-buttons">
-                            <a href="{% url 'questions:simulado_detail' simulado.id %}" class="btn btn-sm">
+                            <a href="{% url 'questions:simulado_detail' simulado.id %}" class="btn btn-sm" title="Ver gabaritos">
                                 <i class="bi bi-eye"></i> Gabaritos
                             </a>
-                            <a href="{% url 'questions:simulado_form_edit' simulado.id %}" class="btn btn-sm">
+                            <a href="{% url 'questions:simulado_form_edit' simulado.id %}" class="btn btn-sm" title="Editar simulado">
                                 <i class="bi bi-file-earmark-text"></i> Editar
                             </a>
-                            <a href="{% url 'questions:simulado_edit' simulado.id %}" class="btn btn-sm">
+                            <a href="{% url 'questions:simulado_edit' simulado.id %}" class="btn btn-sm" title="Editar questões">
                                 <i class="bi bi-pencil"></i> Questões
                             </a>
-                            <a href="{% url 'questions:progresso_pdf' pk=simulado.pk %}" class="btn btn-sm">
+                            <a href="{% url 'questions:progresso_pdf' pk=simulado.pk %}" class="btn btn-sm" title="Baixar PDF">
                                 <i class="bi bi-file-pdf"></i> Baixar PDF
                             </a>
                             <a href="{% url 'questions:simulado_delete' simulado.id %}"
@@ -134,14 +154,12 @@
                                data-bs-toggle="modal"
                                data-bs-target="#confirmacaoModal"
                                title="Excluir simulado">
-                                <i class="bi bi-trash"></i>
-                                <span class="visually-hidden">Excluir</span>
+                                <i class="bi bi-trash"></i> Excluir
                             </a>
                             <button class="btn btn-sm btn-secondary archive-simulado"
                                     data-simulado-id="{{ simulado.id }}"
                                     title="Arquivar simulado">
-                                <i class="bi bi-archive"></i>
-                                <span class="visually-hidden">Arquivar</span>
+                                <i class="bi bi-archive"></i> Arquivar
                             </button>
                         </div>
                     </div>
@@ -184,9 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Evento para preparar o modal quando ele for acionado
     confirmacaoModal.addEventListener('show.bs.modal', function (event) {
-        // Pega o botão que acionou o modal
         const button = event.relatedTarget;
-        // Extrai a URL e o ID dos atributos data-* do botão
         urlParaDeletar = button.getAttribute('href');
         idParaDeletar = button.getAttribute('data-simulado-id');
     });
@@ -206,11 +222,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Esconde o modal
                 const modalInstance = bootstrap.Modal.getInstance(confirmacaoModal);
                 modalInstance.hide();
 
-                // Remove o card do simulado da tela com uma animação
                 const cardColuna = document.getElementById(`simulado-col-${idParaDeletar}`);
                 if (cardColuna) {
                     cardColuna.style.transition = 'opacity 0.5s ease';
@@ -218,7 +232,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     setTimeout(() => cardColuna.remove(), 500);
                 }
 
-                // Se não houver mais simulados, mostra a mensagem
                 setTimeout(() => {
                     const container = document.getElementById('simulados-container');
                     if (container.querySelectorAll('.simulado-card').length === 0) {
@@ -256,13 +269,24 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'simulado arquivado' || data.status === 'simulado já arquivado') {
-                    // Remove o card do simulado da tela com uma animação
                     const cardColuna = document.getElementById(`simulado-col-${simuladoId}`);
                     if (cardColuna) {
                         cardColuna.style.transition = 'opacity 0.5s ease';
                         cardColuna.style.opacity = '0';
                         setTimeout(() => cardColuna.remove(), 500);
                     }
+
+                    // Verifica se ainda há simulados na lista
+                    setTimeout(() => {
+                        const container = document.getElementById('simulados-container');
+                        if (container.querySelectorAll('.simulado-card').length === 0) {
+                            container.innerHTML = `
+                                <div class="alert alert-info" role="alert">
+                                    Nenhum simulado cadastrado ainda. Clique em "Novo Simulado" para criar um.
+                                </div>
+                            `;
+                        }
+                    }, 550);
                 } else {
                     alert('Erro ao arquivar o simulado.');
                 }

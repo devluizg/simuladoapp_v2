@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SimuladoApp{% endblock %}</title>
+    <title>{% block title %}{% endblock %}</title>
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
@@ -27,33 +27,71 @@
             font-display: swap;
         }
 
-        /* --- NOVA PALETA DE CORES E DESIGN --- */
+        /* --- PALETA DE CORES - TEMA CLARO (PADRÃO) --- */
         :root {
-            --color-primary: #00a4d9;   /* Ciano vibrante (Principal) */
-            --color-secondary: #434891; /* Índigo profundo (Secundária) */
+            --color-primary: #00a4d9;
+            --color-secondary: #434891;
 
-            --bg-dark: #121425;         /* Fundo ultra escuro com tom azulado */
-            --bg-surface: #1d203a;      /* Superfícies (cards, navbar) com tom índigo */
-            --border-color: #31355b;    /* Bordas sutis */
+            /* Backgrounds */
+            --bg-main: #f0f4f8;
+            --bg-surface: #ffffff;
+            --bg-surface-hover: #f8fafb;
 
-            --text-light: #e0e6f1;      /* Texto claro e legível */
-            --text-muted: #8c96c3;      /* Texto secundário, mais suave */
+            /* Navbar */
+            --navbar-bg: #1d203a;
+            --navbar-border: #31355b;
+
+            /* Bordas */
+            --border-color: #d1dce6;
+            --border-color-dark: #b8c5d9;
+
+            /* Textos */
+            --text-primary: #1a1a1a;
+            --text-secondary: #2d2d2d;
+            --text-muted: #4a4a4a;
+
+            /* Navbar textos */
+            --navbar-text-light: #e0e6f1;
+            --navbar-text-muted: #8c96c3;
 
             --accent-gradient: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
 
-            /* Cores de feedback alinhadas à paleta */
-            --color-success: #2dd8a3;
-            --color-danger: #e94b6a;
-            --color-warning: #f2a93b;
+            /* Feedback */
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-warning: #f59e0b;
+            --color-info: #3b82f6;
 
             /* Tipografia */
             --font-title: 'Beatcarb', sans-serif;
             --font-body: 'Poppins', sans-serif;
         }
 
+        /* --- TEMA ESCURO --- */
+        [data-theme="dark"] {
+            --bg-main: #121425;
+            --bg-surface: #1d203a;
+            --bg-surface-hover: #252844;
+
+            --border-color: #31355b;
+            --border-color-dark: #31355b;
+
+            --text-primary: #ffffff;
+            --text-secondary: #e8e8e8;
+            --text-muted: #b8b8b8;
+
+            --color-success: #2dd8a3;
+            --color-danger: #e94b6a;
+            --color-warning: #f2a93b;
+        }
+
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-light);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
             font-family: var(--font-body);
         }
 
@@ -62,8 +100,8 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            background-color: var(--bg-surface);
-            border-bottom: 1px solid var(--border-color);
+            background-color: var(--navbar-bg);
+            border-bottom: 1px solid var(--navbar-border);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             padding: 0.5rem 0;
         }
@@ -72,19 +110,15 @@
             font-family: var(--font-title);
             font-size: 2rem;
             letter-spacing: 2px;
-
-            /* Efeito de texto em gradiente */
             background: var(--accent-gradient);
             -webkit-background-clip: text;
             -moz-background-clip: text;
             background-clip: text;
             color: transparent;
-
             transition: color 0.3s ease;
         }
 
         .navbar-brand i {
-            /* O ícone herda o gradiente do pai */
             vertical-align: middle;
         }
 
@@ -97,7 +131,7 @@
         }
 
         .navbar-dark .navbar-nav .nav-link {
-            color: var(--text-muted);
+            color: var(--navbar-text-muted);
             font-weight: 500;
             padding: 0.5rem 1rem;
             position: relative;
@@ -122,148 +156,482 @@
 
         .navbar-dark .navbar-nav .nav-link:hover,
         .navbar-dark .navbar-nav .nav-link.active {
-            color: var(--text-light);
+            color: var(--navbar-text-light);
+        }
+
+        /* Botão de alternância de tema */
+        .theme-toggle {
+            background-color: transparent;
+            border: 2px solid var(--navbar-border);
+            color: var(--navbar-text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--color-primary);
+            color: var(--navbar-text-light);
         }
 
         .dropdown-menu {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-color);
+            background-color: var(--navbar-bg);
+            border: 1px solid var(--navbar-border);
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         .dropdown-item {
-            color: var(--text-muted);
+            color: var(--navbar-text-muted);
             font-weight: 500;
         }
 
         .dropdown-item:hover,
         .dropdown-item:focus {
             background-image: var(--accent-gradient);
-            color: var(--text-light);
+            color: var(--navbar-text-light);
         }
 
         .dropdown-divider {
-            border-top: 1px solid var(--border-color);
+            border-top: 1px solid var(--navbar-border);
         }
 
         /* --- Cards --- */
         .card {
-            background-color: transparent !important;
+            background-color: var(--bg-surface) !important;
             border: 1px solid var(--border-color) !important;
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(67, 72, 145, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .card {
+            background: linear-gradient(145deg, rgba(30, 32, 58, 0.5), rgba(30, 32, 58, 0.2)) !important;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            background: linear-gradient(145deg, rgba(30, 32, 58, 0.5), rgba(30, 32, 58, 0.2));
         }
 
         .card:hover {
-            transform: translateY(-8px);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(67, 72, 145, 0.12);
+            border-color: var(--color-primary) !important;
+        }
+
+        [data-theme="dark"] .card:hover {
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            border-color: var(--color-primary);
         }
 
         .card-header,
         .card-footer {
-            background-color: rgba(0,0,0,0.2) !important;
+            background-color: var(--bg-main) !important;
             border-color: var(--border-color) !important;
+        }
+
+        [data-theme="dark"] .card-header,
+        [data-theme="dark"] .card-footer {
+            background-color: rgba(0,0,0,0.2) !important;
+        }
+
+        .card-body,
+        .card-header,
+        .card-footer {
+            color: var(--text-primary) !important;
+        }
+
+        .card-body *,
+        .card-header *,
+        .card-footer * {
+            color: var(--text-primary) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-primary) !important;
         }
 
         h2,
         h5.card-title {
             font-family: var(--font-title);
-            color: var(--color-primary);
+            color: var(--color-primary) !important;
             letter-spacing: 1px;
+        }
+
+        p, span:not(.badge), label, div:not(.btn):not(.badge) {
+            color: var(--text-primary) !important;
+        }
+
+        strong, b {
+            color: var(--text-primary) !important;
+            font-weight: 600;
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        .text-secondary {
+            color: var(--text-secondary) !important;
+        }
+
+        .text-light,
+        small.text-light {
+            color: var(--text-secondary) !important;
+            opacity: 0.9;
         }
 
         /* --- Formulários --- */
         .form-control,
         .form-select {
-            background-color: var(--bg-dark) !important;
+            background-color: var(--bg-surface) !important;
             border: 1px solid var(--border-color) !important;
-            color: var(--text-light) !important;
-            border-radius: 4px;
+            color: var(--text-primary) !important;
+            border-radius: 8px;
+        }
+
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background-color: var(--bg-main) !important;
         }
 
         .form-control:focus,
         .form-select:focus {
             border-color: var(--color-primary) !important;
-            box-shadow: 0 0 0 0.25rem rgba(0, 164, 217, 0.25) !important;
+            box-shadow: 0 0 0 0.25rem rgba(0, 164, 217, 0.15) !important;
             background-color: var(--bg-surface) !important;
         }
 
-        /* --- Botões --- */
+        [data-theme="dark"] .form-control:focus,
+        [data-theme="dark"] .form-select:focus {
+            background-color: var(--bg-surface) !important;
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted) !important;
+            opacity: 0.7;
+        }
+
+        .form-label {
+            color: var(--text-primary) !important;
+            font-weight: 500;
+        }
+
+        /* ===================================================
+           SISTEMA DE BOTÕES - 3 TIPOS PADRONIZADOS
+           =================================================== */
+
         .btn {
-            border-radius: 4px;
+            border-radius: 8px;
             font-weight: 600;
             padding: 0.6rem 1.5rem;
             transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .btn-primary {
-            background-image: var(--accent-gradient);
-            color: var(--text-light);
             border: none;
-            box-shadow: 0 4px 15px rgba(0, 164, 217, 0.3);
         }
 
-        .btn-primary:hover {
-            color: var(--text-light);
-            box-shadow: 0 6px 20px rgba(0, 164, 217, 0.5);
+        /* -----------------------------------------------
+           TIPO 1: BOTÃO AZUL - AÇÕES PRINCIPAIS
+           (Primary, Success, Info, Warning, Submit)
+           ----------------------------------------------- */
+        .btn-primary,
+        .btn-success,
+        .btn-info,
+        .btn-warning,
+        .btn-outline-light,
+        .btn-outline-primary,
+        button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.btn-outline-secondary),
+        a.btn-primary,
+        a.btn-success,
+        a.btn-info,
+        a.btn-warning {
+            background-image: var(--accent-gradient) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(0, 164, 217, 0.25) !important;
+        }
+
+        .btn-primary:hover,
+        .btn-success:hover,
+        .btn-info:hover,
+        .btn-warning:hover,
+        .btn-outline-light:hover,
+        .btn-outline-primary:hover,
+        button[type="submit"]:hover:not(.btn-danger):not(.btn-secondary):not(.btn-outline-secondary),
+        a.btn-primary:hover,
+        a.btn-success:hover,
+        a.btn-info:hover,
+        a.btn-warning:hover {
+            color: white !important;
+            box-shadow: 0 6px 20px rgba(0, 164, 217, 0.4) !important;
+            transform: translateY(-2px);
+            background-image: var(--accent-gradient) !important;
+            opacity: 0.9;
+        }
+
+        /* -----------------------------------------------
+           TIPO 2: BOTÃO NEUTRO - AÇÕES SECUNDÁRIAS
+           (Secondary, Outline-secondary, Light)
+           ----------------------------------------------- */
+        .btn-secondary,
+        .btn-outline-secondary,
+        .btn-light,
+        button.btn-secondary,
+        a.btn-secondary {
+            background-color: var(--bg-surface) !important;
+            color: var(--text-primary) !important;
+            border: 2px solid var(--border-color-dark) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .btn-secondary:hover,
+        .btn-outline-secondary:hover,
+        .btn-light:hover,
+        button.btn-secondary:hover,
+        a.btn-secondary:hover {
+            background-color: var(--bg-main) !important;
+            border-color: var(--color-primary) !important;
+            color: var(--color-primary) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 164, 217, 0.15) !important;
+        }
+
+        /* Tema escuro - botão secundário */
+        [data-theme="dark"] .btn-secondary,
+        [data-theme="dark"] .btn-outline-secondary,
+        [data-theme="dark"] .btn-light {
+            background-color: var(--bg-surface) !important;
+            color: var(--text-primary) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        [data-theme="dark"] .btn-secondary:hover,
+        [data-theme="dark"] .btn-outline-secondary:hover,
+        [data-theme="dark"] .btn-light:hover {
+            background-color: rgba(0, 164, 217, 0.2) !important;
+            border-color: var(--color-primary) !important;
+            color: var(--color-primary) !important;
+        }
+
+        /* -----------------------------------------------
+           TIPO 3: BOTÃO VERMELHO VINHO - EXCLUSÃO/PERIGO
+           (Danger, Outline-danger, Excluir)
+           ----------------------------------------------- */
+        .btn-danger,
+        .btn-outline-danger,
+        button.btn-danger,
+        a.btn-danger,
+        button:contains("Excluir"),
+        a:contains("Excluir") {
+            background-color: #8B1538 !important; /* Vermelho vinho escuro */
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3) !important;
+        }
+
+        .btn-danger:hover,
+        .btn-outline-danger:hover,
+        button.btn-danger:hover,
+        a.btn-danger:hover {
+            background-color: #6B0F2A !important; /* Vinho ainda mais escuro */
+            color: white !important;
+            box-shadow: 0 6px 20px rgba(139, 21, 56, 0.5) !important;
             transform: translateY(-2px);
         }
 
-        .btn-secondary {
-            background-color: var(--bg-surface);
-            color: var(--text-light);
-            border: 2px solid var(--border-color);
+        /* Forçar estilo para qualquer botão com texto "Excluir" */
+        button[class*="excluir" i],
+        a[class*="excluir" i],
+        button[class*="delete" i],
+        a[class*="delete" i],
+        .btn-excluir,
+        .delete-btn {
+            background-color: #8B1538 !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3) !important;
         }
 
-        /* Regra corrigida para o hover do botão secundário */
-        .btn-secondary:hover {
-            background-color: var(--color-primary);
-            border-color: var(--color-primary);
-            color: var(--text-light);
+        button[class*="excluir" i]:hover,
+        a[class*="excluir" i]:hover,
+        button[class*="delete" i]:hover,
+        a[class*="delete" i]:hover,
+        .btn-excluir:hover,
+        .delete-btn:hover {
+            background-color: #6B0F2A !important;
+            color: white !important;
+            box-shadow: 0 6px 20px rgba(139, 21, 56, 0.5) !important;
             transform: translateY(-2px);
+        }
+
+        /* -----------------------------------------------
+           ESTADOS DESABILITADOS
+           ----------------------------------------------- */
+        .btn:disabled,
+        .btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* -----------------------------------------------
+           TAMANHOS DE BOTÕES
+           ----------------------------------------------- */
+        .btn-sm {
+            padding: 0.4rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-lg {
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* -----------------------------------------------
+           GRUPOS DE BOTÕES
+           ----------------------------------------------- */
+        .btn-group .btn {
+            border-radius: 0;
+        }
+
+        .btn-group .btn:first-child {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+
+        .btn-group .btn:last-child {
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
         }
 
         /* --- Modais --- */
         .modal-content {
             background-color: var(--bg-surface) !important;
-            border: 1px solid var(--color-primary) !important;
-            border-radius: 8px;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 12px;
         }
 
-        .modal-header,
+        [data-theme="dark"] .modal-content {
+            border: 1px solid var(--color-primary) !important;
+        }
+
+        .modal-header {
+            border-color: var(--border-color) !important;
+            background-color: var(--bg-main) !important;
+        }
+
         .modal-footer {
             border-color: var(--border-color) !important;
+            background-color: var(--bg-main) !important;
+        }
+
+        .modal-title,
+        .modal-body,
+        .modal-body *,
+        .modal-header,
+        .modal-header *,
+        .modal-footer,
+        .modal-footer * {
+            color: var(--text-primary) !important;
+        }
+
+        .btn-close {
+            filter: invert(0);
+        }
+
+        [data-theme="dark"] .btn-close {
+            filter: invert(1);
         }
 
         /* --- Alertas --- */
         .alert {
-            border-radius: 4px;
+            border-radius: 8px;
+            border-left: 4px solid;
         }
 
         .alert-success {
-            background-color: rgba(45, 216, 163, 0.1);
+            background-color: rgba(16, 185, 129, 0.1);
             border-color: var(--color-success);
+            color: #065f46;
+        }
+
+        [data-theme="dark"] .alert-success {
             color: var(--color-success);
         }
 
         .alert-danger {
-            background-color: rgba(233, 75, 106, 0.1);
+            background-color: rgba(239, 68, 68, 0.1);
             border-color: var(--color-danger);
+            color: #991b1b;
+        }
+
+        [data-theme="dark"] .alert-danger {
             color: var(--color-danger);
         }
 
         .alert-warning {
-            background-color: rgba(242, 169, 59, 0.1);
+            background-color: rgba(245, 158, 11, 0.1);
             border-color: var(--color-warning);
+            color: #92400e;
+        }
+
+        [data-theme="dark"] .alert-warning {
             color: var(--color-warning);
         }
 
-        /* --- Links e Utilidades --- */
+        .alert-info {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: var(--color-info);
+            color: #1e40af;
+        }
+
+        [data-theme="dark"] .alert-info {
+            color: var(--color-info);
+        }
+
+        /* --- Tables --- */
+        .table {
+            background-color: var(--bg-surface);
+            color: var(--text-primary);
+        }
+
+        .table thead {
+            background-color: var(--bg-main);
+            color: var(--text-secondary);
+        }
+
+        .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: var(--bg-surface-hover);
+        }
+
+        /* Linhas zebradas mais suaves no tema claro */
+        :root {
+            --table-stripe-bg: rgba(0, 164, 217, 0.05); /* Azul muito suave */
+        }
+
+        [data-theme="dark"] {
+            --table-stripe-bg: var(--bg-surface-hover);
+        }
+
+        .table-striped > tbody > tr:nth-of-type(odd),
+        .table > tbody > tr:nth-child(odd) {
+            background-color: var(--table-stripe-bg) !important;
+        }
+
+        .table-striped > tbody > tr:nth-of-type(even),
+        .table > tbody > tr:nth-child(even) {
+            background-color: transparent !important;
+        }
+
+        .table-hover > tbody > tr:hover {
+            background-color: rgba(0, 164, 217, 0.1) !important;
+        }
+
+        /* --- Badge --- */
+        .badge {
+            font-weight: 600;
+            padding: 0.35em 0.65em;
+            color: white !important;
+        }
+
+        /* --- Links --- */
         a {
             color: var(--color-primary);
             text-decoration: none;
@@ -271,7 +639,7 @@
         }
 
         a:hover {
-            color: var(--text-light);
+            color: var(--color-secondary);
             text-decoration: none;
         }
 
@@ -281,16 +649,56 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-dark);
+            background: var(--bg-main);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--color-secondary);
+            background: linear-gradient(180deg, var(--color-secondary), var(--color-primary));
             border-radius: 5px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
             background: var(--color-primary);
+        }
+
+        /* --- List group --- */
+        .list-group-item {
+            background-color: var(--bg-surface);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .list-group-item:hover {
+            background-color: var(--bg-surface-hover);
+        }
+
+        /* --- Pagination --- */
+        .pagination .page-link {
+            background-color: var(--bg-surface);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .pagination .page-link:hover {
+            background-color: var(--bg-main);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .pagination .page-item.active .page-link {
+            background-image: var(--accent-gradient);
+            border-color: var(--color-primary);
+        }
+
+        /* --- Rich Text Editor --- */
+        .ck-editor__editable {
+            color: var(--text-primary) !important;
+            background-color: var(--bg-surface) !important;
+        }
+
+        .ck-toolbar {
+            background-color: var(--bg-main) !important;
+            border-color: var(--border-color) !important;
         }
     </style>
 </head>
@@ -339,6 +747,13 @@
                     </ul>
 
                     <ul class="navbar-nav">
+                        <!-- Botão de alternância de tema -->
+                        <li class="nav-item me-3">
+                            <button class="theme-toggle" id="themeToggle" title="Alternar tema">
+                                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                            </button>
+                        </li>
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -379,6 +794,13 @@
                     </ul>
                 {% else %}
                     <ul class="navbar-nav ms-auto">
+                        <!-- Botão de alternância de tema -->
+                        <li class="nav-item me-3">
+                            <button class="theme-toggle" id="themeToggle" title="Alternar tema">
+                                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                            </button>
+                        </li>
+
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'accounts:login' %}">
                                 <i class="bi bi-box-arrow-in-right"></i> Entrar
@@ -401,6 +823,40 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    <script>
+        // Script de alternância de tema
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+
+        // Recupera o tema salvo ou usa o padrão (light)
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(currentTheme);
+
+        // Função para atualizar o ícone
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.classList.remove('bi-moon-stars-fill');
+                themeIcon.classList.add('bi-sun-fill');
+            } else {
+                themeIcon.classList.remove('bi-sun-fill');
+                themeIcon.classList.add('bi-moon-stars-fill');
+            }
+        }
+
+        // Event listener para o botão
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+    </script>
+
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

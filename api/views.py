@@ -16,6 +16,8 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Avg, Count, Sum, F, Q
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.dateparse import parse_date
 
 class ClassViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -65,13 +67,36 @@ class ClassViewSet(viewsets.ReadOnlyModelViewSet):
 class StudentViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API para listar e detalhar alunos.
+    Suporta autenticação de professores (Token) e alunos (JWT).
     """
     serializer_class = StudentSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Retorna apenas os alunos do usuário autenticado"""
-        return Student.objects.filter(user=self.request.user)
+        """
+        Retorna os alunos do professor autenticado.
+        Para alunos logados via app, a verificação é feita nos endpoints individuais.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+
+        user = self.request.user
+        logger.info(f"🔍 get_queryset - Usuário: {user} (ID={user.id})")
+
+        # ✅ CORREÇÃO: Verificar se tem student_id no token (aluno via app)
+        token = self.request.auth
+
+        if token and isinstance(token, dict) and 'student_id' in token:
+            # É um aluno logado via app - retornar apenas ele
+            student_id = token['student_id']
+            logger.info(f"✅ Token de aluno detectado: student_id={student_id}")
+            return Student.objects.filter(id=student_id)
+        else:
+            # É um professor - retornar alunos de suas turmas
+            logger.info(f"👨‍🏫 Usuário é PROFESSOR - buscando alunos de suas turmas")
+            queryset = Student.objects.filter(user=user).distinct()
+            logger.info(f"✅ Total de alunos encontrados: {queryset.count()}")
+            return queryset
 
     @action(detail=True, methods=['get'])
     def simulados(self, request, pk=None):
@@ -84,62 +109,177 @@ class StudentViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['get'])
     def resultados(self, request, pk=None):
         """Retorna todos os resultados de simulados de um aluno específico"""
-        aluno = self.get_object()
-        resultados = Resultado.objects.filter(aluno=aluno)
-        serializer = ResultadoSerializer(resultados, many=True)
-        return Response(serializer.data)
+        import logging
+        logger = logging.getLogger(__name__)
+
+        logger.info(f"🔍 ===== BUSCANDO RESULTADOS =====")
+        logger.info(f"🔍 Aluno ID solicitado: {pk}")
+        logger.info(f"🔍 Usuário autenticado: {request.user} (ID={request.user.id})")
+
+        try:
+            # Buscar aluno pelo ID
+            aluno = Student.objects.get(id=pk)
+            logger.info(f"✅ Aluno encontrado: {aluno.name} (ID={aluno.id})")
+
+            # ✅ VERIFICAÇÃO DE PERMISSÃO
+            # Pegar o student_id do token JWT
+            token = request.auth  # Token JWT decodificado
+
+            if token and 'student_id' in token:
+                # É um aluno logado via app
+                student_id_from_token = token['student_id']
+                logger.info(f"🔐 Token de aluno detectado: student_id={student_id_from_token}")
+
+                if student_id_from_token != int(pk):
+                    logger.error(f"❌ Aluno {student_id_from_token} tentando acessar dados do aluno {pk}")
+                    return Response(
+                        {"error": "Você não tem permissão para acessar estes dados"},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+                logger.info(f"✅ Aluno acessando seus próprios dados")
+            else:
+                # É um professor acessando via site
+                logger.info(f"👨‍🏫 Acesso de professor detectado")
+
+                # Verificar se o aluno pertence às turmas do professor
+                turmas_do_professor = Class.objects.filter(user=request.user)
+                aluno_nas_turmas = aluno.classes.filter(
+                    id__in=turmas_do_professor.values_list('id', flat=True)
+                ).exists()
+
+                if not aluno_nas_turmas:
+                    logger.error(f"❌ Professor tentando acessar aluno que não está em suas turmas")
+                    return Response(
+                        {"error": "Este aluno não está em suas turmas"},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+                logger.info(f"✅ Professor acessando aluno de suas turmas")
+
+            # Se passou nas verificações, retornar resultados
+            resultados = Resultado.objects.filter(aluno=aluno)
+            logger.info(f"✅ Total de resultados encontrados: {resultados.count()}")
+
+            for resultado in resultados:
+                logger.info(f"   📝 Resultado ID={resultado.id}: {resultado.simulado.titulo} - {resultado.pontuacao} pontos")
+
+            serializer = ResultadoSerializer(resultados, many=True)
+            logger.info(f"✅ Serialização OK: {len(serializer.data)} resultados")
+            logger.info(f"🔍 ===== FIM DA BUSCA =====")
+
+            return Response(serializer.data)
+
+        except Student.DoesNotExist:
+            logger.error(f"❌ Aluno {pk} não encontrado no banco de dados")
+            return Response(
+                {"error": "Aluno não encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"❌ ERRO ao buscar resultados: {str(e)}")
+            import traceback
+            logger.error(f"❌ TRACEBACK: {traceback.format_exc()}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['get'])
     def dashboard(self, request, pk=None):
         """Retorna dados do dashboard de desempenho do aluno"""
-        aluno = self.get_object()
+        import logging
+        logger = logging.getLogger(__name__)
 
-        # Estatísticas gerais
-        total_simulados = Resultado.objects.filter(aluno=aluno).count()
-        media_geral = Resultado.objects.filter(aluno=aluno).aggregate(Avg('pontuacao'))['pontuacao__avg'] or 0
+        try:
+            # Buscar aluno pelo ID
+            aluno = Student.objects.get(id=pk)
+            logger.info(f"🔍 Gerando dashboard para {aluno.name}")
 
-        # Desempenho por disciplina
-        desempenho_disciplinas = []
-        disciplinas = Questao.objects.values_list('disciplina', flat=True).distinct()
+            # ✅ VERIFICAÇÃO DE PERMISSÃO (mesma lógica)
+            token = request.auth
 
-        for disciplina in disciplinas:
-            # Calcular média por disciplina
-            detalhes = DetalhesResposta.objects.filter(
-                resultado__aluno=aluno,
-                questao__disciplina=disciplina
+            if token and 'student_id' in token:
+                # É um aluno
+                student_id_from_token = token['student_id']
+                if student_id_from_token != int(pk):
+                    return Response(
+                        {"error": "Você não tem permissão para acessar este dashboard"},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            else:
+                # É um professor
+                turmas_do_professor = Class.objects.filter(user=request.user)
+                aluno_nas_turmas = aluno.classes.filter(
+                    id__in=turmas_do_professor.values_list('id', flat=True)
+                ).exists()
+
+                if not aluno_nas_turmas:
+                    return Response(
+                        {"error": "Este aluno não está em suas turmas"},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+
+            # Estatísticas gerais (resto do código igual)
+            total_simulados = Resultado.objects.filter(aluno=aluno).count()
+            media_geral = Resultado.objects.filter(aluno=aluno).aggregate(Avg('pontuacao'))['pontuacao__avg'] or 0
+
+            # Desempenho por disciplina
+            desempenho_disciplinas = []
+            disciplinas = Questao.objects.values_list('disciplina', flat=True).distinct()
+
+            for disciplina in disciplinas:
+                detalhes = DetalhesResposta.objects.filter(
+                    resultado__aluno=aluno,
+                    questao__disciplina=disciplina
+                )
+
+                total_questoes = detalhes.count()
+                acertos = detalhes.filter(acertou=True).count()
+
+                if total_questoes > 0:
+                    taxa_acerto = (acertos / total_questoes) * 100
+                else:
+                    taxa_acerto = 0
+
+                desempenho_disciplinas.append({
+                    'disciplina': disciplina,
+                    'total_questoes': total_questoes,
+                    'acertos': acertos,
+                    'taxa_acerto': taxa_acerto
+                })
+
+            # Evolução ao longo do tempo
+            resultados_timeline = Resultado.objects.filter(aluno=aluno).order_by('data_correcao').values(
+                'simulado__titulo', 'pontuacao', 'data_correcao'
             )
 
-            total_questoes = detalhes.count()
-            acertos = detalhes.filter(acertou=True).count()
+            dashboard_data = {
+                'aluno': aluno.name,
+                'total_simulados': total_simulados,
+                'media_geral': media_geral,
+                'desempenho_disciplinas': desempenho_disciplinas,
+                'evolucao_timeline': list(resultados_timeline)
+            }
 
-            if total_questoes > 0:
-                taxa_acerto = (acertos / total_questoes) * 100
-            else:
-                taxa_acerto = 0
+            serializer = DashboardAlunoSerializer(data=dashboard_data)
+            serializer.is_valid(raise_exception=True)
 
-            desempenho_disciplinas.append({
-                'disciplina': disciplina,
-                'total_questoes': total_questoes,
-                'acertos': acertos,
-                'taxa_acerto': taxa_acerto
-            })
+            logger.info(f"✅ Dashboard gerado com sucesso")
+            return Response(serializer.data)
 
-        # Evolução ao longo do tempo
-        resultados_timeline = Resultado.objects.filter(aluno=aluno).order_by('data_correcao').values(
-            'simulado__titulo', 'pontuacao', 'data_correcao'
-        )
-
-        dashboard_data = {
-            'aluno': aluno.name,
-            'total_simulados': total_simulados,
-            'media_geral': media_geral,
-            'desempenho_disciplinas': desempenho_disciplinas,
-            'evolucao_timeline': list(resultados_timeline)
-        }
-
-        serializer = DashboardAlunoSerializer(data=dashboard_data)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
+        except Student.DoesNotExist:
+            logger.error(f"❌ Aluno {pk} não encontrado")
+            return Response(
+                {"error": "Aluno não encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"❌ Erro ao gerar dashboard: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class QuestaoViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -887,3 +1027,321 @@ def submit_resultado(request):
         logger.info("====== PROCESSAMENTO FALHOU ======")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def aluno_login(request):
+    """Endpoint para login de alunos no aplicativo Flutter"""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    email = request.data.get('email')
+    data_nascimento_str = request.data.get('data_nascimento')  # Formato DDMMYYYY
+
+    logger.info(f"🔐 Tentativa de login de aluno - Email: {email}")
+
+    # Validar campos obrigatórios
+    if not email or not data_nascimento_str:
+        logger.error("❌ Campos obrigatórios faltando")
+        return Response({
+            'success': False,
+            'message': 'E-mail e data de nascimento são obrigatórios'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Converter data de DDMMYYYY para Date
+    try:
+        if len(data_nascimento_str) != 8:
+            raise ValueError("Data deve ter 8 dígitos (DDMMYYYY)")
+
+        dia = data_nascimento_str[0:2]
+        mes = data_nascimento_str[2:4]
+        ano = data_nascimento_str[4:8]
+
+        data_nascimento = parse_date(f"{ano}-{mes}-{dia}")
+
+        if not data_nascimento:
+            raise ValueError("Formato de data inválido")
+
+        logger.info(f"✅ Data convertida: {data_nascimento}")
+    except Exception as e:
+        logger.error(f"❌ Erro ao converter data: {str(e)}")
+        return Response({
+            'success': False,
+            'message': f'Formato de data inválido: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Buscar aluno por e-mail
+    try:
+        aluno = Student.objects.get(email=email)
+        logger.info(f"✅ Aluno encontrado: {aluno.name} (ID={aluno.id})")
+    except Student.DoesNotExist:
+        logger.error(f"❌ Aluno não encontrado: {email}")
+        return Response({
+            'success': False,
+            'message': 'Aluno não encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    # Verificar data de nascimento
+    if aluno.data_nascimento != data_nascimento:
+        logger.error(f"❌ Data de nascimento incorreta")
+        return Response({
+            'success': False,
+            'message': 'Data de nascimento incorreta'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+
+    # ✅ CORREÇÃO: Gerar token JWT com student_id customizado
+    try:
+        # Gerar token para o user do professor (necessário para validação)
+        refresh = RefreshToken.for_user(aluno.user)
+
+        # ✅ ADICIONAR student_id como claim customizada
+        refresh['student_id'] = aluno.id
+        refresh['student_name'] = aluno.name
+        refresh['is_student'] = True  # Flag para identificar que é um aluno
+
+        logger.info(f"✅ Token JWT gerado com student_id={aluno.id}")
+
+    except AttributeError:
+        logger.error(f"❌ Aluno não tem usuário associado")
+        return Response({
+            'success': False,
+            'message': 'Aluno não tem usuário associado'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    logger.info(f"✅ Login bem-sucedido para {aluno.name}")
+
+    return Response({
+        'success': True,
+        'token': str(refresh.access_token),
+        'refresh': str(refresh),
+        'aluno': {
+            'id': aluno.id,
+            'nome': aluno.name,
+            'email': aluno.email,
+            'student_id': aluno.student_id,
+            'data_nascimento': aluno.data_nascimento.strftime('%d/%m/%Y') if aluno.data_nascimento else None
+        }
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_detalhes_resultado(request, resultado_id):
+    """
+    Retorna detalhes completos de um resultado incluindo:
+    - Informações do simulado
+    - Desempenho por disciplina
+    - Desempenho por assunto
+    - Desempenho por nível e disciplina
+    - Detalhes de cada resposta
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"🔍 ===== BUSCANDO DETALHES DO RESULTADO {resultado_id} =====")
+
+    try:
+        # Buscar o resultado
+        resultado = Resultado.objects.get(id=resultado_id)
+        aluno = resultado.aluno
+        simulado = resultado.simulado
+
+        logger.info(f"✅ Resultado encontrado: Aluno={aluno.name}, Simulado={simulado.titulo}")
+
+        # ✅ VERIFICAÇÃO DE PERMISSÃO
+        token = request.auth
+        if token and isinstance(token, dict) and 'student_id' in token:
+            student_id_from_token = token['student_id']
+            if student_id_from_token != aluno.id:
+                logger.error(f"❌ Aluno {student_id_from_token} tentando acessar resultado do aluno {aluno.id}")
+                return Response(
+                    {"error": "Você não tem permissão para acessar estes dados"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            logger.info(f"✅ Aluno acessando seu próprio resultado")
+        else:
+            logger.info(f"👨‍🏫 Acesso de professor detectado")
+            turmas_do_professor = Class.objects.filter(user=request.user)
+            aluno_nas_turmas = aluno.classes.filter(
+                id__in=turmas_do_professor.values_list('id', flat=True)
+            ).exists()
+
+            if not aluno_nas_turmas:
+                logger.error(f"❌ Professor tentando acessar resultado de aluno que não está em suas turmas")
+                return Response(
+                    {"error": "Este aluno não está em suas turmas"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            logger.info(f"✅ Professor acessando resultado de aluno de suas turmas")
+
+        # ===== 1. BUSCAR DETALHES DAS RESPOSTAS =====
+        detalhes_respostas = DetalhesResposta.objects.filter(
+            resultado=resultado
+        ).select_related('questao').order_by('ordem')
+
+        respostas_list = []
+        for detalhe in detalhes_respostas:
+            questao = detalhe.questao
+
+            # ✅ CORREÇÃO: O campo correto é 'nivel_dificuldade'
+            nivel = getattr(questao, 'nivel_dificuldade', 'medio') or 'medio'
+
+            respostas_list.append({
+                'ordem': detalhe.ordem,
+                'questao_id': questao.id,
+                'disciplina': questao.disciplina or 'Não definido',
+                'assunto': questao.conteudo or 'Não definido',
+                'nivel': nivel,
+                'resposta_aluno': detalhe.resposta_aluno,
+                'resposta_correta': detalhe.resposta_correta,
+                'acertou': detalhe.acertou
+            })
+
+        logger.info(f"✅ Total de respostas processadas: {len(respostas_list)}")
+
+        # ===== 2. CALCULAR DESEMPENHO POR DISCIPLINA =====
+        disciplinas_stats = {}
+        for resposta in respostas_list:
+            disciplina = resposta['disciplina']
+            if disciplina not in disciplinas_stats:
+                disciplinas_stats[disciplina] = {'acertos': 0, 'total': 0}
+
+            disciplinas_stats[disciplina]['total'] += 1
+            if resposta['acertou']:
+                disciplinas_stats[disciplina]['acertos'] += 1
+
+        desempenho_disciplina = []
+        for disciplina, stats in disciplinas_stats.items():
+            percentual = (stats['acertos'] / stats['total'] * 100) if stats['total'] > 0 else 0
+            desempenho_disciplina.append({
+                'disciplina': disciplina,
+                'acertos': stats['acertos'],
+                'total': stats['total'],
+                'percentual': round(percentual, 2)
+            })
+
+        desempenho_disciplina.sort(key=lambda x: x['percentual'], reverse=True)
+        logger.info(f"✅ Desempenho por disciplina calculado: {len(desempenho_disciplina)} disciplinas")
+
+        # ===== 3. CALCULAR DESEMPENHO POR ASSUNTO =====
+        assuntos_stats = {}
+        for resposta in respostas_list:
+            assunto = resposta['assunto']
+            if assunto not in assuntos_stats:
+                assuntos_stats[assunto] = {'acertos': 0, 'total': 0}
+
+            assuntos_stats[assunto]['total'] += 1
+            if resposta['acertou']:
+                assuntos_stats[assunto]['acertos'] += 1
+
+        desempenho_assunto = []
+        for assunto, stats in assuntos_stats.items():
+            percentual = (stats['acertos'] / stats['total'] * 100) if stats['total'] > 0 else 0
+            desempenho_assunto.append({
+                'assunto': assunto,
+                'acertos': stats['acertos'],
+                'total': stats['total'],
+                'percentual': round(percentual, 2)
+            })
+
+        desempenho_assunto.sort(key=lambda x: x['percentual'], reverse=True)
+        logger.info(f"✅ Desempenho por assunto calculado: {len(desempenho_assunto)} assuntos")
+
+        # ===== 4. CALCULAR DESEMPENHO POR NÍVEL E DISCIPLINA =====
+        def normalizar_nivel(nivel):
+            """Normaliza o nível para um formato padrão"""
+            if not nivel:
+                return 'medio'
+            nivel = str(nivel).lower()
+            if nivel in ['facil', 'fácil', 'f', 'easy']:
+                return 'facil'
+            elif nivel in ['medio', 'médio', 'm', 'medium']:
+                return 'medio'
+            elif nivel in ['dificil', 'difícil', 'd', 'hard']:
+                return 'dificil'
+            return 'medio'
+
+        nivel_disciplina_stats = {}
+        for resposta in respostas_list:
+            disciplina = resposta['disciplina']
+            nivel = normalizar_nivel(resposta['nivel'])
+
+            if disciplina not in nivel_disciplina_stats:
+                nivel_disciplina_stats[disciplina] = {
+                    'facil': {'acertos': 0, 'total': 0},
+                    'medio': {'acertos': 0, 'total': 0},
+                    'dificil': {'acertos': 0, 'total': 0}
+                }
+
+            if nivel in nivel_disciplina_stats[disciplina]:
+                nivel_disciplina_stats[disciplina][nivel]['total'] += 1
+                if resposta['acertou']:
+                    nivel_disciplina_stats[disciplina][nivel]['acertos'] += 1
+
+        desempenho_nivel_disciplina = []
+        for disciplina, niveis in nivel_disciplina_stats.items():
+            total_acertos = sum(n['acertos'] for n in niveis.values())
+            total_questoes = sum(n['total'] for n in niveis.values())
+            percentual_total = (total_acertos / total_questoes * 100) if total_questoes > 0 else 0
+
+            for nivel_key, nivel_data in niveis.items():
+                if nivel_data['total'] > 0:
+                    nivel_data['percentual'] = round((nivel_data['acertos'] / nivel_data['total']) * 100, 2)
+                else:
+                    nivel_data['percentual'] = 0
+
+            desempenho_nivel_disciplina.append({
+                'disciplina': disciplina,
+                'total_acertos': total_acertos,
+                'total_questoes': total_questoes,
+                'percentual_total': round(percentual_total, 2),
+                'facil': niveis['facil'],
+                'medio': niveis['medio'],
+                'dificil': niveis['dificil']
+            })
+
+        logger.info(f"✅ Desempenho por nível e disciplina calculado")
+
+        # ===== 5. MONTAR RESPOSTA COMPLETA =====
+        response_data = {
+            'id': resultado.id,
+            'simulado': {
+                'id': simulado.id,
+                'titulo': simulado.titulo,
+                'descricao': getattr(simulado, 'descricao', ''),
+            },
+            'aluno': {
+                'id': aluno.id,
+                'nome': aluno.name,
+            },
+            'pontuacao': float(resultado.pontuacao),
+            'acertos': resultado.acertos,
+            'total_questoes': resultado.total_questoes,
+            'data_correcao': resultado.data_correcao.isoformat(),
+            'versao': getattr(resultado, 'versao', None),
+            'tipo_prova': getattr(resultado, 'tipo_prova', None),
+
+            # Dados processados
+            'detalhes': respostas_list,
+            'desempenho_disciplina': desempenho_disciplina,
+            'desempenho_assunto': desempenho_assunto,
+            'desempenho_nivel_disciplina': desempenho_nivel_disciplina,
+        }
+
+        logger.info(f"✅ Resposta completa montada com sucesso")
+        logger.info(f"🔍 ===== FIM DA BUSCA DE DETALHES =====")
+
+        return Response(response_data)
+
+    except Resultado.DoesNotExist:
+        logger.error(f"❌ Resultado {resultado_id} não encontrado")
+        return Response(
+            {"error": "Resultado não encontrado"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"❌ Erro ao buscar detalhes: {str(e)}")
+        import traceback
+        logger.error(f"❌ TRACEBACK: {traceback.format_exc()}")
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

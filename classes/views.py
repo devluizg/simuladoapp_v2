@@ -208,17 +208,17 @@ def class_students(request, pk):
 def class_add_students(request, pk):
     class_obj = get_object_or_404(Class, pk=pk, user=request.user)
     if request.method == 'POST':
-        form = StudentForm(request.POST)
+        # Passa o usuário para o formulário
+        form = StudentForm(request.POST, user=request.user)
         if form.is_valid():
             student = form.save(commit=False)
             student.user = request.user
-
             # Verificar se o student_id já existe
             if Student.objects.filter(user=request.user, student_id=student.student_id).exists():
                 messages.error(request, f'Número de matrícula {student.student_id} já existe.')
                 return redirect('class_edit', pk=pk)
-
             student.save()
+            form.save_m2m()  # Salva as relações many-to-many
             class_obj.students.add(student)
             messages.success(request, f'Aluno {student.name} adicionado com sucesso.')
     return redirect('class_students', pk=pk)
@@ -231,6 +231,41 @@ def class_remove_student(request, class_pk, student_pk):
         class_obj.students.remove(student)
         messages.success(request, f'Aluno {student.name} removido da turma {class_obj.name}.')
     return redirect('class_students', pk=class_pk)
+
+@login_required
+def student_create(request):
+    """View para criar um novo aluno"""
+    class_pk = request.GET.get('class_pk')  # Pega o class_pk da URL
+
+    if request.method == 'POST':
+        form = StudentForm(request.POST, user=request.user)
+        if form.is_valid():
+            student = form.save(commit=False)
+            student.user = request.user
+
+            # Verificar se o student_id já existe
+            if Student.objects.filter(user=request.user, student_id=student.student_id).exists():
+                messages.error(request, f'Número de matrícula {student.student_id} já existe.')
+            else:
+                student.save()
+                form.save_m2m()  # Salva as turmas selecionadas
+                messages.success(request, f'Aluno {student.name} criado com sucesso.')
+
+                # Se veio de uma turma específica, redireciona para ela
+                if class_pk:
+                    return redirect('class_students', pk=class_pk)
+                return redirect('student_list')
+    else:
+        # Passa o usuário ao criar o formulário vazio
+        initial_data = {}
+        if class_pk:
+            initial_data['class_pk'] = class_pk
+        form = StudentForm(user=request.user, initial=initial_data)
+
+    return render(request, 'classes/student_form.html', {
+        'form': form,
+        'title': 'Adicionar Novo Aluno'
+    })
 
 @login_required
 def class_select_simulado(request, class_id):
@@ -527,9 +562,38 @@ def class_performance_dashboard(request, class_id, simulado_id):
 
     todos_resultados = list(melhores_resultados.values())
 
+    # ✅✅✅ NOVO: IDENTIFICAR ALUNOS SEM RESULTADOS ✅✅✅
+    alunos_com_resultados_ids = set(melhores_resultados.keys())
+    todos_alunos_ids = set(students.values_list('id', flat=True))
+    alunos_sem_resultados_ids = todos_alunos_ids - alunos_com_resultados_ids
+
+    # Buscar os objetos Student dos alunos sem resultados
+    alunos_sem_notas = Student.objects.filter(
+        id__in=alunos_sem_resultados_ids
+    ).order_by('name')
+
+    total_sem_notas = alunos_sem_notas.count()
+    # ✅✅✅ FIM DA NOVA LÓGICA ✅✅✅
+
     if not todos_resultados:
-        messages.info(request, "Não há dados de resultados para este simulado nesta turma.")
-        return redirect('class_select_simulado', class_id=class_id)
+        # Mesmo sem resultados, mostrar a página com a lista de alunos pendentes
+        context = {
+            'class': class_obj,
+            'simulado': simulado,
+            'total_participantes': 0,
+            'total_alunos': students.count(),
+            'media_turma': 0,
+            'resultados': [],
+            'estatisticas_disciplinas': [],
+            'estatisticas_assuntos': [],
+            'nomes_alunos_json': mark_safe(json.dumps([])),
+            'notas_alunos_json': mark_safe(json.dumps([])),
+            'disciplinas_nomes_json': mark_safe(json.dumps([])),
+            'disciplinas_percentuais_json': mark_safe(json.dumps([])),
+            'alunos_sem_notas': alunos_sem_notas,
+            'total_sem_notas': total_sem_notas,
+        }
+        return render(request, 'classes/class_performance_dashboard.html', context)
 
     # ✅ ESTATÍSTICAS POR QUESTÃO REAL (ID) - SEM DUPLICAÇÃO
     estatisticas_por_questao = defaultdict(lambda: {"acertos": 0, "total": 0})
@@ -659,10 +723,14 @@ def class_performance_dashboard(request, class_id, simulado_id):
         'nomes_alunos_json': mark_safe(json.dumps(nomes_alunos)),
         'notas_alunos_json': mark_safe(json.dumps(notas_alunos)),
         'disciplinas_nomes_json': mark_safe(json.dumps(disciplinas_nomes)),
-        'disciplinas_percentuais_json': mark_safe(json.dumps(disciplinas_percentuais))
+        'disciplinas_percentuais_json': mark_safe(json.dumps(disciplinas_percentuais)),
+        # ✅ ADICIONAR AS NOVAS VARIÁVEIS AO CONTEXTO
+        'alunos_sem_notas': alunos_sem_notas,
+        'total_sem_notas': total_sem_notas,
     }
 
     return render(request, 'classes/class_performance_dashboard.html', context)
+
 @login_required
 def class_simulado_limpar(request, class_id, simulado_id):
     """Excluir dados de um simulado específico para uma turma específica"""
@@ -898,7 +966,7 @@ def student_form(request):
     initial_data = {'class_pk': class_pk} if class_pk else {}
 
     if request.method == 'POST':
-        form = StudentForm(request.POST, initial=initial_data)
+        form = StudentForm(request.POST, initial=initial_data, user=request.user)
         if form.is_valid():
             student = form.save(commit=False)
             student.user = request.user
@@ -928,7 +996,7 @@ def student_form(request):
         # Sugerir próximo ID disponível
         next_id = get_next_student_id(request.user)
         initial_data['student_id'] = next_id
-        form = StudentForm(initial=initial_data)
+        form = StudentForm(initial=initial_data, user=request.user)
 
     return render(request, 'classes/student_form.html', {
         'form': form,
@@ -939,17 +1007,18 @@ def student_form(request):
 def student_edit(request, pk):
     student = get_object_or_404(Student, pk=pk, user=request.user)
     if request.method == 'POST':
-        form = StudentForm(request.POST, instance=student)
+        # Passa o usuário e a instância para o formulário
+        form = StudentForm(request.POST, instance=student, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Informações do aluno atualizadas com sucesso.')
-
             # Redirecionar para a última turma, caso exista
             if student.classes.exists():
                 return redirect('class_students', pk=student.classes.first().id)
             return redirect('student_list')
     else:
-        form = StudentForm(instance=student)
+        # Passa o usuário ao carregar o formulário
+        form = StudentForm(instance=student, user=request.user)
     return render(request, 'classes/student_form.html', {'form': form})
 
 @login_required

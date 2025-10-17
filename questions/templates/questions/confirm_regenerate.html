@@ -8,67 +8,86 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card border-warning">
-                <div class="card-header bg-warning text-light">
+            <div class="card border-warning-custom">
+                <div class="card-header bg-warning-custom">
                     <h4 class="mb-0">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <i class="bi bi-exclamation-triangle me-2"></i>
                         Atenção: Uma Nova Versão do Simulado Será Criada
                     </h4>
                 </div>
                 <div class="card-body">
                     <h5 class="card-title">{{ simulado.titulo }}</h5>
 
-                    <p class="card-text text-light">
+                    <p class="card-text">
                         Ao continuar, uma nova versão do PDF será gerada com um código de identificação único. A versão anterior e seu gabarito não serão perdidos, eles ficarão salvos no seu histórico.
                     </p>
 
                     <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body text-center">
-                                    <h6 class="card-title text-light">Se você continuar:</h6>
-                                    <ul class="list-unstyled text-start text-light">
-                                        <li>✅ Uma nova versão com código único será criada.</li>
-                                        <li>✅ Um novo gabarito correspondente será gerado.</li>
-                                        <li>✅ As questões serão reordenadas na nova versão.</li>
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="card info-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title text-center mb-3">Se você continuar:</h6>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            Uma nova versão com código único será criada.
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            Um novo gabarito correspondente será gerado.
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            As questões serão reordenadas na nova versão.
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body text-center">
-                                    <h6 class="card-title text-warning">⚠️ Fique Atento:</h6>
-                                    <ul class="list-unstyled text-start text-light">
-                                        <li>⚠️ O novo gabarito não será válido para versões impressas anteriormente.</li>
-                                        <li>✅ Você pode acessar todas as versões e seus gabaritos no histórico.</li>
-                                        <li>✅ Se necessário, você pode definir uma versão antiga como a "oficial" para usar seu gabarito.</li>
+                            <div class="card warning-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title text-center mb-3">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        Fique Atento:
+                                    </h6>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="bi bi-exclamation-circle-fill text-warning me-2"></i>
+                                            O novo gabarito não será válido para versões impressas anteriormente.
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            Você pode acessar todas as versões e seus gabaritos no histórico.
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            Se necessário, você pode definir uma versão antiga como a "oficial".
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between flex-wrap gap-2">
                         <a href="{% url 'questions:simulado_edit' simulado.pk %}"
                            class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>
+                            <i class="bi bi-arrow-left me-2"></i>
                             Voltar para Edição
                         </a>
 
-                        <div>
-                            <button id="confirm-regenerate-btn"
-                                    data-simulado-pk="{{ simulado.pk }}"
-                                    class="btn btn-warning me-2">
-                                <i class="fas fa-sync-alt me-2"></i>
-                                Sim, Criar Nova Versão
-                            </button>
-                        </div>
+                        <button id="confirm-regenerate-btn"
+                                data-simulado-pk="{{ simulado.pk }}"
+                                class="btn btn-warning">
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            Sim, Criar Nova Versão
+                        </button>
                     </div>
                 </div>
 
-                <div class="card-footer text-light">
-                    <small>
+                <div class="card-footer">
+                    <small class="footer-info">
                         <strong>Última modificação:</strong> {{ simulado.ultima_modificacao|date:"d/m/Y H:i" }} |
                         <strong>Total de questões:</strong> {{ simulado.questoes.count }}
                     </small>
@@ -79,28 +98,152 @@
 </div>
 
 <style>
-.card-border-warning {
-    border-color: #ffc107;
+/* Card principal com borda de aviso */
+.border-warning-custom {
+    border: 2px solid var(--color-warning) !important;
 }
 
-.alert-warning {
-    border-left: 4px solid #ffc107;
+.bg-warning-custom {
+    background: linear-gradient(135deg, var(--color-warning), #ffb700) !important;
+    color: #000 !important;
 }
 
-.alert-info {
-    border-left: 4px solid #0dcaf0;
+.bg-warning-custom h4 {
+    color: #000 !important;
 }
 
+.bg-warning-custom i {
+    color: #000 !important;
+}
+
+/* Card title */
+.card-title {
+    color: var(--color-primary) !important;
+}
+
+/* Card text */
+.card-text {
+    color: var(--text-primary);
+}
+
+/* Info cards dentro do body */
+.info-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .info-card {
+    background: linear-gradient(145deg, rgba(30, 32, 58, 0.5), rgba(30, 32, 58, 0.2));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.warning-card {
+    background-color: rgba(245, 158, 11, 0.05);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
+}
+
+[data-theme="dark"] .warning-card {
+    background-color: rgba(242, 169, 59, 0.1);
+    border-color: rgba(242, 169, 59, 0.3);
+}
+
+.info-card .card-title,
+.warning-card .card-title {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+.info-card .card-body,
+.warning-card .card-body {
+    color: var(--text-primary);
+}
+
+.info-card ul li,
+.warning-card ul li {
+    color: var(--text-primary);
+}
+
+/* Ícones de status mantêm suas cores */
+.text-success {
+    color: var(--color-success) !important;
+}
+
+.text-warning {
+    color: var(--color-warning) !important;
+}
+
+/* Footer info */
+.footer-info {
+    color: var(--text-muted) !important;
+}
+
+.footer-info strong {
+    color: var(--text-secondary);
+}
+
+/* Botão warning customizado */
 .btn-warning {
-    background-color: #ffc107;
-    border-color: #ffc107;
-    color: #000;
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+    color: #000 !important;
+    font-weight: 600;
 }
 
 .btn-warning:hover {
     background-color: #e0a800;
     border-color: #d39e00;
-    color: #000;
+    color: #000 !important;
+    transform: translateY(-2px);
+}
+
+.btn-warning:disabled {
+    background-color: #d39e00;
+    border-color: #d39e00;
+    opacity: 0.7;
+}
+
+.btn-warning i {
+    color: #000 !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .d-flex.justify-content-between {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Animação do spinner */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Hover nos cards internos */
+.info-card:hover,
+.warning-card:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .info-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Melhora a legibilidade das listas */
+.list-unstyled li {
+    padding: 0.25rem 0;
 }
 </style>
 {% endblock %}
@@ -117,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Desabilita o botão para evitar múltiplos cliques
             this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Iniciando...';
+            this.innerHTML = '<i class="bi bi-arrow-clockwise fa-spin me-2"></i> Iniciando...';
 
             // Redirecionar para a página de progresso com force=true
             const progressUrl = `/simulados/${simuladoPk}/progresso/?force=true`;

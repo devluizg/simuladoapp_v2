@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from django.utils.timezone import now
+from django.utils import timezone
 
 class Class(models.Model):
     name = models.CharField(max_length=100, verbose_name="Nome")
@@ -26,15 +26,25 @@ class Class(models.Model):
 class Student(models.Model):
     name = models.CharField(max_length=100, verbose_name="Nome completo")
     email = models.EmailField(null=True, blank=True, verbose_name="E-mail")
+    data_nascimento = models.DateField(
+        verbose_name="Data de Nascimento",
+        null=True,
+        blank=True,
+        help_text="Formato: DD/MM/AAAA"
+    )
     student_id = models.IntegerField(verbose_name="Número de matrícula")
-    classes = models.ManyToManyField('Class', related_name='students', verbose_name="Turmas")
+    classes = models.ManyToManyField(
+        'Class',
+        related_name='students',
+        verbose_name="Turmas"
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='students',
         verbose_name="Professor"
     )
-    created_at = models.DateTimeField(default=now)
+    created_at = models.DateTimeField(default=timezone.now)  # Corrigido
 
     def __str__(self):
         return f"{self.student_id} - {self.name}"
@@ -60,7 +70,7 @@ class StudentPerformance(models.Model):
         verbose_name_plural = "Desempenhos dos alunos"
 
     def __str__(self):
-        return f"{self.student.name} - {self.simulado.title} - {self.score}"
+        return f"{self.student.name} - {self.simulado.titulo} - {self.score}"
 
     def get_percentage(self):
         if self.total_questions == 0:

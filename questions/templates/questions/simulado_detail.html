@@ -3,11 +3,11 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="card bg-dark text-white">
+    <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="mb-0">{{ simulado.titulo }}</h2>
-                <small class="text-white">Gabarito Oficial para Correção</small>
+                <h2 class="mb-0" style="color: var(--color-primary);">{{ simulado.titulo }}</h2>
+                <small class="text-muted">Gabarito Oficial para Correção</small>
             </div>
             <span class="badge bg-primary rounded-pill fs-6">{{ simulado.questoes.count }} questões</span>
         </div>
@@ -15,20 +15,20 @@
             {% if versao_oficial and versao_oficial.gabaritos_gerados %}
                 <!-- AVISO SOBRE SISTEMA -->
                 <div class="alert alert-info mb-4">
-                    <i class="fas fa-info-circle me-2"></i>
+                    <i class="bi bi-info-circle me-2"></i>
                     <strong>Gabarito Oficial:</strong> Este é o gabarito que será usado para correção automática das provas.
                     {% if versao_oficial != simulado.get_historico_gabaritos.first %}
                         <br><small class="text-warning">
-                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <i class="bi bi-exclamation-triangle me-1"></i>
                             Esta não é a versão mais recente. Você escolheu manualmente esta versão como oficial.
                         </small>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    <small class="text-white">
-                        <i class="fas fa-star me-1 text-warning"></i>Versão Oficial: {{ versao_oficial.get_versao_curta }}
-                        | <i class="fas fa-clock me-1"></i>Gerada em: {{ versao_oficial.data_geracao|date:"d/m/Y \à\s H:i" }}
+                    <small style="color: var(--text-secondary);">
+                        <i class="bi bi-star-fill me-1 text-warning"></i>Versão Oficial: {{ versao_oficial.get_versao_curta }}
+                        | <i class="bi bi-clock me-1"></i>Gerada em: {{ versao_oficial.data_geracao|date:"d/m/Y \à\s H:i" }}
                         | Total de questões: {{ versao_oficial.total_questoes }}
                         {% if versao_oficial.usuario_geracao %}
                         | Por: {{ versao_oficial.usuario_geracao.get_full_name|default:versao_oficial.usuario_geracao.username }}
@@ -65,59 +65,60 @@
             {% else %}
                 <!-- Estado sem gabarito oficial -->
                 <div class="alert alert-warning text-center">
-                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <i class="bi bi-exclamation-triangle fa-2x mb-3"></i>
                     <h4 class="alert-heading">Nenhum Gabarito Oficial Definido</h4>
                     <p>
                         Para que as correções automáticas funcionem, é necessário definir um gabarito como oficial.
                         Gere um novo PDF ou acesse o histórico para definir uma versão existente como oficial.
                     </p>
                     <div class="alert alert-info mt-3">
-                        <i class="fas fa-lightbulb me-2"></i>
+                        <i class="bi bi-lightbulb me-2"></i>
                         <strong>Dica:</strong> Toda nova geração de PDF automaticamente vira a versão oficial.
                     </div>
                     <hr>
                     <div class="btn-group">
                         <a href="{% url 'questions:progresso_pdf' pk=simulado.pk %}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-file-pdf me-2"></i> Gerar Novo PDF (Vira Oficial)
+                            <i class="bi bi-file-pdf me-2"></i> Gerar Novo PDF (Vira Oficial)
                         </a>
                         {% if total_versoes > 0 %}
                         <a href="{% url 'questions:simulado_gabaritos_historico' simulado.pk %}" class="btn btn-outline-primary btn-lg">
-                            <i class="fas fa-star me-2"></i> Escolher Versão Oficial
+                            <i class="bi bi-star me-2"></i> Escolher Versão Oficial
                         </a>
                         {% endif %}
                     </div>
                 </div>
             {% endif %}
         </div>
-        <div class="card-footer text-muted">
+        <div class="card-footer">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div class="btn-group">
-                    <a href="{% url 'questions:simulado_list' %}" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-arrow-left me-1"></i> Voltar
+                    <a href="{% url 'questions:simulado_list' %}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar
                     </a>
-                    <a href="{% url 'questions:simulado_edit' simulado.id %}" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-pencil-alt me-1"></i> Editar
-                    <a href="{% url 'questions:progresso_pdf' pk=simulado.pk %}" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-download me-1"></i> Baixar PDF (Novo Embaralhamento)
+                    <a href="{% url 'questions:simulado_edit' simulado.id %}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-pencil me-1"></i> Editar
+                    </a>
+                    <a href="{% url 'questions:progresso_pdf' pk=simulado.pk %}" class="btn btn-info btn-sm">
+                        <i class="bi bi-download me-1"></i> Baixar PDF (Novo Embaralhamento)
                     </a>
                     {% if total_versoes > 0 %}
-                    <a href="{% url 'questions:simulado_gabaritos_historico' simulado.pk %}" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-history me-1"></i> Histórico ({{ total_versoes }})
+                    <a href="{% url 'questions:simulado_gabaritos_historico' simulado.pk %}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-clock-history me-1"></i> Histórico ({{ total_versoes }})
                     </a>
                     {% endif %}
                 </div>
-                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                    <i class="fas fa-trash me-1"></i> Excluir Simulado
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash me-1"></i> Excluir Simulado
                 </button>
             </div>
         </div>
     </div>
 
     {% if total_versoes > 0 %}
-    <div class="card bg-dark text-white mt-4">
+    <div class="card mt-4">
         <div class="card-body">
             <h5 class="card-title stats-title">
-                <i class="fas fa-chart-line me-2"></i>Estatísticas de Geração
+                <i class="bi bi-graph-up me-2"></i>Estatísticas de Geração
             </h5>
             <div class="row">
                 <div class="col-md-3">
@@ -151,8 +152,8 @@
             <hr class="my-3">
             <div class="row">
                 <div class="col-md-6">
-                    <small class="text-white">
-                        <i class="fas fa-info-circle me-1"></i>
+                    <small style="color: var(--text-secondary);">
+                        <i class="bi bi-info-circle me-1"></i>
                         <strong>Versão Oficial:</strong> {{ versao_oficial.get_versao_curta }}
                         {% if versao_oficial.usuario_geracao %}
                         (por {{ versao_oficial.usuario_geracao.get_full_name|default:versao_oficial.usuario_geracao.username }})
@@ -160,8 +161,8 @@
                     </small>
                 </div>
                 <div class="col-md-6">
-                    <small class="text-white">
-                        <i class="fas fa-calendar me-1"></i>
+                    <small style="color: var(--text-secondary);">
+                        <i class="bi bi-calendar me-1"></i>
                         <strong>Definida em:</strong> {{ versao_oficial.data_geracao|date:"d/m/Y \à\s H:i" }}
                     </small>
                 </div>
@@ -175,26 +176,26 @@
 <!-- Modal de Confirmação de Exclusão -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary">
-            <div class="modal-header border-secondary">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>Tem certeza que deseja excluir o simulado <strong>"{{ simulado.titulo }}"</strong>?</p>
-                <p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Esta ação é irreversível e removerá todos os dados associados.</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Esta ação é irreversível e removerá todos os dados associados.</p>
                 {% if versao_oficial %}
                 <p class="text-warning">
-                    <i class="fas fa-star me-2"></i>
+                    <i class="bi bi-star me-2"></i>
                     Isso também excluirá a versão oficial <strong>{{ versao_oficial.get_versao_curta }}</strong>
                     e todas as {{ total_versoes }} versões de gabarito geradas.
                 </p>
                 {% endif %}
             </div>
-            <div class="modal-footer border-secondary">
+            <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <a href="{% url 'questions:simulado_delete' simulado.pk %}" class="btn btn-danger">
-                    <i class="fas fa-trash me-2"></i>Excluir Definitivamente
+                    <i class="bi bi-trash me-2"></i>Excluir Definitivamente
                 </a>
             </div>
         </div>
@@ -202,54 +203,73 @@
 </div>
 
 <style>
-/* --- Tabela de Gabaritos - Usando cores do base.html --- */
+/* --- Tabela de Gabaritos --- */
 .table {
-    color: var(--text-light);
+    color: var(--text-primary);
     border-color: var(--border-color);
 }
 
 .table thead th {
-    color: var(--text-muted);
-    background-color: var(--bg-surface);
+    color: var(--text-secondary);
+    background-color: var(--bg-main);
     border-bottom: 2px solid var(--border-color);
     font-weight: 600;
 }
 
 .table tbody tr {
     border-bottom: 1px solid var(--border-color);
-    background-color: var(--bg-dark);
 }
 
 .table tbody tr td {
-    background-color: var(--bg-dark) !important;
-    color: var(--text-light) !important;
+    color: var(--text-primary) !important;
 }
 
 .table-striped>tbody>tr:nth-of-type(odd) {
-    background-color: rgba(30, 32, 58, 0.3) !important;
+    background-color: var(--bg-surface-hover) !important;
 }
 
 .table-striped>tbody>tr:nth-of-type(odd)>* {
-    background-color: rgba(30, 32, 58, 0.3) !important;
-    color: var(--text-light) !important;
+    background-color: var(--bg-surface-hover) !important;
 }
 
 .table-striped>tbody>tr:nth-of-type(even) {
-    background-color: var(--bg-dark) !important;
+    background-color: var(--bg-surface) !important;
 }
 
 .table-striped>tbody>tr:nth-of-type(even)>* {
-    background-color: var(--bg-dark) !important;
-    color: var(--text-light) !important;
+    background-color: var(--bg-surface) !important;
 }
 
 .table-hover>tbody>tr:hover {
-    background-color: var(--bg-surface) !important;
+    background-color: var(--bg-main) !important;
 }
 
 .table-hover>tbody>tr:hover>* {
+    background-color: var(--bg-main) !important;
+}
+
+[data-theme="dark"] .table tbody tr {
+    background-color: var(--bg-main);
+}
+
+[data-theme="dark"] .table tbody tr td {
+    background-color: var(--bg-main) !important;
+}
+
+[data-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd) {
+    background-color: rgba(30, 32, 58, 0.3) !important;
+}
+
+[data-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd)>* {
+    background-color: rgba(30, 32, 58, 0.3) !important;
+}
+
+[data-theme="dark"] .table-hover>tbody>tr:hover {
     background-color: var(--bg-surface) !important;
-    color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .table-hover>tbody>tr:hover>* {
+    background-color: var(--bg-surface) !important;
 }
 
 .table td, .table th {
@@ -276,187 +296,148 @@
     width: calc((100% - 80px) / 5);
 }
 
-/* Garante que os ícones tenham o mesmo estilo dos botões */
-.btn i {
-    vertical-align: middle;
-}
-
-/* Estilos melhorados para todos os botões */
-.btn-outline-light {
-    background-color: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.3);
-    color: #f8f9fa;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-}
-
-.btn-outline-light:hover {
-    background-color: rgba(255,255,255,0.2);
-    border-color: rgba(255,255,255,0.5);
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-}
-
-.btn-outline-danger {
-    background-color: rgba(220,53,69,0.15);
-    border-color: rgba(220,53,69,0.4);
-    color: #ff6b6b;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-}
-
-.btn-outline-danger:hover {
-    background-color: rgba(220,53,69,0.25);
-    border-color: rgba(220,53,69,0.6);
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(220,53,69,0.3);
-}
-
-.btn-outline-primary {
-    background-color: rgba(13,110,253,0.15);
-    border-color: rgba(13,110,253,0.4);
-    color: #66d9ff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-}
-
-.btn-outline-primary:hover {
-    background-color: rgba(13,110,253,0.25);
-    border-color: rgba(13,110,253,0.6);
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(13,110,253,0.3);
-}
-
-/* Novo estilo para o botão de download - cor azul suave */
-.btn-success {
-    background-color: #0dcaf0;
-    border-color: #0dcaf0;
-    color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-}
-
-.btn-success:hover {
-    background-color: #0bb5d3;
-    border-color: #0bb5d3;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(13,202,240,0.4);
-}
-
-/* Botões primários */
-.btn-primary {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(13,110,253,0.3);
-}
-
-/* Botão secundário */
-.btn-secondary {
-    background-color: rgba(108,117,125,0.8);
-    border-color: rgba(108,117,125,0.8);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(108,117,125,0.3);
-}
-
-/* Botão de perigo */
-.btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-}
-
-.btn-danger:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(220,53,69,0.3);
-}
-
-/* Estilo específico para versão oficial */
-.text-warning {
-    color: #ffc107 !important;
-}
-
-/* Destaque para informações da versão oficial */
+/* Alertas adaptados ao tema */
 .alert-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: var(--color-info);
+    color: var(--color-info);
+}
+
+[data-theme="dark"] .alert-info {
     background-color: rgba(13, 202, 240, 0.1);
-    border-color: rgba(13, 202, 240, 0.2);
+    border-color: #0dcaf0;
     color: #0dcaf0;
 }
 
 .alert-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    border-color: var(--color-warning);
+    color: #92400e;
+}
+
+[data-theme="dark"] .alert-warning {
     background-color: rgba(255, 193, 7, 0.1);
-    border-color: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+}
+
+.alert-warning .text-warning {
+    color: var(--color-warning) !important;
+}
+
+.alert .bi {
+    color: inherit;
 }
 
 /* Estilos para as estatísticas */
 .stats-title {
-    color: #e9ecef !important;
+    color: var(--text-primary) !important;
     font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 .stats-item {
     padding: 1rem;
     border-radius: 8px;
-    background: rgba(255,255,255,0.05);
+    background-color: var(--bg-surface-hover);
+    border: 1px solid var(--border-color);
     margin-bottom: 1rem;
     transition: all 0.3s ease;
 }
 
+[data-theme="dark"] .stats-item {
+    background: rgba(255,255,255,0.05);
+}
+
 .stats-item:hover {
-    background: rgba(255,255,255,0.1);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .stats-item:hover {
+    background: rgba(255,255,255,0.1);
 }
 
 .stats-number-primary {
-    color: #66d9ff !important;
+    color: var(--color-primary) !important;
     font-weight: 700;
-    text-shadow: 0 0 10px rgba(102, 217, 255, 0.5);
     margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .stats-number-primary {
+    text-shadow: 0 0 10px rgba(0, 164, 217, 0.5);
 }
 
 .stats-number-success {
-    color: #52e052 !important;
+    color: var(--color-success) !important;
     font-weight: 700;
-    text-shadow: 0 0 10px rgba(82, 224, 82, 0.5);
     margin-bottom: 0.5rem;
 }
 
+[data-theme="dark"] .stats-number-success {
+    text-shadow: 0 0 10px rgba(45, 216, 163, 0.5);
+}
+
 .stats-number-warning {
-    color: #ffeb3b !important;
+    color: var(--color-warning) !important;
     font-weight: 700;
-    text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
     margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .stats-number-warning {
+    text-shadow: 0 0 10px rgba(242, 169, 59, 0.5);
 }
 
 .stats-number-info {
     color: #ff6b6b !important;
     font-weight: 700;
-    text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
     margin-bottom: 0.5rem;
 }
 
+[data-theme="dark"] .stats-number-info {
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
+
 .stats-label {
-    color: #f8f9fa !important;
+    color: var(--text-secondary) !important;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    opacity: 0.9;
+}
+
+/* Badges */
+.badge {
+    font-size: 0.875em;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Card adaptado ao tema */
+.card-header h2 {
+    color: var(--color-primary) !important;
+}
+
+.card-header small {
+    color: var(--text-muted) !important;
+}
+
+/* Texto secundário */
+small {
+    color: var(--text-secondary);
+}
+
+/* Botões */
+.btn i {
+    vertical-align: middle;
+}
+
+.btn-info {
+    background-color: var(--color-info);
+    color: white !important;
+    border: none;
+}
+
+.btn-info:hover {
+    background-color: #2563eb;
+    color: white !important;
 }
 
 /* Responsividade */
@@ -469,6 +450,11 @@
         position: sticky;
         left: 0;
         z-index: 1;
+        background-color: var(--bg-surface);
+    }
+
+    [data-theme="dark"] .questao-numero {
+        background-color: var(--bg-main);
     }
 
     .btn-group {
@@ -481,7 +467,6 @@
         margin-bottom: 0.25rem;
     }
 
-    /* Responsividade para estatísticas */
     .col-md-3 {
         margin-bottom: 1rem;
     }
@@ -492,28 +477,44 @@
     transition: transform 0.2s ease-in-out;
 }
 
-.card:hover {
-    transform: translateY(-2px);
-}
-
-/* Estilo para badges de versão */
-.badge {
-    font-size: 0.875em;
-    padding: 0.5rem 0.75rem;
-}
-
 /* Melhor visualização dos alertas */
 .alert {
     border-radius: 10px;
     border-width: 2px;
 }
 
-.alert-info .fas {
-    color: #0dcaf0;
+.alert-heading {
+    color: inherit !important;
 }
 
-.alert-warning .fas {
-    color: #ffc107;
+/* Texto de destaque */
+strong {
+    color: var(--text-primary);
+}
+
+/* Links dentro de alertas */
+.alert a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+/* Modal adaptado ao tema */
+.modal-body p {
+    color: var(--text-primary);
+}
+
+/* Ícones coloridos mantêm sua cor */
+.text-warning {
+    color: var(--color-warning) !important;
+}
+
+.text-danger {
+    color: var(--color-danger) !important;
+}
+
+/* Garante que ícones nos badges mantenham visibilidade */
+.badge i {
+    color: inherit;
 }
 </style>
 {% endblock %}

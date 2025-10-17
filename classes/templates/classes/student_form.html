@@ -11,25 +11,64 @@
     <div class="card-body">
         <form method="post">
             {% csrf_token %}
-            {% for field in form %}
-                {% if field.name != 'class_pk' %}
-                    <div class="mb-3">
-                        {{ field.label_tag }}
-                        {% render_field field class="form-control" %}
-                        {% if field.errors %}
-                            <div class="alert alert-danger mt-2">
-                                {{ field.errors }}
-                            </div>
-                        {% endif %}
-                        {% if field.help_text %}
-                            <small class="form-text text-muted">{{ field.help_text }}</small>
-                        {% endif %}
+
+            <!-- Campo Nome -->
+            <div class="mb-3">
+                <label for="id_name" class="form-label">Nome Completo</label>
+                {% render_field form.name class="form-control" placeholder="Nome completo do aluno" %}
+                {% if form.name.errors %}
+                    <div class="alert alert-danger mt-2">
+                        {{ form.name.errors }}
                     </div>
-                {% else %}
-                    {{ field }}
                 {% endif %}
-            {% endfor %}
-            
+            </div>
+
+            <!-- Campo E-mail -->
+            <div class="mb-3">
+                <label for="id_email" class="form-label">E-mail</label>
+                {% render_field form.email class="form-control" placeholder="email@escola.com" %}
+                {% if form.email.errors %}
+                    <div class="alert alert-danger mt-2">
+                        {{ form.email.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Campo Matrícula -->
+            <div class="mb-3">
+                <label for="id_student_id" class="form-label">Número de Matrícula</label>
+                {% render_field form.student_id class="form-control" placeholder="Número único de identificação" %}
+                {% if form.student_id.errors %}
+                    <div class="alert alert-danger mt-2">
+                        {{ form.student_id.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Campo Data de Nascimento (novo) -->
+            <div class="mb-3">
+                <label for="id_data_nascimento" class="form-label">Data de Nascimento</label>
+                {% render_field form.data_nascimento class="form-control" %}
+                <small class="form-text text-muted">Formato: DD/MM/AAAA</small>
+                {% if form.data_nascimento.errors %}
+                    <div class="alert alert-danger mt-2">
+                        {{ form.data_nascimento.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Campo Turmas -->
+            <div class="mb-3">
+                <label for="id_classes" class="form-label">Turmas</label>
+                {% render_field form.classes class="form-control" %}
+                {% if form.classes.errors %}
+                    <div class="alert alert-danger mt-2">
+                        {{ form.classes.errors }}
+                    </div>
+                {% endif %}
+                <small class="form-text text-muted">Segure Ctrl para selecionar múltiplas turmas</small>
+            </div>
+
             <div class="mt-4">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-save"></i> Adicionar Aluno

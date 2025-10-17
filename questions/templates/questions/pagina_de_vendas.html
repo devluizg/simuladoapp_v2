@@ -1,0 +1,985 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SimuladoApp - Plataforma de Gestão de Simulados Escolares{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* --- TEMA CLARO COM PALETA DO BASE.HTML --- */
+    :root {
+        /* Cores do base adaptadas para tema claro */
+        --light-primary: #00a4d9;
+        --light-secondary: #434891;
+        --light-accent: #5a6fd8;
+
+        /* Backgrounds claros */
+        --light-bg: #f0f4f8;
+        --light-surface: #ffffff;
+        --light-surface-hover: #f8fafb;
+
+        /* Bordas e divisores */
+        --light-border: #d1dce6;
+
+        /* Textos */
+        --light-text-primary: #1e2a3a;
+        --light-text-secondary: #4a5f7f;
+        --light-text-muted: #6b7f99;
+
+        /* Cores escuras do base.html para navbar */
+        --dark-bg-surface: #1d203a;
+        --dark-border: #31355b;
+        --dark-text-light: #e0e6f1;
+        --dark-text-muted: #8c96c3;
+    }
+
+    /* Remove margens e padding padrão */
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    body {
+        background-color: var(--light-bg) !important;
+        color: var(--light-text-primary) !important;
+        font-family: 'Inter', 'Poppins', sans-serif !important;
+    }
+
+    /* Esconde a navbar padrão do base.html */
+    nav.navbar {
+        display: none !important;
+    }
+
+    /* Remove todas as margens do container do base */
+    .container.mt-4 {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Garante que sections ocupem 100% da largura */
+    section {
+        width: 100%;
+        margin: 0;
+        padding: 5rem 0;
+    }
+
+    /* Container responsivo dentro das sections */
+    section .container {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        section {
+            padding: 3rem 0;
+        }
+
+        section .container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+
+    /* Gradientes suaves */
+    .gradient-bg {
+        background: linear-gradient(135deg, var(--light-secondary) 0%, var(--light-primary) 100%);
+    }
+
+    .gradient-soft {
+        background: linear-gradient(135deg, #e8ecf5 0%, #e0f2f7 100%);
+    }
+
+    /* Header da Landing - TEMA ESCURO */
+    .landing-header {
+        background-color: var(--dark-bg-surface);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 1px solid var(--dark-border);
+        width: 100%;
+        margin: 0;
+    }
+
+    .landing-header .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
+    .landing-nav a {
+        color: var(--dark-text-muted);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .landing-nav a::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--light-secondary), var(--light-primary));
+        transition: width 0.3s ease;
+    }
+
+    .landing-nav a:hover {
+        color: var(--dark-text-light);
+    }
+
+    .landing-nav a:hover::after,
+    .landing-nav a.active::after {
+        width: 100%;
+    }
+
+    .btn-landing-primary {
+        background: linear-gradient(90deg, var(--light-secondary), var(--light-primary));
+        color: white !important;
+        font-weight: 600;
+        padding: 0.7rem 1.8rem;
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 164, 217, 0.3);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-landing-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 164, 217, 0.5);
+    }
+
+    .btn-landing-secondary {
+        background-color: transparent;
+        color: var(--dark-text-light) !important;
+        font-weight: 600;
+        padding: 0.7rem 1.8rem;
+        border-radius: 8px;
+        border: 2px solid var(--dark-border);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-landing-secondary:hover {
+        border-color: var(--light-primary);
+        color: var(--light-primary) !important;
+        background-color: rgba(0, 164, 217, 0.1);
+    }
+
+    .btn-landing-outline {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white !important;
+        font-weight: 600;
+        padding: 0.7rem 1.8rem;
+        border-radius: 8px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-landing-outline:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-color: white;
+    }
+
+    /* Mobile menu - tema escuro */
+    #mobileMenu {
+        background-color: var(--dark-bg-surface);
+    }
+
+    #mobileMenu a {
+        color: var(--dark-text-muted);
+    }
+
+    #mobileMenu a:hover {
+        color: var(--dark-text-light);
+    }
+
+    #mobileMenu hr {
+        border-color: var(--dark-border);
+        opacity: 1;
+    }
+
+    /* Cards */
+    .feature-card {
+        background-color: var(--light-surface);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(67, 72, 145, 0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid var(--light-border);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(67, 72, 145, 0.12);
+        border-color: var(--light-primary);
+    }
+
+    .benefit-icon {
+        width: 3.5rem;
+        height: 3.5rem;
+        background: linear-gradient(135deg, rgba(67, 72, 145, 0.1), rgba(0, 164, 217, 0.1));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--light-primary);
+        font-size: 1.5rem;
+    }
+
+    /* Pricing Cards */
+    .pricing-card {
+        background-color: var(--light-surface);
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 12px rgba(67, 72, 145, 0.08);
+        transition: all 0.3s ease;
+        border: 2px solid var(--light-border);
+        height: 100%;
+    }
+
+    .pricing-card:hover {
+        border-color: var(--light-primary);
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(67, 72, 145, 0.15);
+    }
+
+    .pricing-card.featured {
+        background: linear-gradient(135deg, var(--light-secondary) 0%, var(--light-primary) 100%);
+        color: white !important;
+        transform: scale(1.05);
+        border: none;
+    }
+
+    .pricing-card.featured * {
+        color: white !important;
+    }
+
+    .pricing-card.featured:hover {
+        transform: scale(1.08) translateY(-5px);
+    }
+
+    .pricing-card.featured .text-muted {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    /* Testimonial Cards */
+    .testimonial-card {
+        background-color: var(--light-surface);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(67, 72, 145, 0.08);
+        border: 1px solid var(--light-border);
+        height: 100%;
+    }
+
+    /* Stats */
+    .stat-number {
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, var(--light-secondary), var(--light-primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--light-text-primary) !important;
+        font-weight: 700;
+    }
+
+    .text-muted {
+        color: var(--light-text-muted) !important;
+    }
+
+    .text-secondary {
+        color: var(--light-text-secondary) !important;
+    }
+
+    /* Badges */
+    .badge-gradient {
+        background: linear-gradient(90deg, var(--light-secondary), var(--light-primary));
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    /* Footer */
+    .landing-footer {
+        background: linear-gradient(135deg, #2a3254 0%, #1e2a45 100%);
+        color: #e0e6f1;
+        width: 100%;
+        margin: 0;
+    }
+
+    .landing-footer .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
+    .landing-footer h5 {
+        color: white !important;
+    }
+
+    .landing-footer a {
+        color: #b8c5d9;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .landing-footer a:hover {
+        color: var(--light-primary);
+    }
+
+    /* Images */
+    .feature-image {
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(67, 72, 145, 0.15);
+        border: 1px solid var(--light-border);
+    }
+
+    /* Brand na navbar - texto com gradiente */
+    .brand-text {
+        font-family: 'Beatcarb', sans-serif;
+        font-size: 1.75rem;
+        background: linear-gradient(90deg, var(--light-secondary), var(--light-primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Star ratings */
+    .star-rating {
+        color: #f59e0b;
+    }
+
+    /* Avatar */
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--light-secondary), var(--light-primary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--light-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--light-secondary), var(--light-primary));
+        border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--light-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header da Landing Page -->
+<header class="landing-header">
+    <nav class="container py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-display me-2" style="font-size: 2rem; color: var(--light-primary);"></i>
+                <span class="brand-text">SimuladoApp</span>
+            </div>
+
+            <div class="d-none d-md-flex landing-nav align-items-center gap-4">
+                <a href="#funcionalidades">Funcionalidades</a>
+                <a href="#planos">Planos</a>
+                <a href="#depoimentos">Depoimentos</a>
+                <a href="#contato">Contato</a>
+            </div>
+
+            <div class="d-none d-md-flex align-items-center gap-3">
+                <a href="{% url 'accounts:login' %}" class="btn btn-landing-secondary">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                </a>
+                <a href="{% url 'accounts:register' %}" class="btn btn-landing-primary">
+                    <i class="bi bi-person-plus me-2"></i>Registrar
+                </a>
+            </div>
+
+            <button class="btn d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenu">
+                <i class="bi bi-list" style="font-size: 1.5rem; color: var(--light-primary);"></i>
+            </button>
+        </div>
+
+        <div class="collapse d-md-none mt-3" id="mobileMenu">
+            <div class="d-flex flex-column gap-2">
+                <a href="#funcionalidades" class="py-2">Funcionalidades</a>
+                <a href="#planos" class="py-2">Planos</a>
+                <a href="#depoimentos" class="py-2">Depoimentos</a>
+                <a href="#contato" class="py-2">Contato</a>
+                <hr>
+                <a href="{% url 'accounts:login' %}" class="btn btn-landing-secondary mb-2">Login</a>
+                <a href="{% url 'accounts:register' %}" class="btn btn-landing-primary">Registrar</a>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- Hero Section -->
+<section class="gradient-bg text-white">
+    <div class="container text-center py-5">
+        <h1 class="display-3 fw-bold mb-4" style="color: white !important;">Transforme a Gestão de Simulados</h1>
+        <p class="lead mb-5 mx-auto" style="max-width: 800px; opacity: 0.95;">
+            A solução completa para criação, gestão e correção de simulados escolares. Simplifique o processo avaliativo, economize tempo e ofereça uma experiência personalizada.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="#planos" class="btn btn-light btn-lg px-5 py-3" style="color: var(--light-secondary); font-weight: 600;">
+                <i class="bi bi-rocket-takeoff me-2"></i>Conheça os Planos
+            </a>
+            <a href="#funcionalidades" class="btn btn-landing-outline btn-lg px-5 py-3">
+                <i class="bi bi-play-circle me-2"></i>Ver Funcionalidades
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Por que escolher -->
+<section style="background-color: var(--light-surface);">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge-gradient mb-3">POR QUE ESCOLHER</span>
+            <h2 class="display-5 fw-bold mb-3">Por que escolher o SimuladoApp?</h2>
+            <p class="lead text-muted mx-auto" style="max-width: 700px;">Uma revolução na gestão educacional. Ajudamos professores e instituições a focarem no que realmente importa.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="benefit-icon mb-3">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Redução de tempo e custos</h4>
+                    <p class="text-muted">Automatize a criação, correção e análise de simulados, eliminando processos manuais demorados.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="benefit-icon mb-3">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Segurança e integridade</h4>
+                    <p class="text-muted">Embaralhamento automático de questões em até 5 versões diferentes para evitar fraudes.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="benefit-icon mb-3">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Acessibilidade Total</h4>
+                    <p class="text-muted">Plataforma web para professores e aplicativos móveis para professores e alunos.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="benefit-icon mb-3">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Análise de desempenho</h4>
+                    <p class="text-muted">Dashboards detalhados com resultados individuais e por turma, disponíveis em tempo real.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="benefit-icon mb-3">
+                        <i class="bi bi-sliders"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Flexibilidade</h4>
+                    <p class="text-muted">Adapte simulados às suas necessidades com um banco de questões personalizável.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="benefit-icon mb-3">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Colaboração</h4>
+                    <p class="text-muted">Compartilhe questões e simulados com colegas de forma eficiente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Funcionalidades -->
+<section id="funcionalidades" class="gradient-soft">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge-gradient mb-3">FUNCIONALIDADES</span>
+            <h2 class="display-5 fw-bold mb-3">Principais Funcionalidades</h2>
+            <p class="lead text-muted mx-auto" style="max-width: 700px;">Ferramentas poderosas e intuitivas para otimizar todo o ciclo avaliativo.</p>
+        </div>
+
+        <!-- Feature 1 -->
+        <div class="row align-items-center mb-5 pb-5">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <span class="badge bg-primary mb-3 px-3 py-2">Funcionalidade 1</span>
+                <h3 class="h2 fw-bold mb-3" style="color: var(--light-primary);">Banco de Questões Personalizável</h3>
+                <p class="lead text-muted">Crie, edite e armazene questões em nosso banco de dados intuitivo. Já incluímos um conjunto de questões pré-cadastradas para facilitar o início. Adicione imagens, fórmulas e referências para criar simulados únicos e desafiadores.</p>
+                <ul class="text-muted mt-3">
+                    <li class="mb-2">Interface intuitiva e fácil de usar</li>
+                    <li class="mb-2">Suporte para imagens e fórmulas matemáticas</li>
+                    <li class="mb-2">Organização por matéria e dificuldade</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://placehold.co/600x400/E0E7FF/4F46E5?text=Banco+de+Questões" alt="Banco de Questões" class="img-fluid feature-image">
+            </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="row align-items-center mb-5 pb-5 flex-lg-row-reverse">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <span class="badge bg-primary mb-3 px-3 py-2">Funcionalidade 2</span>
+                <h3 class="h2 fw-bold mb-3" style="color: var(--light-primary);">Criação de Simulados com Embaralhamento</h3>
+                <p class="lead text-muted">Monte simulados em minutos e gere até <strong>5 versões diferentes</strong> com questões embaralhadas automaticamente, garantindo a integridade das avaliações. O PDF do simulado é gerado pronto para impressão, com identificação do aluno inclusa.</p>
+                <ul class="text-muted mt-3">
+                    <li class="mb-2">Até 5 versões embaralhadas automaticamente</li>
+                    <li class="mb-2">PDF pronto para impressão</li>
+                    <li class="mb-2">Cartão-resposta integrado</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://placehold.co/600x400/E0E7FF/4F46E5?text=Criação+de+Simulados" alt="Criação de Simulados" class="img-fluid feature-image">
+            </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="row align-items-center mb-5 pb-5">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <span class="badge bg-primary mb-3 px-3 py-2">Funcionalidade 3</span>
+                <h3 class="h2 fw-bold mb-3" style="color: var(--light-primary);">Correção Automática via Aplicativo</h3>
+                <p class="lead text-muted">Corrija simulados em segundos! Basta tirar uma foto do cartão-resposta com o aplicativo do professor. A leitura óptica avançada garante precisão e agilidade na correção, com resultados enviados diretamente para a plataforma.</p>
+                <ul class="text-muted mt-3">
+                    <li class="mb-2">Correção em poucos segundos</li>
+                    <li class="mb-2">Leitura óptica de alta precisão</li>
+                    <li class="mb-2">Resultados instantâneos</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://placehold.co/600x400/E0E7FF/4F46E5?text=Correção+Automática" alt="Correção Automática" class="img-fluid feature-image">
+            </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="row align-items-center flex-lg-row-reverse">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <span class="badge bg-primary mb-3 px-3 py-2">Funcionalidade 4</span>
+                <h3 class="h2 fw-bold mb-3" style="color: var(--light-primary);">Dashboard de Desempenho e App do Aluno</h3>
+                <p class="lead text-muted">Acesse relatórios completos com o desempenho individual de cada aluno e das turmas. No plano institucional, disponibilize um app personalizado para os alunos acompanharem seus resultados e desempenho em todos os simulados.</p>
+                <ul class="text-muted mt-3">
+                    <li class="mb-2">Relatórios detalhados e visuais</li>
+                    <li class="mb-2">Análise por turma e individual</li>
+                    <li class="mb-2">App exclusivo para alunos (plano institucional)</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://placehold.co/600x400/E0E7FF/4F46E5?text=Dashboard+e+App" alt="Dashboard e App" class="img-fluid feature-image">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section style="background-color: var(--light-surface);">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge-gradient mb-3">RESULTADOS COMPROVADOS</span>
+            <h2 class="display-5 fw-bold mb-3">Benefícios Exclusivos do SimuladoApp</h2>
+        </div>
+        <div class="row text-center">
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="stat-number">70%</div>
+                <h4 class="fw-bold mt-3">Economia de Tempo</h4>
+                <p class="text-muted">Reduza o tempo gasto com criação e correção de simulados.</p>
+            </div>
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="stat-number">92%</div>
+                <h4 class="fw-bold mt-3">Menos Revisões</h4>
+                <p class="text-muted">Diminua os pedidos de revisão com nossa tecnologia de leitura óptica.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-number">150+</div>
+                <h4 class="fw-bold mt-3">Instituições</h4>
+                <p class="text-muted">Milhares de professores em todo o Brasil confiam em nós.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Planos -->
+<section id="planos" class="gradient-soft">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge-gradient mb-3">PLANOS</span>
+            <h2 class="display-5 fw-bold mb-3">Planos que se Adaptam às Suas Necessidades</h2>
+            <p class="lead text-muted mx-auto" style="max-width: 700px;">Escolha o plano ideal para você ou sua instituição e comece a transformar suas avaliações.</p>
+        </div>
+
+        <div class="row justify-content-center g-4">
+            <!-- Plano Professor -->
+            <div class="col-lg-5">
+                <div class="pricing-card">
+                    <h3 class="h2 fw-bold text-center mb-2">Plano Professor</h3>
+                    <p class="text-center text-muted mb-4">Perfeito para professores independentes</p>
+
+                    <div class="text-center mb-4">
+                        <span class="display-4 fw-bold" style="color: var(--light-primary);">R$59</span>
+                        <span class="text-muted">/ semestre</span>
+                        <div class="mt-2">
+                            <span class="fs-5 text-muted">ou R$99 por ano</span>
+                        </div>
+                    </div>
+
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1" style="color: var(--light-primary);"></i>
+                            <span>Cadastro de até <strong>5 turmas</strong></span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1" style="color: var(--light-primary);"></i>
+                            <span>Banco de questões personalizável</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1" style="color: var(--light-primary);"></i>
+                            <span>Criação de simulados com até 5 versões</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1" style="color: var(--light-primary);"></i>
+                            <span>Correção automática via aplicativo</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1" style="color: var(--light-primary);"></i>
+                            <span>Dashboard de desempenho</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1" style="color: var(--light-primary);"></i>
+                            <span>Adicional de R$5,00 por turma extra</span>
+                        </li>
+                    </ul>
+
+                    <a href="{% url 'accounts:register' %}" class="btn btn-landing-primary w-100 py-3">
+                        <i class="bi bi-rocket-takeoff me-2"></i>Começar Agora
+                    </a>
+                </div>
+            </div>
+
+            <!-- Plano Institucional -->
+            <div class="col-lg-5">
+                <div class="pricing-card featured">
+                    <div class="text-center mb-2">
+                        <span class="badge bg-warning text-dark px-3 py-2">MAIS POPULAR</span>
+                    </div>
+                    <h3 class="h2 fw-bold text-center mb-2">Plano Institucional</h3>
+                    <p class="text-center mb-4" style="color: rgba(255,255,255,0.9);">Ideal para escolas e instituições</p>
+
+                    <div class="text-center mb-4">
+                        <div class="mb-2" style="font-size: 1.1rem;">A partir de</div>
+                        <span class="display-4 fw-bold">R$119</span>
+                        <span>/ mês</span>
+                        <div class="mt-2" style="font-size: 0.9rem; opacity: 0.9;">
+                            (Valor ajustado conforme número de turmas)
+                        </div>
+                    </div>
+
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1"></i>
+                            <span><strong>Tudo do Plano Professor, mais:</strong></span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1"></i>
+                            <span><strong>Aplicativo do aluno personalizado</strong> com a identidade da instituição</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1"></i>
+                            <span>Relatórios avançados de desempenho</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1"></i>
+                            <span>Suporte prioritário e integração</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill me-2 mt-1"></i>
+                            <span>Turmas ilimitadas</span>
+                        </li>
+                    </ul>
+
+                    <a href="#contato" class="btn btn-light w-100 py-3" style="color: var(--light-secondary); font-weight: 600;">
+                        <i class="bi bi-envelope me-2"></i>Solicitar Orçamento
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Depoimentos -->
+<section id="depoimentos" style="background-color: var(--light-surface);">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge-gradient mb-3">DEPOIMENTOS</span>
+            <h2 class="display-5 fw-bold mb-3">O que nossos clientes dizem</h2>
+            <p class="lead text-muted mx-auto" style="max-width: 700px;">Descubra como o SimuladoApp está transformando a educação</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="testimonial-card">
+                    <div class="mb-3 star-rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="text-muted fst-italic mb-4">"O SimuladoApp transformou a forma como gerenciamos nossas avaliações. A correção automática e os relatórios detalhados economizam horas do nosso trabalho!"</p>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle me-3">MS</div>
+                        <div>
+                            <div class="fw-bold">Maria Silva</div>
+                            <div class="text-muted small">Coordenadora Pedagógica</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="testimonial-card">
+                    <div class="mb-3 star-rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="text-muted fst-italic mb-4">"O aplicativo do aluno é um diferencial incrível! Nossos estudantes adoram acompanhar o progresso diretamente no celular. A plataforma é intuitiva e eficiente."</p>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle me-3">JP</div>
+                        <div>
+                            <div class="fw-bold">João Pereira</div>
+                            <div class="text-muted small">Diretor de Escola</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="gradient-bg text-white">
+    <div class="container text-center py-5">
+        <h2 class="display-5 fw-bold mb-4" style="color: white !important;">Pronto para Revolucionar suas Avaliações?</h2>
+        <p class="lead mb-5 mx-auto" style="max-width: 700px; opacity: 0.95;">
+            Junte-se a mais de 150 instituições e milhares de professores que já confiam no SimuladoApp para gerenciar seus simulados.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg px-5 py-3" style="color: var(--light-secondary); font-weight: 600;">
+                <i class="bi bi-rocket-takeoff me-2"></i>Começar Gratuitamente
+            </a>
+            <a href="#contato" class="btn btn-landing-outline btn-lg px-5 py-3">
+                <i class="bi bi-chat-dots me-2"></i>Falar com Especialista
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer id="contato" class="landing-footer">
+    <div class="container py-5">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-display me-2" style="font-size: 2rem; color: var(--light-primary);"></i>
+                    <span style="font-family: 'Beatcarb', sans-serif; font-size: 1.5rem; color: white;">
+                        SimuladoApp
+                    </span>
+                </div>
+                <p class="mb-3" style="color: #b8c5d9;">Simplificando Avaliações, Ampliando Resultados.</p>
+                <p style="color: #b8c5d9;">Junte-se a mais de <strong style="color: white;">150 instituições</strong> e milhares de professores em todo o Brasil!</p>
+            </div>
+
+            <div class="col-lg-4">
+                <h5 class="fw-bold mb-3">Contato</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-3">
+                        <i class="bi bi-telephone-fill me-2" style="color: var(--light-primary);"></i>
+                        <a href="https://wa.me/5581326420100" target="_blank">(81) 3264-2010 (WhatsApp)</a>
+                                        </li>
+                    <li class="mb-3">
+                        <i class="bi bi-envelope-fill me-2" style="color: var(--light-primary);"></i>
+                        <a href="mailto:contato@simulaapp.com.br">contato@simulaapp.com.br</a>
+                    </li>
+                    <li class="mb-3">
+                        <i class="bi bi-geo-alt-fill me-2" style="color: var(--light-primary);"></i>
+                        <span style="color: #b8c5d9;">Av. Gov. Agamenon Magalhães, 2615, Sala 0904<br>Recife, PE, CEP 50.050-290</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-lg-4">
+                <h5 class="fw-bold mb-3">Links Rápidos</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="#funcionalidades"><i class="bi bi-chevron-right me-2"></i>Funcionalidades</a></li>
+                    <li class="mb-2"><a href="#planos"><i class="bi bi-chevron-right me-2"></i>Planos</a></li>
+                    <li class="mb-2"><a href="#depoimentos"><i class="bi bi-chevron-right me-2"></i>Depoimentos</a></li>
+                    <li class="mb-2"><a href="{% url 'accounts:login' %}"><i class="bi bi-chevron-right me-2"></i>Login</a></li>
+                    <li class="mb-2"><a href="{% url 'accounts:register' %}"><i class="bi bi-chevron-right me-2"></i>Registrar</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <hr style="border-color: #475569; opacity: 0.3;">
+
+        <div class="row mt-4">
+            <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                <p class="mb-0" style="color: #b8c5d9;">&copy; 2024 SimuladoApp. Todos os direitos reservados.</p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <a href="#" class="me-3">Política de Privacidade</a>
+                <a href="#">Termos de Uso</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Smooth scroll para links internos
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            if (href !== '#') {
+                e.preventDefault();
+                const target = document.querySelector(href);
+                if (target) {
+                    const headerOffset = 80;
+                    const elementPosition = target.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+
+                    // Fecha o menu mobile se estiver aberto
+                    const mobileMenu = document.getElementById('mobileMenu');
+                    if (mobileMenu && mobileMenu.classList.contains('show')) {
+                        const bsCollapse = bootstrap.Collapse.getInstance(mobileMenu);
+                        if (bsCollapse) {
+                            bsCollapse.hide();
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    // Adiciona classe active ao link da navbar ao rolar a página
+    window.addEventListener('scroll', () => {
+        const sections = document.querySelectorAll('section[id]');
+        const scrollY = window.pageYOffset;
+
+        sections.forEach(section => {
+            const sectionHeight = section.offsetHeight;
+            const sectionTop = section.offsetTop - 100;
+            const sectionId = section.getAttribute('id');
+            const navLink = document.querySelector(`.landing-nav a[href="#${sectionId}"]`);
+
+            if (navLink && scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+                document.querySelectorAll('.landing-nav a').forEach(link => {
+                    link.style.color = 'var(--light-text-secondary)';
+                });
+                navLink.style.color = 'var(--light-primary)';
+            }
+        });
+    });
+
+    // Animação de entrada para os cards
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '0';
+                entry.target.style.transform = 'translateY(20px)';
+
+                setTimeout(() => {
+                    entry.target.style.transition = 'all 0.6s ease-out';
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, 100);
+
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observa todos os cards
+    document.querySelectorAll('.feature-card, .pricing-card, .testimonial-card').forEach(card => {
+        observer.observe(card);
+    });
+
+    // Fecha o menu mobile ao clicar fora
+    document.addEventListener('click', (e) => {
+        const mobileMenu = document.getElementById('mobileMenu');
+        const toggleButton = document.querySelector('[data-bs-target="#mobileMenu"]');
+
+        if (mobileMenu && mobileMenu.classList.contains('show')) {
+            if (!mobileMenu.contains(e.target) && !toggleButton.contains(e.target)) {
+                const bsCollapse = bootstrap.Collapse.getInstance(mobileMenu);
+                if (bsCollapse) {
+                    bsCollapse.hide();
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
