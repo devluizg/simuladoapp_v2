@@ -25,6 +25,7 @@ urlpatterns = [
     path('update_simulado_area/', update_simulado_area, name='update_simulado_area'),
     path('', include(('creditos.urls', 'creditos'), namespace='creditos')),
     path('privacy-policy/', privacy_policy, name='privacy_policy'),
+    path('payments/', include('payments.urls', namespace='payments')),
 ]
 
 # Servir arquivos de mídia durante o desenvolvimento

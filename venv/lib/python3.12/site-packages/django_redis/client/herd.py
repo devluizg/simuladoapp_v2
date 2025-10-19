@@ -4,12 +4,19 @@ import time
 from collections import OrderedDict
 
 from django.conf import settings
-from redis.exceptions import ConnectionError, ResponseError, TimeoutError
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import ResponseError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 
-from ..exceptions import ConnectionInterrupted
-from .default import DEFAULT_TIMEOUT, DefaultClient
+from django_redis.client.default import DEFAULT_TIMEOUT, DefaultClient
+from django_redis.exceptions import ConnectionInterrupted
 
-_main_exceptions = (ConnectionError, ResponseError, TimeoutError, socket.timeout)
+_main_exceptions = (
+    RedisConnectionError,
+    RedisTimeoutError,
+    ResponseError,
+    socket.timeout,
+)
 
 
 class Marker:
@@ -26,9 +33,7 @@ def _is_expired(x, herd_timeout: int) -> bool:
         return True
     val = x + random.randint(1, herd_timeout)
 
-    if val >= herd_timeout:
-        return True
-    return False
+    return val >= herd_timeout
 
 
 class HerdClient(DefaultClient):
@@ -147,10 +152,10 @@ class HerdClient(DefaultClient):
             raise ConnectionInterrupted(connection=client) from e
 
     def incr(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def decr(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def touch(self, key, timeout=DEFAULT_TIMEOUT, version=None, client=None):
         if client is None:

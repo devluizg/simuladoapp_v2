@@ -8,8 +8,6 @@ from io import BytesIO
 from itertools import cycle
 from math import inf
 from pathlib import Path
-from urllib.parse import urlparse
-from urllib.request import url2pathname
 from xml.etree import ElementTree
 
 import pydyf
@@ -70,7 +68,7 @@ class RasterImage:
 
         # The presence of the APP14 segment indicates an Adobe image with
         # inverted CMYK data. Specify a Decode Array to invert it again back to
-        # normal. See https://github.com/Kozea/WeasyPrint/pull/2179.
+        # normal. See PR #2179.
         app14 = getattr(original_pillow_image, 'app', {}).get('APP14')
         self.invert_colors = self.mode == 'CMYK' and app14 is not None
 
@@ -299,11 +297,6 @@ def get_image_from_uri(cache, url_fetcher, options, url, forced_mime_type=None,
 
     try:
         with fetch(url_fetcher, url) as result:
-            parsed_url = urlparse(result.get('redirected_url'))
-            if parsed_url.scheme == 'file':
-                filename = url2pathname(parsed_url.path)
-            else:
-                filename = None
             if 'string' in result:
                 string = result['string']
             else:
@@ -337,9 +330,9 @@ def get_image_from_uri(cache, url_fetcher, options, url, forced_mime_type=None,
             else:
                 # Store image id to enable cache in Stream.add_image
                 image_id = md5(url.encode(), usedforsecurity=False).hexdigest()
+                path = result.get('path')
                 image = RasterImage(
-                    pillow_image, image_id, string, filename, cache,
-                    orientation, options)
+                    pillow_image, image_id, string, path, cache, orientation, options)
 
     except (URLFetchingError, ImageLoadingError) as exception:
         LOGGER.error('Failed to load image at %r: %s', url, exception)
@@ -733,8 +726,8 @@ class RadialGradient(Gradient):
                         intermediate_color = gradient_average_color(
                             [previous_color, previous_color, color, color],
                             [previous_position, 0, 0, position])
-                        colors = [intermediate_color] + colors[i:]
-                        positions = [0] + positions[i:]
+                        colors = [intermediate_color, *colors[i:]]
+                        positions = [0, *positions[i:]]
                         break
         first, last, positions = normalize_stop_positions(positions)
 
@@ -775,7 +768,7 @@ class RadialGradient(Gradient):
             colors *= repeat
             positions = [
                 i + position for i in range(repeat) for position in positions]
-            points = points[:5] + (points[5] + gradient_length * repeat_after,)
+            points = (*points[:5], points[5] + gradient_length * repeat_after)
 
         if points[2] == 0:
             # Inner circle has 0 radius, no need to repeat inside, return
@@ -785,7 +778,7 @@ class RadialGradient(Gradient):
         repeat_before = points[2] / gradient_length
 
         # Set the inner circle size to 0
-        points = points[:2] + (0,) + points[3:]
+        points = (*points[:2], 0, *points[3:])
 
         # Find how many times the whole gradient can be repeated
         full_repeat = int(repeat_before)
@@ -830,7 +823,7 @@ class RadialGradient(Gradient):
                 average_positions = [position, ratio, ratio, next_position]
                 zero_color = gradient_average_color(
                     average_colors, average_positions)
-                colors = [zero_color] + original_colors[-(i - 1):] + colors
+                colors = [zero_color, *original_colors[-(i - 1):], *colors]
                 new_positions = [
                     position - 1 - full_repeat for position
                     in original_positions[-(i - 1):]]

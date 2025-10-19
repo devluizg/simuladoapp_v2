@@ -92,6 +92,7 @@ class Node:
         self._wrapper = wrapper
         self._etree_node = wrapper.etree_element
         self._style = style
+        self._children = None
 
         self.attrib = wrapper.etree_element.attrib.copy()
 
@@ -178,10 +179,14 @@ class Node:
 
     def __iter__(self):
         """Yield node children, handling cascade."""
-        for wrapper in self._wrapper:
-            child = Node(wrapper, self._style)
-            self.cascade(child)
-            yield child
+        if self._children is None:
+            children = []
+            for wrapper in self._wrapper:
+                child = Node(wrapper, self._style)
+                self.cascade(child)
+                children.append(child)
+            self._children = children
+        return iter(self._children)
 
     def get_viewbox(self):
         """Get node viewBox as a tuple of floats."""
@@ -410,16 +415,13 @@ class SVG:
             apply_filters(self, node, filter_, font_size)
 
         # Apply transform attribute
-        self.transform(node.get('transform'), font_size)
+        self.transform(node, font_size)
 
         # Create substream for opacity
         opacity = alpha_value(node.get('opacity', 1))
         if fill_stroke and 0 <= opacity < 1:
             original_streams.append(self.stream)
-            box = self.calculate_bounding_box(node, font_size)
-            if not is_valid_bounding_box(box):
-                box = (0, 0, self.inner_width, self.inner_height)
-            self.stream = self.stream.add_group(*box)
+            self.stream = self.stream.add_group(0, 0, 0, 0)  # BBox set after drawing
 
         # Clip
         clip_path = parse_url(node.get('clip-path')).fragment
@@ -523,6 +525,12 @@ class SVG:
 
         # Apply opacity stream and restore original stream
         if fill_stroke and 0 <= opacity < 1:
+            box = self.calculate_bounding_box(node, font_size)
+            if not is_valid_bounding_box(box):
+                box = (0, 0, self.inner_width, self.inner_height)
+            x, y, width, height = box
+            self.stream.extra['BBox'][:] = x, y, x + width, y + height
+
             group_id = self.stream.id
             self.stream = original_streams.pop()
             self.stream.set_alpha(opacity, stroke=True, fill=True)
@@ -760,12 +768,15 @@ class SVG:
             else:
                 self.stream.end()
 
-    def transform(self, transform_string, font_size):
+    def transform(self, node, font_size):
         """Apply a transformation string to the node."""
+        transform_origin = node.get('transform-origin')
+        transform_string = node.get('transform')
         if not transform_string:
             return
 
-        matrix = transform(transform_string, font_size, self.inner_diagonal)
+        matrix = transform(
+            transform_string, transform_origin, font_size, self.inner_diagonal)
         if matrix.determinant:
             self.stream.transform(*matrix.values)
 

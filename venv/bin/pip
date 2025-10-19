@@ -1,4 +1,4 @@
-#!/home/luiz/Documentos/simuladoapp/venv/bin/python3
+#!/home/luiz/Documentos/simuladoapp_v2/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

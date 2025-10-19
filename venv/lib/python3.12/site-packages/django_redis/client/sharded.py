@@ -1,14 +1,18 @@
+import builtins
 import re
 from collections import OrderedDict
+from collections.abc import Iterator
 from datetime import datetime
-from typing import Union
+from typing import Any, Optional, Union
 
-from redis.exceptions import ConnectionError
+from redis import Redis
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.typing import KeyT
 
-from ..exceptions import ConnectionInterrupted
-from ..hash_ring import HashRing
-from ..util import CacheKey
-from .default import DEFAULT_TIMEOUT, DefaultClient
+from django_redis.client.default import DEFAULT_TIMEOUT, DefaultClient
+from django_redis.exceptions import ConnectionInterrupted
+from django_redis.hash_ring import HashRing
+from django_redis.util import CacheKey
 
 
 class ShardClient(DefaultClient):
@@ -37,8 +41,7 @@ class ShardClient(DefaultClient):
         g = self._findhash.match(key)
         if g is not None and len(g.groups()) > 0:
             key = g.groups()[0]
-        name = self._ring.get_node(key)
-        return name
+        return self._ring.get_node(key)
 
     def get_server(self, key):
         name = self.get_server_name(key)
@@ -80,7 +83,14 @@ class ShardClient(DefaultClient):
         return recovered_data
 
     def set(
-        self, key, value, timeout=DEFAULT_TIMEOUT, version=None, client=None, nx=False
+        self,
+        key,
+        value,
+        timeout=DEFAULT_TIMEOUT,
+        version=None,
+        client=None,
+        nx=False,
+        xx=False,
     ):
         """
         Persist a value to the cache, and set an optional expiration time.
@@ -90,10 +100,16 @@ class ShardClient(DefaultClient):
             client = self.get_server(key)
 
         return super().set(
-            key=key, value=value, timeout=timeout, version=version, client=client, nx=nx
+            key=key,
+            value=value,
+            timeout=timeout,
+            version=version,
+            client=client,
+            nx=nx,
+            xx=xx,
         )
 
-    def set_many(self, data, timeout=DEFAULT_TIMEOUT, version=None):
+    def set_many(self, data, timeout=DEFAULT_TIMEOUT, version=None, client=None):
         """
         Set a bunch of values in the cache at once from a dict of key/value
         pairs. This is much more efficient than calling set() multiple times.
@@ -102,7 +118,7 @@ class ShardClient(DefaultClient):
         the default cache timeout will be used.
         """
         for key, value in data.items():
-            self.set(key, value, timeout, version=version)
+            self.set(key, value, timeout, version=version, client=client)
 
     def has_key(self, key, version=None, client=None):
         """
@@ -116,7 +132,7 @@ class ShardClient(DefaultClient):
         key = self.make_key(key, version=version)
         try:
             return client.exists(key) == 1
-        except ConnectionError as e:
+        except RedisConnectionError as e:
             raise ConnectionInterrupted(connection=client) from e
 
     def delete(self, key, version=None, client=None):
@@ -242,11 +258,12 @@ class ShardClient(DefaultClient):
 
         try:
             ttl = self.ttl(old_key, version=version, client=client)
-        except ConnectionError as e:
+        except RedisConnectionError as e:
             raise ConnectionInterrupted(connection=client) from e
 
         if value is None:
-            raise ValueError("Key '%s' not found" % key)
+            msg = f"Key '{key}' not found"
+            raise ValueError(msg)
 
         if isinstance(key, CacheKey):
             new_key = self.make_key(key.original_key(), version=version + delta)
@@ -272,15 +289,16 @@ class ShardClient(DefaultClient):
         return super().decr(key=key, delta=delta, version=version, client=client)
 
     def iter_keys(self, key, version=None):
-        raise NotImplementedError("iter_keys not supported on sharded client")
+        error_message = "iter_keys not supported on sharded client"
+        raise NotImplementedError(error_message)
 
     def keys(self, search, version=None):
         pattern = self.make_pattern(search, version=version)
         keys = []
         try:
-            for server, connection in self._serverdict.items():
+            for connection in self._serverdict.values():
                 keys.extend(connection.keys(pattern))
-        except ConnectionError as e:
+        except RedisConnectionError as e:
             # FIXME: technically all clients should be passed as `connection`.
             client = self.get_server(pattern)
             raise ConnectionInterrupted(connection=client) from e
@@ -299,12 +317,12 @@ class ShardClient(DefaultClient):
             kwargs["count"] = itersize
 
         keys = []
-        for server, connection in self._serverdict.items():
+        for connection in self._serverdict.values():
             keys.extend(key for key in connection.scan_iter(**kwargs))
 
         res = 0
         if keys:
-            for server, connection in self._serverdict.items():
+            for connection in self._serverdict.values():
                 res += connection.delete(*keys)
         return res
 
@@ -322,3 +340,148 @@ class ShardClient(DefaultClient):
     def clear(self, client=None):
         for connection in self._serverdict.values():
             connection.flushdb()
+
+    def sadd(
+        self,
+        key: KeyT,
+        *values: Any,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> int:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().sadd(key, *values, version=version, client=client)
+
+    def scard(
+        self,
+        key: KeyT,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> int:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().scard(key=key, version=version, client=client)
+
+    def smembers(
+        self,
+        key: KeyT,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> builtins.set[Any]:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().smembers(key=key, version=version, client=client)
+
+    def smove(
+        self,
+        source: KeyT,
+        destination: KeyT,
+        member: Any,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ):
+        if client is None:
+            source = self.make_key(source, version=version)
+            client = self.get_server(source)
+            destination = self.make_key(destination, version=version)
+
+        return super().smove(
+            source=source,
+            destination=destination,
+            member=member,
+            version=version,
+            client=client,
+        )
+
+    def srem(
+        self,
+        key: KeyT,
+        *members,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> int:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().srem(key, *members, version=version, client=client)
+
+    def sscan(
+        self,
+        key: KeyT,
+        match: Optional[str] = None,
+        count: Optional[int] = 10,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> builtins.set[Any]:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().sscan(
+            key=key, match=match, count=count, version=version, client=client
+        )
+
+    def sscan_iter(
+        self,
+        key: KeyT,
+        match: Optional[str] = None,
+        count: Optional[int] = 10,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> Iterator[Any]:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().sscan_iter(
+            key=key, match=match, count=count, version=version, client=client
+        )
+
+    def srandmember(
+        self,
+        key: KeyT,
+        count: Optional[int] = None,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> Union[builtins.set, Any]:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().srandmember(key=key, count=count, version=version, client=client)
+
+    def sismember(
+        self,
+        key: KeyT,
+        member: Any,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> bool:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().sismember(key, member, version=version, client=client)
+
+    def spop(
+        self,
+        key: KeyT,
+        count: Optional[int] = None,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> Union[builtins.set, Any]:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().spop(key=key, count=count, version=version, client=client)
+
+    def smismember(
+        self,
+        key: KeyT,
+        *members,
+        version: Optional[int] = None,
+        client: Optional[Redis] = None,
+    ) -> list[bool]:
+        if client is None:
+            key = self.make_key(key, version=version)
+            client = self.get_server(key)
+        return super().smismember(key, *members, version=version, client=client)

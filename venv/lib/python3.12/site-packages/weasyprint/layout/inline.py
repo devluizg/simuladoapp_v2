@@ -30,7 +30,7 @@ def iter_line_boxes(context, box, position_y, bottom_space, skip_stack,
     """
     resolve_percentages(box, containing_block)
     if skip_stack is None:
-        # TODO: wrong, see https://github.com/Kozea/WeasyPrint/issues/679
+        # TODO: wrong, see issue #679.
         resolve_one_percentage(box, 'text_indent', containing_block.width)
     else:
         box.text_indent = 0
@@ -126,7 +126,7 @@ def get_next_linebox(context, linebox, position_y, bottom_space, skip_stack,
         line.translate(offset_x, offset_y)
         # Avoid floating point errors, as position_y - top + top != position_y
         # Removing this line breaks the position == linebox.position test below
-        # See https://github.com/Kozea/WeasyPrint/issues/583
+        # See issue #583.
         line.position_y = position_y
 
         if line.height <= candidate_height:
@@ -767,15 +767,14 @@ def split_inline_box(context, box, position_x, max_x, bottom_space, skip_stack,
             # May be None where we have an empty TextBox.
             assert isinstance(child, boxes.TextBox)
         else:
+            # Store lines to get previous break points.
             if isinstance(box, boxes.LineBox):
                 line_children.append((index, new_child))
-            trailing_whitespace = (
-                isinstance(new_child, boxes.TextBox) and
-                new_child.text and
-                unicodedata.category(new_child.text[-1]) == 'Zs')
-            new_position_x = new_child.position_x + new_child.margin_width()
 
-            if new_position_x > max_x and not trailing_whitespace:
+            # Check that text doesn’t overflow.
+            new_position_x = new_child.position_x + new_child.margin_width()
+            if new_position_x - trailing_whitespace_size(context, new_child) > max_x:
+                # Text overflows, find previous break point.
                 previous_resume_at = _break_waiting_children(
                     context, containing_block, max_x, bottom_space, initial_skip_stack,
                     absolute_boxes, fixed_boxes, line_placeholders,

@@ -1,0 +1,470 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pagamento Confirmado! - {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .success-container {
+        max-width: 800px;
+        margin: 80px auto;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .success-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #4caf50, #45a049);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        animation: scaleIn 0.5s ease-out;
+    }
+    
+    .success-icon i {
+        color: white;
+        font-size: 3.5rem;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .success-container h1 {
+        font-size: 2.5rem;
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    .success-container .lead {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 40px;
+    }
+    
+    .success-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .subscription-details {
+        text-align: left;
+        margin: 30px 0;
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #666;
+    }
+    
+    .detail-value {
+        color: #333;
+        font-weight: bold;
+    }
+    
+    .next-steps {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 30px;
+        margin: 30px 0;
+    }
+    
+    .next-steps h3 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    .step-item {
+        display: flex;
+        align-items: start;
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .step-content h5 {
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .step-content p {
+        color: #666;
+        margin: 0;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 30px;
+    }
+    
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 40px;
+        border-radius: 50px;
+        border: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-secondary-custom {
+        background: white;
+        color: #667eea;
+        padding: 15px 40px;
+        border-radius: 50px;
+        border: 2px solid #667eea;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary-custom:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: #667eea;
+        position: absolute;
+        animation: confetti-fall 3s linear infinite;
+    }
+    
+    @keyframes confetti-fall {
+        to {
+            transform: translateY(100vh) rotate(360deg);
+        }
+    }
+    
+    .email-confirmation {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .email-confirmation i {
+        color: #2196f3;
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    
+    .email-confirmation h5 {
+        color: #1976d2;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .email-confirmation p {
+        color: #333;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <!-- Ícone de Sucesso -->
+    <div class="success-icon">
+        <i class="fas fa-check"></i>
+    </div>
+
+    <!-- Mensagem Principal -->
+    <h1>🎉 Pagamento Confirmado!</h1>
+    <p class="lead">Bem-vindo(a) ao SimuladoApp! Sua assinatura foi ativada com sucesso.</p>
+
+    <!-- Card com Detalhes -->
+    <div class="success-card">
+        {% if subscription %}
+        <h3><i class="fas fa-file-invoice"></i> Detalhes da Assinatura</h3>
+        
+        <div class="subscription-details">
+            <div class="detail-row">
+                <span class="detail-label">Plano:</span>
+                <span class="detail-value">{{ subscription.plan.name }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Tipo:</span>
+                <span class="detail-value">{{ subscription.plan.get_plan_type_display }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Valor:</span>
+                <span class="detail-value">R$ {{ subscription.plan.price }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Período:</span>
+                <span class="detail-value">{{ subscription.plan.get_billing_period_display }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">
+                    <span class="badge bg-success">{{ subscription.get_status_display }}</span>
+                </span>
+            </div>
+            
+            {% if subscription.current_period_end %}
+            <div class="detail-row">
+                <span class="detail-label">Próxima Cobrança:</span>
+                <span class="detail-value">{{ subscription.current_period_end|date:"d/m/Y" }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Confirmação de Email -->
+        <div class="email-confirmation">
+            <h5>
+                <i class="fas fa-envelope"></i>
+                Email de Confirmação
+            </h5>
+            <p>
+                Enviamos um email de confirmação para <strong>{{ user.email }}</strong> com todos os detalhes da sua assinatura.
+                Verifique também sua caixa de spam.
+            </p>
+        </div>
+
+        <!-- Próximos Passos -->
+        <div class="next-steps">
+            <h3><i class="fas fa-rocket"></i> Próximos Passos</h3>
+            
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h5>Configure seu Perfil</h5>
+                    <p>Complete as informações do seu perfil e configure suas preferências.</p>
+                </div>
+            </div>
+            
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h5>Crie suas Turmas</h5>
+                    <p>Cadastre suas turmas e adicione os alunos para começar a criar simulados.</p>
+                </div>
+            </div>
+            
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h5>Monte seu Banco de Questões</h5>
+                    <p>Adicione questões ao seu banco personalizado ou use as questões pré-cadastradas.</p>
+                </div>
+            </div>
+            
+            <div class="step-item">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h5>Crie seu Primeiro Simulado</h5>
+                    <p>Selecione as questões e gere seu primeiro simulado com múltiplas versões.</p>
+                </div>
+            </div>
+            
+            <div class="step-item">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h5>Baixe o App do Professor</h5>
+                    <p>Instale nosso aplicativo para corrigir simulados de forma rápida e prática.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="action-buttons">
+            <a href="{% url 'accounts:dashboard' %}" class="btn-primary-custom">
+                <i class="fas fa-tachometer-alt"></i>
+                Ir para o Dashboard
+            </a>
+            
+            <a href="{% url 'payments:subscription_detail' %}" class="btn-secondary-custom">
+                <i class="fas fa-file-invoice"></i>
+                Ver Minha Assinatura
+            </a>
+        </div>
+
+        <!-- Informações Adicionais -->
+        <div class="mt-5 pt-4" style="border-top: 1px solid #e0e0e0;">
+            <p class="text-muted">
+                <i class="fas fa-question-circle"></i>
+                Precisa de ajuda? Entre em contato com nosso 
+                <a href="mailto:suporte@simuladoapp.com">suporte</a> ou acesse nossa 
+                <a href="#">central de ajuda</a>.
+            </p>
+        </div>
+    </div>
+
+    <!-- Card de Boas-vindas -->
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-gift"></i> Bônus de Boas-vindas!</h4>
+        <p>Como agradecimento por escolher o SimuladoApp, você ganhou:</p>
+        <hr>
+        <ul class="text-start mb-0">
+            <li>Acesso a todas as funcionalidades premium</li>
+            <li>1 mês de suporte prioritário grátis</li>
+            <li>Guia completo de uso da plataforma</li>
+            <li>Acesso a webinars exclusivos</li>
+        </ul>
+    </div>
+
+    <!-- Links Úteis -->
+    <div class="row mt-5 text-start">
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-book text-primary"></i>
+                        Documentação
+                    </h5>
+                    <p class="card-text">Aprenda a usar todas as funcionalidades da plataforma.</p>
+                    <a href="#" class="btn btn-sm btn-outline-primary">Acessar Docs</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-video text-danger"></i>
+                        Vídeo Tutoriais
+                    </h5>
+                    <p class="card-text">Assista tutoriais em vídeo para começar rapidamente.</p>
+                    <a href="#" class="btn btn-sm btn-outline-danger">Ver Vídeos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animação de confetes
+    function createConfetti() {
+        const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'];
+        
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }, i * 50);
+        }
+    }
+    
+    // Executa confetes ao carregar a página
+    window.addEventListener('load', createConfetti);
+    
+    // Animação dos steps ao aparecer
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '0';
+                entry.target.style.transform = 'translateX(-20px)';
+                
+                setTimeout(() => {
+                    entry.target.style.transition = 'all 0.5s ease';
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateX(0)';
+                }, 100);
+                
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+    
+    document.querySelectorAll('.step-item').forEach(item => {
+        observer.observe(item);
+    });
+    
+    // Som de sucesso (opcional)
+    function playSuccessSound() {
+        // Você pode adicionar um arquivo de som aqui
+        // const audio = new Audio('{% static "sounds/success.mp3" %}');
+        // audio.play();
+    }
+    
+    // Redireciona automaticamente após 30 segundos (opcional)
+    // setTimeout(() => {
+    //     if (confirm('Deseja ir para o dashboard agora?')) {
+    //         window.location.href = '{% url "dashboard" %}';
+    //     }
+    // }, 30000);
+</script>
+{% endblock %}

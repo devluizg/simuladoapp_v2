@@ -195,9 +195,10 @@ def element_to_box(element, style_for, get_image_from_uri, base_url,
             footnote = child_boxes[0]
             footnote.style['float'] = 'none'
             footnotes.append(footnote)
-            call_style = style_for(element, 'footnote-call')
+            call_style = style_for(footnote.element, 'footnote-call')
             footnote_call = make_box(
-                f'{element.tag}::footnote-call', call_style, [], element)
+                f'{footnote.element.tag}::footnote-call', call_style, [],
+                footnote.element)
             footnote_call.children = content_to_boxes(
                 call_style, footnote_call, quote_depth, counter_values,
                 get_image_from_uri, target_collector, counter_style)
@@ -250,7 +251,7 @@ def element_to_box(element, style_for, get_image_from_uri, base_url,
         marker = make_box(
             f'{element.tag}::footnote-marker', marker_style, [], element)
         marker.children = content_to_boxes(
-            marker_style, box, quote_depth, counter_values, get_image_from_uri,
+            marker_style, marker, quote_depth, counter_values, get_image_from_uri,
             target_collector, counter_style)
         box.children.insert(0, marker)
 
@@ -344,7 +345,6 @@ def marker_to_box(element, state, parent_style, style_for, get_image_from_uri,
         if not children and style['list_style_type'] != 'none':
             counter_value = counter_values.get('list-item', [0])[-1]
             counter_type = style['list_style_type']
-            # TODO: rtl numbered list has the dot on the left
             if marker_text := counter_style.render_marker(counter_type, counter_value):
                 box = boxes.TextBox.anonymous_from(box, marker_text)
                 box.style['white_space'] = 'pre-wrap'
@@ -358,13 +358,7 @@ def marker_to_box(element, state, parent_style, style_for, get_image_from_uri,
         # We can safely edit everything that can't be changed by user style
         # See https://drafts.csswg.org/css-pseudo-4/#marker-pseudo
         marker_box.style['position'] = 'absolute'
-        if parent_style['direction'] == 'ltr':
-            translate_x = properties.Dimension(-100, '%')
-        else:
-            translate_x = properties.Dimension(100, '%')
-        translate_y = properties.ZERO_PIXELS
-        marker_box.style['transform'] = (
-            ('translate', (translate_x, translate_y)),)
+        marker_box.is_outside_marker = True
     else:
         marker_box = boxes.InlineBox.anonymous_from(box, children)
     yield marker_box
@@ -421,7 +415,7 @@ def compute_content_list(content_list, parent_box, counter_values, css_token,
         elif type_ == 'url' and get_image_from_uri is not None:
             origin, uri = value
             if origin != 'external':
-                # Embedding internal references is impossible
+                # Embedding internal references is impossible.
                 continue
             image = get_image_from_uri(
                 url=uri, orientation=parent_box.style['image_orientation'])
@@ -431,12 +425,12 @@ def compute_content_list(content_list, parent_box, counter_values, css_token,
         elif type_ == 'content()':
             added_text = extract_text(value, parent_box)
             # Simulate the step of white space processing
-            # (normally done during the layout)
+            # (normally done during the layout).
             add_text(added_text.strip())
         elif type_ == 'string()':
             if not in_page_context:
-                # string() is currently only valid in @page context
-                # See https://github.com/Kozea/WeasyPrint/issues/723
+                # string() is currently only valid in @page context.
+                # See issue #723.
                 LOGGER.warning(
                     '"string(%s)" is only allowed in page margins',
                     ' '.join(value))
@@ -810,9 +804,9 @@ def table_boxes_children(box, children):
     children = [
         child
         for prev_child, child, next_child in zip(
-            [None] + children[:-1],
+            [None, *children[:-1]],
             children,
-            children[1:] + [None]
+            [*children[1:], None]
         )
         if not (
             # Ignore some whitespace: rule 1.4
@@ -990,6 +984,25 @@ def wrap_table(box, children):
     return wrapper
 
 
+def blockify(box, layout):
+    """Turn an inline box into a block box."""
+    # See https://drafts.csswg.org/css-display-4/#blockify.
+    if isinstance(box, boxes.InlineBlockBox):
+        anonymous = boxes.BlockBox.anonymous_from(box, box.children)
+    elif isinstance(box, boxes.InlineReplacedBox):
+        replacement = box.replacement
+        anonymous = boxes.BlockReplacedBox.anonymous_from(box, replacement)
+    elif isinstance(box, boxes.InlineLevelBox):
+        anonymous = boxes.BlockBox.anonymous_from(box, [box])
+        setattr(box, f'is_{layout}_item', False)
+    else:
+        return box
+    anonymous.style = box.style
+    setattr(anonymous, f'is_{layout}_item', True)
+    return anonymous
+
+
+
 def flex_boxes(box):
     """Remove and add boxes according to the flex model.
 
@@ -1019,18 +1032,7 @@ def flex_children(box, children):
                 # affected by the white-space property"
                 # https://www.w3.org/TR/css-flexbox-1/#flex-items
                 continue
-            if isinstance(child, boxes.InlineBlockBox):
-                anonymous = boxes.BlockBox.anonymous_from(child, child.children)
-                anonymous.style = child.style
-                anonymous.is_flex_item = True
-                flex_children.append(anonymous)
-            elif isinstance(child, boxes.InlineLevelBox):
-                anonymous = boxes.BlockBox.anonymous_from(child, [child])
-                anonymous.style = child.style
-                anonymous.is_flex_item = True
-                flex_children.append(anonymous)
-            else:
-                flex_children.append(child)
+            flex_children.append(blockify(child, 'flex'))
         return flex_children
     else:
         return children
@@ -1064,19 +1066,7 @@ def grid_children(box, children):
                 # affected by the white-space property"
                 # https://drafts.csswg.org/css-grid-2/#grid-item
                 continue
-            if isinstance(child, boxes.InlineBlockBox):
-                anonymous = boxes.BlockBox.anonymous_from(child, child.children)
-                anonymous.style = child.style
-                anonymous.is_grid_item = True
-                grid_children.append(anonymous)
-            elif isinstance(child, boxes.InlineLevelBox):
-                anonymous = boxes.BlockBox.anonymous_from(child, [child])
-                anonymous.style = child.style
-                child.is_grid_item = False
-                anonymous.is_grid_item = True
-                grid_children.append(anonymous)
-            else:
-                grid_children.append(child)
+            grid_children.append(blockify(child, 'grid'))
         return grid_children
     else:
         return children

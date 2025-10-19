@@ -72,6 +72,7 @@ class Box:
     is_for_root_element = False
     is_column = False
     is_leader = False
+    is_outside_marker = False
 
     # Other properties
     transformation_matrix = None
@@ -80,6 +81,8 @@ class Box:
     footnote = None
     cached_counter_values = None
     missing_link = None
+    link_annotation = None
+    force_fragmentation = False
 
     # Default, overriden on some subclasses
     def all_children(self):
@@ -502,8 +505,6 @@ class InlineBox(InlineLevelBox, ParentBox):
     inline box.
 
     """
-    link_annotation = None
-
     def hit_area(self):
         """Return the (x, y, w, h) rectangle where the box is clickable."""
         # Use line-height (margin_height) rather than border_height

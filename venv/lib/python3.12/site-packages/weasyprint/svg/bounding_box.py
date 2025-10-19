@@ -206,7 +206,7 @@ def bounding_box_path(svg, node, font_size):
 
 def bounding_box_text(svg, node, font_size):
     """Bounding box for text node."""
-    return node.get('text_bounding_box')
+    return getattr(node, 'text_bounding_box', None)
 
 
 def bounding_box_g(svg, node, font_size):
@@ -229,7 +229,9 @@ def bounding_box_use(svg, node, font_size):
     if (tree := get_use_tree(svg, node, font_size)) is None:
         return EMPTY_BOUNDING_BOX
     else:
-        return bounding_box(svg, tree, font_size, True)
+        x, y = svg.point(node.get('x'), node.get('y'), font_size)
+        box = bounding_box(svg, tree, font_size, True)
+        return box[0] + x, box[1] + y, box[2], box[3]
 
 
 def _bounding_box_elliptical_arc(x1, y1, rx, ry, phi, large, sweep, x, y):

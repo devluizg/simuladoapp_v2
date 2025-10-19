@@ -44,12 +44,6 @@ def get_use_tree(svg, node, font_size):
 
 def use(svg, node, font_size):
     """Draw use tags."""
-    x, y = svg.point(node.get('x'), node.get('y'), font_size)
-
-    for attribute in ('x', 'y', 'viewBox', 'mask'):
-        if attribute in node.attrib:
-            del node.attrib[attribute]
-
     if (tree := get_use_tree(svg, node, font_size)) is None:
         return
 
@@ -69,6 +63,7 @@ def use(svg, node, font_size):
 
     node.cascade(tree)
     node.override_iter(iter((tree,)))
+    x, y = svg.point(node.get('x'), node.get('y'), font_size)
     svg.stream.transform(e=x, f=y)
 
 
@@ -137,7 +132,7 @@ def draw_gradient(svg, node, gradient, font_size, opacity, stroke):
 
     if 'gradientTransform' in gradient.attrib:
         transform_matrix = transform(
-            gradient.get('gradientTransform'), font_size,
+            gradient.get('gradientTransform'), '0 0', font_size,
             svg.normalized_diagonal)
         matrix = transform_matrix @ matrix
 
@@ -407,7 +402,7 @@ def spread_radial_gradient(spread, positions, colors, fx, fy, fr, cx, cy, r,
                 average_positions = [position, ratio, ratio, next_position]
                 zero_color = gradient_average_color(
                     average_colors, average_positions)
-                colors = [zero_color] + original_colors[-(i - 1):] + colors
+                colors = [zero_color, *original_colors[-(i - 1):], *colors]
                 new_positions = [
                     position - 1 - full_repeat for position
                     in original_positions[-(i - 1):]]
@@ -450,7 +445,7 @@ def draw_pattern(svg, node, pattern, font_size, opacity, stroke):
 
     if 'patternTransform' in pattern.attrib:
         transform_matrix = transform(
-            pattern.get('patternTransform'), font_size, svg.inner_diagonal)
+            pattern.get('patternTransform'), '0 0', font_size, svg.inner_diagonal)
         matrix = transform_matrix @ matrix
 
     matrix = matrix @ svg.stream.ctm

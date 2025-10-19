@@ -1,0 +1,577 @@
+/**
+ * SimuladoApp - Payments Module Styles
+ * Estilos globais para o módulo de pagamentos
+ */
+
+/* ========================================
+   VARIÁVEIS E CONFIGURAÇÕES GLOBAIS
+   ======================================== */
+
+:root {
+    /* Cores principais */
+    --payment-primary: #667eea;
+    --payment-secondary: #764ba2;
+    --payment-success: #28a745;
+    --payment-warning: #ffc107;
+    --payment-danger: #dc3545;
+    --payment-info: #17a2b8;
+    
+    /* Gradientes */
+    --payment-gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --payment-gradient-success: linear-gradient(135deg, #28a745, #20c997);
+    --payment-gradient-warning: linear-gradient(135deg, #ffc107, #ff9800);
+    --payment-gradient-danger: linear-gradient(135deg, #f44336, #d32f2f);
+    
+    /* Backgrounds */
+    --payment-bg-light: #f8f9fa;
+    --payment-bg-white: #ffffff;
+    --payment-bg-dark: #1d203a;
+    
+    /* Borders */
+    --payment-border-color: #e0e0e0;
+    --payment-border-radius: 12px;
+    
+    /* Sombras */
+    --payment-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --payment-shadow-md: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --payment-shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
+    
+    /* Transições */
+    --payment-transition: all 0.3s ease;
+}
+
+/* ========================================
+   RESET E BASES
+   ======================================== */
+
+.payment-container * {
+    box-sizing: border-box;
+}
+
+.payment-container {
+    font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #333;
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+.payment-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.payment-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--payment-primary);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: payment-spin 1s linear infinite;
+}
+
+@keyframes payment-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.payment-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: payment-skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+@keyframes payment-skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ========================================
+   CARDS E CONTAINERS
+   ======================================== */
+
+.payment-card {
+    background: var(--payment-bg-white);
+    border-radius: var(--payment-border-radius);
+    box-shadow: var(--payment-shadow-md);
+    padding: 25px;
+    transition: var(--payment-transition);
+}
+
+.payment-card:hover {
+    box-shadow: var(--payment-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.payment-card-header {
+    border-bottom: 2px solid var(--payment-border-color);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.payment-card-body {
+    padding: 20px 0;
+}
+
+.payment-card-footer {
+    border-top: 1px solid var(--payment-border-color);
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+/* ========================================
+   BOTÕES
+   ======================================== */
+
+.btn-payment {
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: var(--payment-transition);
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.btn-payment:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-payment-primary {
+    background: var(--payment-gradient-primary);
+    color: white;
+}
+
+.btn-payment-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-payment-success {
+    background: var(--payment-success);
+    color: white;
+}
+
+.btn-payment-success:hover:not(:disabled) {
+    background: #218838;
+}
+
+.btn-payment-danger {
+    background: var(--payment-danger);
+    color: white;
+}
+
+.btn-payment-danger:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.btn-payment-outline {
+    background: transparent;
+    color: var(--payment-primary);
+    border: 2px solid var(--payment-primary);
+}
+
+.btn-payment-outline:hover:not(:disabled) {
+    background: var(--payment-primary);
+    color: white;
+}
+
+/* ========================================
+   BADGES E LABELS
+   ======================================== */
+
+.payment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.payment-badge.badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.payment-badge.badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.payment-badge.badge-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.payment-badge.badge-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.payment-badge.badge-primary {
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--payment-primary);
+}
+
+/* ========================================
+   PRICE DISPLAY
+   ======================================== */
+
+.payment-price-display {
+    text-align: center;
+    padding: 20px;
+    background: var(--payment-gradient-primary);
+    border-radius: var(--payment-border-radius);
+    color: white;
+}
+
+.payment-price-display .currency {
+    font-size: 1.5rem;
+    opacity: 0.9;
+}
+
+.payment-price-display .amount {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.payment-price-display .period {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+/* ========================================
+   ALERTS E NOTIFICATIONS
+   ======================================== */
+
+.payment-alert {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: start;
+    gap: 12px;
+}
+
+.payment-alert i {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.payment-alert.alert-success {
+    background: #d4edda;
+    border-left: 4px solid var(--payment-success);
+    color: #155724;
+}
+
+.payment-alert.alert-warning {
+    background: #fff3cd;
+    border-left: 4px solid var(--payment-warning);
+    color: #856404;
+}
+
+.payment-alert.alert-danger {
+    background: #f8d7da;
+    border-left: 4px solid var(--payment-danger);
+    color: #721c24;
+}
+
+.payment-alert.alert-info {
+    background: #d1ecf1;
+    border-left: 4px solid var(--payment-info);
+    color: #0c5460;
+}
+
+/* ========================================
+   FORMS
+   ======================================== */
+
+.payment-form-group {
+    margin-bottom: 20px;
+}
+
+.payment-form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.payment-form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--payment-border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--payment-transition);
+}
+
+.payment-form-control:focus {
+    outline: none;
+    border-color: var(--payment-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.payment-form-control.is-invalid {
+    border-color: var(--payment-danger);
+}
+
+.payment-form-error {
+    color: var(--payment-danger);
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
+
+/* ========================================
+   STRIPE ELEMENTS STYLING
+   ======================================== */
+
+.payment-stripe-element {
+    padding: 15px;
+    border: 2px solid var(--payment-border-color);
+    border-radius: 8px;
+    background: white;
+    transition: var(--payment-transition);
+}
+
+.payment-stripe-element:focus-within {
+    border-color: var(--payment-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.payment-stripe-element.StripeElement--invalid {
+    border-color: var(--payment-danger);
+}
+
+/* ========================================
+   PROGRESS BAR
+   ======================================== */
+
+.payment-progress {
+    width: 100%;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.payment-progress-bar {
+    height: 100%;
+    background: var(--payment-gradient-primary);
+    transition: width 0.5s ease;
+}
+
+/* ========================================
+   TIMELINE
+   ======================================== */
+
+.payment-timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.payment-timeline::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--payment-border-color);
+}
+
+.payment-timeline-item {
+    position: relative;
+    padding-left: 60px;
+    margin-bottom: 25px;
+}
+
+.payment-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 5px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--payment-primary);
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--payment-primary);
+}
+
+/* ========================================
+   SECURITY BADGES
+   ======================================== */
+
+.payment-security-badges {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 20px 0;
+}
+
+.payment-security-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.payment-security-badge i {
+    color: var(--payment-success);
+    font-size: 1.2rem;
+}
+
+/* ========================================
+   MODAL OVERLAY
+   ======================================== */
+
+.payment-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--payment-transition);
+}
+
+.payment-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.payment-modal {
+    background: white;
+    border-radius: var(--payment-border-radius);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: var(--payment-transition);
+}
+
+.payment-modal-overlay.active .payment-modal {
+    transform: scale(1);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .payment-card {
+        padding: 20px;
+    }
+    
+    .btn-payment {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .payment-price-display .amount {
+        font-size: 2.5rem;
+    }
+    
+    .payment-security-badges {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* ========================================
+   UTILITIES
+   ======================================== */
+
+.payment-text-center { text-align: center; }
+.payment-text-right { text-align: right; }
+.payment-text-muted { color: #999; }
+.payment-text-success { color: var(--payment-success); }
+.payment-text-danger { color: var(--payment-danger); }
+.payment-text-warning { color: var(--payment-warning); }
+
+.payment-mt-1 { margin-top: 0.5rem; }
+.payment-mt-2 { margin-top: 1rem; }
+.payment-mt-3 { margin-top: 1.5rem; }
+.payment-mt-4 { margin-top: 2rem; }
+
+.payment-mb-1 { margin-bottom: 0.5rem; }
+.payment-mb-2 { margin-bottom: 1rem; }
+.payment-mb-3 { margin-bottom: 1.5rem; }
+.payment-mb-4 { margin-bottom: 2rem; }
+
+.payment-hidden { display: none !important; }
+.payment-visible { display: block !important; }
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes payment-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.payment-fade-in {
+    animation: payment-fadeIn 0.5s ease-out;
+}
+
+@keyframes payment-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.payment-pulse {
+    animation: payment-pulse 2s infinite;
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+    .payment-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .btn-payment,
+    .payment-modal-overlay {
+        display: none !important;
+    }
+}

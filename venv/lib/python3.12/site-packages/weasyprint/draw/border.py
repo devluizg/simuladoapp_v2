@@ -1,13 +1,12 @@
 """Draw borders."""
 
-from math import ceil, floor, pi, sqrt, tan
+from math import ceil, cos, floor, pi, sin, sqrt, tan
 
 from ..formatting_structure import boxes
 from ..layout import replaced
 from ..layout.percent import percentage
 from ..matrix import Matrix
 from .color import get_color, styled_color
-from .stack import stacked
 
 SIDES = ('top', 'right', 'bottom', 'left')
 
@@ -26,6 +25,34 @@ def set_mask_border(stream, box):
         box.style['mask_border_width'])
 
 
+def draw_column_rules(stream, box):
+    """Draw the column rules to a ``pdf.stream.Stream``."""
+    border_widths = (0, 0, 0, box.style['column_rule_width'])
+    skip_next = True
+    for child in box.children:
+        if child.style['column_span'] == 'all':
+            skip_next = True
+            continue
+        elif skip_next:
+            skip_next = False
+            continue
+        with stream.stacked():
+            rule_width = box.style['column_rule_width']
+            rule_style = box.style['column_rule_style']
+            if box.style['column_gap'] == 'normal':
+                gap = box.style['font_size']  # normal equals 1em
+            else:
+                gap = percentage(box.style['column_gap'], box.width)
+            position_x = (
+                child.position_x - (box.style['column_rule_width'] + gap) / 2)
+            border_box = position_x, child.position_y, rule_width, child.height
+            clip_border_segment(
+                stream, rule_style, rule_width, 'left', border_box, border_widths)
+            color = styled_color(
+                rule_style, get_color(box.style, 'column_rule_color'), 'left')
+            draw_rect_border(stream, border_box, border_widths, rule_style, color)
+
+
 def draw_border(stream, box):
     """Draw the box borders and column rules to a ``pdf.stream.Stream``."""
 
@@ -33,43 +60,22 @@ def draw_border(stream, box):
     if box.style['visibility'] != 'visible':
         return
 
-    # Draw column borders.
+    # Draw column rules.
     columns = (
         isinstance(box, boxes.BlockContainerBox) and (
             box.style['column_width'] != 'auto' or
             box.style['column_count'] != 'auto'))
     if columns and box.style['column_rule_width']:
-        border_widths = (0, 0, 0, box.style['column_rule_width'])
-        skip_next = True
-        for child in box.children:
-            if child.style['column_span'] == 'all':
-                skip_next = True
-                continue
-            elif skip_next:
-                skip_next = False
-                continue
-            with stacked(stream):
-                rule_width = box.style['column_rule_width']
-                rule_style = box.style['column_rule_style']
-                if box.style['column_gap'] == 'normal':
-                    gap = box.style['font_size']  # normal equals 1em
-                else:
-                    gap = percentage(box.style['column_gap'], box.width)
-                position_x = (
-                    child.position_x - (box.style['column_rule_width'] + gap) / 2)
-                border_box = (position_x, child.position_y, rule_width, child.height)
-                clip_border_segment(
-                    stream, rule_style, rule_width, 'left', border_box, border_widths)
-                color = styled_color(
-                    rule_style, get_color(box.style, 'column_rule_color'), 'left')
-                draw_rect_border(stream, border_box, border_widths, rule_style, color)
+        with stream.artifact():
+            draw_column_rules(stream, box)
 
     # If there's a border image, that takes precedence.
     if box.style['border_image_source'][0] != 'none' and box.border_image is not None:
-        draw_border_image(
-            box, stream, box.border_image, box.style['border_image_slice'],
-            box.style['border_image_repeat'], box.style['border_image_outset'],
-            box.style['border_image_width'])
+        with stream.artifact():
+            draw_border_image(
+                box, stream, box.border_image, box.style['border_image_slice'],
+                box.style['border_image_repeat'], box.style['border_image_outset'],
+                box.style['border_image_width'])
         return
 
     widths = [getattr(box, f'border_{side}_width') for side in SIDES]
@@ -88,7 +94,8 @@ def draw_border(stream, box):
     four_sides = 0 not in widths  # no 0-width border, to avoid PDF artifacts
     if simple_style and single_color and four_sides:
         # Simple case, we only draw rounded rectangles.
-        draw_rounded_border(stream, box, styles[0], colors[0])
+        with stream.artifact():
+            draw_rounded_border(stream, box, styles[0], colors[0])
         return
 
     # We're not smart enough to find a good way to draw the borders, we must
@@ -99,12 +106,11 @@ def draw_border(stream, box):
         side, width, color, style = values[index]
         if width == 0 or not color:
             continue
-        with stacked(stream):
+        with stream.artifact(), stream.stacked():
             clip_border_segment(
                 stream, style, width, side, box.rounded_border_box()[:4],
                 widths, box.rounded_border_box()[4:])
-            draw_rounded_border(
-                stream, box, style, styled_color(style, color, side))
+            draw_rounded_border(stream, box, style, styled_color(style, color, side))
 
 
 def draw_border_image(box, stream, image, border_slice, border_repeat, border_outset,
@@ -237,7 +243,7 @@ def draw_border_image(box, stream, image, border_slice, border_repeat, border_ou
         offset_x = rendered_width * slice_x / intrinsic_width
         offset_y = rendered_height * slice_y / intrinsic_height
 
-        with stacked(stream):
+        with stream.stacked():
             stream.rectangle(x, y, width, height)
             stream.clip()
             stream.end()
@@ -245,7 +251,7 @@ def draw_border_image(box, stream, image, border_slice, border_repeat, border_ou
             stream.transform(a=scale_x, d=scale_y)
             for i in range(n_repeats_x):
                 for j in range(n_repeats_y):
-                    with stacked(stream):
+                    with stream.stacked():
                         translate_x = i * (slice_width + extra_dx)
                         translate_y = j * (slice_height + extra_dy)
                         stream.transform(e=translate_x, f=translate_y)
@@ -357,6 +363,19 @@ def clip_border_segment(stream, style, width, side, border_box,
         return pi / 8 * (a + b) * (
             1 + 3 * x ** 2 / (10 + sqrt(4 - 3 * x ** 2)))
 
+    def draw_dash(cx, cy, width=0, height=0, r=0):
+        """Draw a single dash or dot centered on cx, cy."""
+        if style == 'dotted':
+            ratio = r / sqrt(pi)
+            stream.move_to(cx + r, cy)
+            stream.curve_to(cx + r, cy + ratio, cx + ratio, cy + r, cx, cy + r)
+            stream.curve_to(cx - ratio, cy + r, cx - r, cy + ratio, cx - r, cy)
+            stream.curve_to(cx - r, cy - ratio, cx - ratio, cy - r, cx, cy - r)
+            stream.curve_to(cx + ratio, cy - r, cx + r, cy - ratio, cx + r, cy)
+            stream.close()
+        elif style == 'dashed':
+            stream.rectangle(cx - width / 2, cy - height / 2, width, height)
+
     if side == 'top':
         (px1, py1), rounded1 = transition_point(tlh, tlv, bl, bt)
         (px2, py2), rounded2 = transition_point(-trh, trv, -br, bt)
@@ -407,25 +426,48 @@ def clip_border_segment(stream, style, width, side, border_box,
 
     if style in ('dotted', 'dashed'):
         dash = width if style == 'dotted' else 3 * width
+        stream.clip(even_odd=True)
+        stream.end()
         if rounded1 or rounded2:
-            # At least one of the two corners is rounded
+            # At least one of the two corners is rounded.
             chl1 = corner_half_length(a1, b1)
             chl2 = corner_half_length(a2, b2)
             length = line_length + chl1 + chl2
             dash_length = round(length / dash)
             if rounded1 and rounded2:
-                # 2x dashes
+                # 2x dashes.
                 dash = length / (dash_length + dash_length % 2)
             else:
-                # 2x - 1/2 dashes
+                # 2x - 1/2 dashes.
                 dash = length / (dash_length + dash_length % 2 - 0.5)
             dashes1 = ceil((chl1 - dash / 2) / dash)
             dashes2 = ceil((chl2 - dash / 2) / dash)
             line = floor(line_length / dash)
 
-            def draw_dots(dashes, line, way, x, y, px, py, chl):
-                if not dashes:
-                    return line + 1, 0
+            def draw_dashes(dashes, line, way, x, y, px, py, chl):
+                if style == 'dotted':
+                    if dashes == 0:
+                        return line + 1, -1
+                    elif dashes == 1:
+                        return line + 1, -0.5
+
+                    for i in range(1, dashes, 2):
+                        a = ((2 * angle - way) + i * way * dash / chl) / 4 * pi
+                        cx = x if side in ('top', 'bottom') else main_offset
+                        cy = y if side in ('left', 'right') else main_offset
+                        draw_dash(
+                            cx + px - (abs(px) - dash / 2) * cos(a),
+                            cy + py - (abs(py) - dash / 2) * sin(a),
+                            r=(dash / 2))
+                    next_a = ((2 * angle - way) + (i + 2) * way * dash / chl) / 4 * pi
+                    offset = next_a / pi * 2 - angle
+                    if dashes % 2:
+                        line += 1
+                    return line, offset
+
+                if dashes == 0:
+                    return line + 1, -1/3
+
                 for i in range(0, dashes, 2):
                     i += 0.5  # half dash
                     angle1 = (
@@ -458,42 +500,53 @@ def clip_border_segment(stream, style, width, side, border_box,
                         (angle * pi / 2 - angle2) / (angle2 - angle1))
                 return line, offset
 
-            line, offset = draw_dots(
-                dashes1, line, way, bbx, bby, px1, py1, chl1)
-            line = draw_dots(
+            line, offset = draw_dashes(dashes1, line, way, bbx, bby, px1, py1, chl1)
+            line = draw_dashes(
                 dashes2, line, -way, bbx + bbw, bby + bbh, px2, py2, chl2)[0]
 
             if line_length > 1e-6:
                 for i in range(0, line, 2):
                     i += offset
                     if side in ('top', 'bottom'):
-                        x1 = max(bbx + px1 + i * dash, bbx + px1)
-                        x2 = min(bbx + px1 + (i + 1) * dash, bbx + bbw + px2)
+                        x1 = bbx + px1 + i * dash
+                        x2 = bbx + px1 + (i + 1) * dash
                         y1 = main_offset - (width if way < 0 else 0)
                         y2 = y1 + width
                     elif side in ('left', 'right'):
-                        y1 = max(bby + py1 + i * dash, bby + py1)
-                        y2 = min(bby + py1 + (i + 1) * dash, bby + bbh + py2)
+                        y1 = bby + py1 + i * dash
+                        y2 = bby + py1 + (i + 1) * dash
                         x1 = main_offset - (width if way > 0 else 0)
                         x2 = x1 + width
-                    stream.rectangle(x1, y1, x2 - x1, y2 - y1)
+                    draw_dash(
+                        x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2,
+                        x2 - x1, y2 - y1, width / 2)
         else:
-            # 2x + 1 dashes
-            stream.clip(even_odd=True)
-            stream.end()
-            dash = length / (
-                round(length / dash) - (round(length / dash) + 1) % 2) or 1
-            for i in range(0, round(length / dash), 2):
+            # No rounded corner, dashes on corners and evenly spaced between.
+            number_of_spaces = floor(length / dash / 2)
+            number_of_dashes = number_of_spaces + 1
+            if style == 'dotted':
+                dash = width
+                if number_of_spaces:
+                    space = (length - number_of_dashes * dash) / number_of_spaces
+                else:
+                    space = 0  # no space, unused
+            elif style == 'dashed':
+                space = dash = length / (number_of_spaces + number_of_dashes) or 1
+            for i in range(0, number_of_dashes + 1):
+                advance = i * (space + dash)
                 if side == 'top':
-                    stream.rectangle(bbx + i * dash, bby, dash, width)
+                    cx, cy = bbx + advance + dash / 2, bby + width / 2
+                    dash_width, dash_height = dash, width
                 elif side == 'right':
-                    stream.rectangle(
-                        bbx + bbw - width, bby + i * dash, width, dash)
+                    cx, cy = bbx + bbw - width / 2, bby + advance + dash / 2
+                    dash_width, dash_height = width, dash
                 elif side == 'bottom':
-                    stream.rectangle(
-                        bbx + i * dash, bby + bbh - width, dash, width)
+                    cx, cy = bbx + advance + dash / 2, bby + bbh - width / 2
+                    dash_width, dash_height = dash, width
                 elif side == 'left':
-                    stream.rectangle(bbx, bby + i * dash, width, dash)
+                    cx, cy = bbx + width / 2, bby + advance + dash / 2
+                    dash_width, dash_height = width, dash
+                draw_dash(cx, cy, dash_width, dash_height, dash / 2)
     stream.clip(even_odd=True)
     stream.end()
 
@@ -551,14 +604,15 @@ def draw_rect_border(stream, box, widths, style, color):
 def draw_line(stream, x1, y1, x2, y2, thickness, style, color, offset=0):
     assert x1 == x2 or y1 == y2  # Only works for vertical or horizontal lines
 
-    with stacked(stream):
+    with stream.stacked():
         if style not in ('ridge', 'groove'):
             stream.set_color(color, stroke=True)
 
         if style == 'dashed':
             stream.set_dash([5 * thickness], offset)
         elif style == 'dotted':
-            stream.set_dash([thickness], offset)
+            stream.set_line_cap(1)
+            stream.set_dash([0, 2 * thickness], offset)
 
         if style == 'double':
             stream.set_line_width(thickness / 3)
@@ -627,7 +681,7 @@ def draw_outline(stream, box):
             box.border_width() + 2 * width + 2 * offset,
             box.border_height() + 2 * width + 2 * offset)
         for side in SIDES:
-            with stacked(stream):
+            with stream.artifact(), stream.stacked():
                 clip_border_segment(stream, style, width, side, outline_box)
                 draw_rect_border(
                     stream, outline_box, 4 * (width,), style,

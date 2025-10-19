@@ -22,3 +22,8 @@ openpyxl
 django-widget-tweaks
 django-crispy-forms
 djangorestframework-simplejwt
+stripe==8.5.0
+python-dotenv>=0.21.0
+whitenoise>=6.2.0
+google-auth>=2.22.0
+google-api-python-client>=2.88.0
