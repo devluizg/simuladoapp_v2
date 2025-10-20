@@ -1,0 +1,562 @@
+{% load static %}
+
+<!-- Component: Subscription Status -->
+<div class="subscription-status-widget {% if subscription %}status-{{ subscription.status }}{% else %}no-subscription{% endif %}">
+    {% if subscription %}
+        <!-- Com Assinatura -->
+        <div class="status-header">
+            <div class="status-icon">
+                {% if subscription.status == 'active' %}
+                    <i class="fas fa-check-circle"></i>
+                {% elif subscription.status == 'trialing' %}
+                    <i class="fas fa-clock"></i>
+                {% elif subscription.status == 'past_due' %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                {% elif subscription.status == 'canceled' %}
+                    <i class="fas fa-times-circle"></i>
+                {% else %}
+                    <i class="fas fa-info-circle"></i>
+                {% endif %}
+            </div>
+            
+            <div class="status-info">
+                <div class="status-label">Status da Assinatura</div>
+                <div class="status-value">
+                    {% if subscription.status == 'active' %}
+                        <span class="badge-status active">
+                            <i class="fas fa-circle"></i>
+                            Ativa
+                        </span>
+                    {% elif subscription.status == 'trialing' %}
+                        <span class="badge-status trialing">
+                            <i class="fas fa-circle"></i>
+                            Em Período de Teste
+                        </span>
+                    {% elif subscription.status == 'past_due' %}
+                        <span class="badge-status past_due">
+                            <i class="fas fa-circle"></i>
+                            Pagamento Vencido
+                        </span>
+                    {% elif subscription.status == 'canceled' %}
+                        <span class="badge-status canceled">
+                            <i class="fas fa-circle"></i>
+                            Cancelada
+                        </span>
+                    {% elif subscription.status == 'incomplete' %}
+                        <span class="badge-status incomplete">
+                            <i class="fas fa-circle"></i>
+                            Incompleta
+                        </span>
+                    {% else %}
+                        <span class="badge-status">
+                            <i class="fas fa-circle"></i>
+                            {{ subscription.get_status_display }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-body">
+            <!-- Plano Atual -->
+            <div class="info-row">
+                <div class="info-label">
+                    <i class="fas fa-tag"></i>
+                    Plano Atual
+                </div>
+                <div class="info-value">
+                    <strong>{{ subscription.plan.name }}</strong>
+                </div>
+            </div>
+            
+            <!-- Valor -->
+            <div class="info-row">
+                <div class="info-label">
+                    <i class="fas fa-dollar-sign"></i>
+                    Valor
+                </div>
+                <div class="info-value">
+                    R$ {{ subscription.plan.price }} / {{ subscription.plan.get_billing_period_display|lower }}
+                </div>
+            </div>
+            
+            <!-- Próxima Cobrança ou Status Especial -->
+            {% if subscription.cancel_at_period_end %}
+                <div class="info-row warning">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-times"></i>
+                        Cancela em
+                    </div>
+                    <div class="info-value">
+                        {{ subscription.current_period_end|date:"d/m/Y" }}
+                    </div>
+                </div>
+            {% elif subscription.current_period_end %}
+                <div class="info-row">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-alt"></i>
+                        {% if subscription.status == 'active' or subscription.status == 'trialing' %}
+                            Próxima Cobrança
+                        {% else %}
+                            Período Expira
+                        {% endif %}
+                    </div>
+                    <div class="info-value">
+                        {{ subscription.current_period_end|date:"d/m/Y" }}
+                        {% if subscription.days_until_renewal is not None %}
+                            <span class="days-remaining">
+                                ({{ subscription.days_until_renewal }} dia{{ subscription.days_until_renewal|pluralize }})
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Turmas -->
+            <div class="info-row">
+                <div class="info-label">
+                    <i class="fas fa-users"></i>
+                    Turmas
+                </div>
+                <div class="info-value">
+                    {% if subscription.plan.max_classes %}
+                        {{ subscription.total_classes_allowed }} turmas
+                        {% if subscription.extra_classes > 0 %}
+                            <span class="text-muted">({{ subscription.extra_classes }} extras)</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-success">
+                            <i class="fas fa-infinity"></i>
+                            Ilimitadas
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Alerta de Expiração -->
+            {% if subscription.is_active and subscription.days_until_renewal <= 7 %}
+                <div class="alert-box warning-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Sua assinatura vence em {{ subscription.days_until_renewal }} dia{{ subscription.days_until_renewal|pluralize }}!</span>
+                </div>
+            {% endif %}
+            
+            <!-- Alerta de Cancelamento -->
+            {% if subscription.cancel_at_period_end %}
+                <div class="alert-box danger-box">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Sua assinatura será cancelada no final do período atual.</span>
+                </div>
+            {% endif %}
+            
+            <!-- Alerta de Pagamento Vencido -->
+            {% if subscription.status == 'past_due' %}
+                <div class="alert-box danger-box">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Há um problema com seu pagamento. Por favor, atualize seus dados.</span>
+                </div>
+            {% endif %}
+        </div>
+                
+        <div class="status-footer">
+            {% if subscription.is_active %}
+                <a href="{% url 'payments:subscription_detail' %}" class="btn-status btn-primary">
+                    <i class="fas fa-cog"></i>
+                    Gerenciar Assinatura
+                </a>
+            {% elif subscription.status == 'canceled' or subscription.status == 'incomplete' %}
+                <a href="{% url 'payments:plans_list' %}" class="btn-status btn-primary">
+                    <i class="fas fa-redo"></i>
+                    Renovar Assinatura
+                </a>
+            {% elif subscription.status == 'past_due' %}
+                <a href="{% url 'payments:customer_portal' %}" class="btn-status btn-danger">
+                    <i class="fas fa-credit-card"></i>
+                    Atualizar Pagamento
+                </a>
+            {% endif %}
+        </div>
+        
+    {% else %}
+        <!-- Sem Assinatura -->
+        <div class="no-subscription-content">
+            <div class="empty-icon">
+                <i class="fas fa-inbox"></i>
+            </div>
+            <h4 class="empty-title">Nenhuma Assinatura Ativa</h4>
+            <p class="empty-description">
+                Assine um plano para desbloquear todos os recursos da plataforma.
+            </p>
+            <a href="{% url 'payments:plans_list' %}" class="btn-status btn-primary">
+                <i class="fas fa-shopping-cart"></i>
+                Ver Planos Disponíveis
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .subscription-status-widget {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .subscription-status-widget:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Status Colors */
+    .subscription-status-widget.status-active {
+        border-top: 4px solid #28a745;
+    }
+    
+    .subscription-status-widget.status-trialing {
+        border-top: 4px solid #17a2b8;
+    }
+    
+    .subscription-status-widget.status-past_due {
+        border-top: 4px solid #ffc107;
+    }
+    
+    .subscription-status-widget.status-canceled {
+        border-top: 4px solid #dc3545;
+    }
+    
+    .subscription-status-widget.status-incomplete {
+        border-top: 4px solid #6c757d;
+    }
+    
+    .subscription-status-widget.no-subscription {
+        border-top: 4px solid #e0e0e0;
+    }
+    
+    /* Header */
+    .status-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .status-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .status-active .status-icon {
+        background: #28a745;
+        color: white;
+    }
+    
+    .status-trialing .status-icon {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .status-past_due .status-icon {
+        background: #ffc107;
+        color: white;
+    }
+    
+    .status-canceled .status-icon {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .status-incomplete .status-icon {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .status-info {
+        flex: 1;
+    }
+    
+    .status-label {
+        font-size: 0.85rem;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+    
+    .status-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    /* Badge Status */
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .badge-status i.fa-circle {
+        font-size: 0.5rem;
+    }
+    
+    .badge-status.active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .badge-status.trialing {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .badge-status.past_due {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .badge-status.canceled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .badge-status.incomplete {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+    
+    /* Body */
+    .status-body {
+        padding: 20px;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+        gap: 15px;
+    }
+    
+    .info-row:last-of-type {
+        border-bottom: none;
+    }
+    
+    .info-row.warning {
+        background: #fff3cd;
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+    }
+    
+    .info-label {
+        font-size: 0.9rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .info-label i {
+        color: #667eea;
+        width: 16px;
+    }
+    
+    .info-value {
+        font-size: 0.95rem;
+        color: #333;
+        font-weight: 600;
+        text-align: right;
+    }
+    
+    .days-remaining {
+        font-size: 0.85rem;
+        color: #999;
+        font-weight: normal;
+    }
+    
+    /* Alert Boxes */
+    .alert-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .alert-box i {
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .alert-box.warning-box {
+        background: #fff3cd;
+        color: #856404;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .alert-box.danger-box {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+    
+    /* Footer */
+    .status-footer {
+        padding: 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .btn-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        width: 100%;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-status.btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-status.btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-status.btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-status.btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+    }
+    
+    /* No Subscription State */
+    .no-subscription-content {
+        padding: 40px 20px;
+        text-align: center;
+    }
+    
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2.5rem;
+        color: #ccc;
+    }
+    
+    .empty-title {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .empty-description {
+        color: #666;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .status-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .info-row {
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .info-value {
+            text-align: left;
+        }
+        
+        .status-body {
+            padding: 15px;
+        }
+        
+        .status-footer {
+            padding: 15px;
+        }
+    }
+    
+    /* Compact Version */
+    .subscription-status-widget.compact .status-body {
+        padding: 15px;
+    }
+    
+    .subscription-status-widget.compact .info-row {
+        padding: 8px 0;
+        font-size: 0.9rem;
+    }
+    
+    .subscription-status-widget.compact .status-footer {
+        padding: 15px;
+    }
+    
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .subscription-status-widget {
+        animation: slideIn 0.3s ease-out;
+    }
+</style>
+
+<script>
+    // Auto-refresh status (opcional)
+    (function() {
+        // Atualiza o status a cada 5 minutos
+        var refreshInterval = 5 * 60 * 1000; // 5 minutos
+        
+        function refreshStatus() {
+            // Você pode implementar uma requisição AJAX aqui
+            // para atualizar o status sem recarregar a página
+            console.log('Status subscription check...');
+        }
+        
+        // setInterval(refreshStatus, refreshInterval);
+    })();
+</script>

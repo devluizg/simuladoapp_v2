@@ -752,6 +752,14 @@
 >>>>>>> Stashed changes
                             </a>
                         </li>
+
+                        <!-- NOVO: Link para Assinaturas -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'payments:' in request.resolver_match.view_name %}active{% endif %}"
+                            href="{% url 'payments:subscription_detail' %}">
+                                <i class="bi bi-wallet2"></i> Assinaturas
+                            </a>
+                        </li>
                     </ul>
 
                     <ul class="navbar-nav">
@@ -786,6 +794,17 @@
                                 <li>
                                     <a class="dropdown-item" href="{% url 'accounts:password_reset' %}">
                                         <i class="bi bi-key"></i> Alterar Senha
+                                    </a>
+                                </li>
+                                <!-- NOVO: Link para gerenciar assinatura no dropdown -->
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'payments:subscription_detail' %}">
+                                        <i class="bi bi-wallet2"></i> Minha Assinatura
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'payments:payment_history' %}">
+                                        <i class="bi bi-file-earmark-text"></i> Histórico de Pagamentos
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>

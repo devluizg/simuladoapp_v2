@@ -1,0 +1,541 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout Cancelado - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cancel-container {
+        max-width: 800px;
+        margin: 80px auto;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .cancel-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        animation: shakeIcon 0.5s ease-out;
+    }
+    
+    .cancel-icon i {
+        color: white;
+        font-size: 3.5rem;
+    }
+    
+    @keyframes shakeIcon {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+    
+    .cancel-container h1 {
+        font-size: 2.5rem;
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    .cancel-container .lead {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 40px;
+    }
+    
+    .cancel-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .reason-section {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        border-radius: 8px;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .reason-section h5 {
+        color: #856404;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .reason-section h5 i {
+        margin-right: 10px;
+    }
+    
+    .reason-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .reason-list li {
+        padding: 10px 0;
+        color: #333;
+        display: flex;
+        align-items: center;
+    }
+    
+    .reason-list li i {
+        color: #ffc107;
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .alternative-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin: 30px 0;
+    }
+    
+    .option-card {
+        background: #f8f9fa;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 25px;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .option-card:hover {
+        border-color: #667eea;
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+    }
+    
+    .option-card .icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        margin: 0 auto 20px;
+    }
+    
+    .option-card h5 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .option-card p {
+        color: #666;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 30px;
+    }
+    
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 40px;
+        border-radius: 50px;
+        border: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-secondary-custom {
+        background: white;
+        color: #667eea;
+        padding: 15px 40px;
+        border-radius: 50px;
+        border: 2px solid #667eea;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary-custom:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .btn-outline-custom {
+        background: transparent;
+        color: #666;
+        padding: 12px 30px;
+        border-radius: 50px;
+        border: 2px solid #e0e0e0;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-custom:hover {
+        border-color: #667eea;
+        color: #667eea;
+        text-decoration: none;
+    }
+    
+    .faq-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 30px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .faq-section h4 {
+        color: #333;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .faq-item {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .faq-item:hover {
+        box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+    }
+    
+    .faq-question {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .faq-answer {
+        color: #666;
+        margin-top: 15px;
+        display: none;
+        line-height: 1.6;
+    }
+    
+    .faq-item.active .faq-answer {
+        display: block;
+    }
+    
+    .faq-item.active .faq-question i {
+        transform: rotate(180deg);
+    }
+    
+    .faq-question i {
+        transition: transform 0.3s ease;
+        color: #667eea;
+    }
+    
+    .help-section {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        border-radius: 8px;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .help-section h5 {
+        color: #1976d2;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .help-section h5 i {
+        margin-right: 10px;
+        font-size: 1.5rem;
+    }
+    
+    .help-section p {
+        color: #333;
+        margin: 0;
+        line-height: 1.6;
+    }
+    
+    .help-section a {
+        color: #1976d2;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    
+    .help-section a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cancel-container">
+    <!-- Ícone de Cancelamento -->
+    <div class="cancel-icon">
+        <i class="fas fa-times"></i>
+    </div>
+
+    <!-- Mensagem Principal -->
+    <h1>Checkout Cancelado</h1>
+    <p class="lead">Não se preocupe! Nenhuma cobrança foi realizada.</p>
+
+    <!-- Card Principal -->
+    <div class="cancel-card">
+        <!-- Seção de Razões -->
+        <div class="reason-section">
+            <h5>
+                <i class="fas fa-lightbulb"></i>
+                O que aconteceu?
+            </h5>
+            <ul class="reason-list">
+                <li>
+                    <i class="fas fa-circle"></i>
+                    Você cancelou o processo de pagamento
+                </li>
+                <li>
+                    <i class="fas fa-circle"></i>
+                    Nenhuma cobrança foi efetuada no seu cartão
+                </li>
+                <li>
+                    <i class="fas fa-circle"></i>
+                    Você pode tentar novamente a qualquer momento
+                </li>
+            </ul>
+        </div>
+
+        <!-- Alternativas -->
+        <h3 class="mt-5 mb-4">O que você gostaria de fazer?</h3>
+        
+        <div class="alternative-options">
+            <div class="option-card">
+                <div class="icon">
+                    <i class="fas fa-redo"></i>
+                </div>
+                <h5>Tentar Novamente</h5>
+                <p>Voltar e completar o processo de checkout</p>
+                <a href="{% url 'payments:plans_list' %}" class="btn btn-sm btn-outline-custom">
+                    Escolher Plano
+                </a>
+            </div>
+            
+            <div class="option-card">
+                <div class="icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h5>Falar com Suporte</h5>
+                <p>Tem dúvidas? Estamos aqui para ajudar</p>
+                <a href="mailto:suporte@simuladoapp.com" class="btn btn-sm btn-outline-custom">
+                    Contatar Suporte
+                </a>
+            </div>
+            
+            <div class="option-card">
+                <div class="icon">
+                    <i class="fas fa-th-large"></i>
+                </div>
+                <h5>Ver Outros Planos</h5>
+                <p>Conheça nossas opções e escolha o melhor</p>
+                <a href="{% url 'payments:plans_list' %}" class="btn btn-sm btn-outline-custom">
+                    Ver Planos
+                </a>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="faq-section">
+            <h4><i class="fas fa-question-circle"></i> Perguntas Frequentes</h4>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Por que o pagamento não foi concluído?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    O pagamento pode não ter sido concluído por diversos motivos: você decidiu cancelar, 
+                    houve um problema com os dados do cartão, ou sua sessão expirou. Não se preocupe, 
+                    você pode tentar novamente sem problemas.
+                </div>
+            </div>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Alguma cobrança foi feita no meu cartão?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Não! Como o processo não foi concluído, nenhuma cobrança foi realizada. 
+                    Você pode verificar sua fatura do cartão para confirmar.
+                </div>
+            </div>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Posso tentar com outro cartão?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Sim! Você pode tentar novamente com qualquer cartão de crédito válido. 
+                    Aceitamos as principais bandeiras: Visa, Mastercard, American Express e mais.
+                </div>
+            </div>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Existe outra forma de pagamento?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Atualmente aceitamos pagamentos por cartão de crédito através do Stripe. 
+                    Se você precisa de outra forma de pagamento, entre em contato com nosso suporte.
+                </div>
+            </div>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Há algum desconto disponível?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Oferecemos descontos para pagamentos anuais e planos institucionais. 
+                    Entre em contato conosco para conhecer as opções disponíveis para você.
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Ajuda -->
+        <div class="help-section">
+            <h5>
+                <i class="fas fa-life-ring"></i>
+                Precisa de Ajuda?
+            </h5>
+            <p>
+                Nossa equipe de suporte está disponível para ajudar com qualquer dúvida sobre pagamentos, 
+                planos ou funcionalidades. Entre em contato através do email 
+                <a href="mailto:suporte@simuladoapp.com">suporte@simuladoapp.com</a> ou pelo WhatsApp 
+                <a href="https://wa.me/5581326420100" target="_blank">(81) 3264-2010</a>.
+            </p>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="action-buttons">
+            <a href="{% url 'payments:plans_list' %}" class="btn-primary-custom">
+                <i class="fas fa-arrow-left"></i>
+                Voltar aos Planos
+            </a>
+            
+            <a href="{% url 'dashboard' %}" class="btn-secondary-custom">
+                <i class="fas fa-home"></i>
+                Ir para o Dashboard
+            </a>
+        </div>
+
+        <!-- Informações Adicionais -->
+        <div class="mt-5 pt-4" style="border-top: 1px solid #e0e0e0;">
+            <p class="text-muted mb-3">
+                <i class="fas fa-shield-alt"></i>
+                Todos os pagamentos são processados de forma segura pelo Stripe
+            </p>
+            <p class="text-muted mb-0">
+                <i class="fas fa-lock"></i>
+                Seus dados estão protegidos com criptografia de ponta a ponta
+            </p>
+        </div>
+    </div>
+
+    <!-- Banner de Benefícios -->
+    <div class="alert alert-info" role="alert">
+        <h5 class="alert-heading"><i class="fas fa-star"></i> Benefícios de Assinar o SimuladoApp</h5>
+        <ul class="text-start mb-0">
+            <li>Economia de até 70% do tempo em criação de simulados</li>
+            <li>Correção automática em segundos</li>
+            <li>Dashboard completo de desempenho</li>
+            <li>Suporte dedicado para ajudar você</li>
+            <li>Atualizações constantes e novas funcionalidades</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle FAQ
+    function toggleFaq(element) {
+        element.classList.toggle('active');
+    }
+
+    // Animação de entrada dos cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        entry.target.style.transition = 'all 0.5s ease';
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }, 100);
+                    
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        document.querySelectorAll('.option-card').forEach(card => {
+            observer.observe(card);
+        });
+    });
+
+    // Auto-expandir primeira FAQ após 2 segundos
+    setTimeout(() => {
+        const firstFaq = document.querySelector('.faq-item');
+        if (firstFaq) {
+            firstFaq.classList.add('active');
+        }
+    }, 2000);
+
+    // Tracking (opcional)
+    console.log('Checkout cancelado em:', new Date().toISOString());
+</script>
+{% endblock %}
