@@ -42,7 +42,7 @@
 
     body {
         background-color: var(--light-bg) !important;
-        color: var(--light-text-primary) !important;
+        color: var(--light-text-primary);
         font-family: 'Inter', 'Poppins', sans-serif !important;
     }
 
@@ -63,7 +63,7 @@
     section {
         width: 100%;
         margin: 0;
-        padding: 5rem 0;
+        padding: 3rem 0;
     }
 
     /* Container responsivo dentro das sections */
@@ -316,16 +316,16 @@
     .badge-gradient {
         background: linear-gradient(90deg, var(--light-secondary), var(--light-primary));
         color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
+        padding: 0.7rem 1.2rem;
+        border-radius: 8px;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 1rem;
     }
 
     /* Footer */
     .landing-footer {
         background: linear-gradient(135deg, #2a3254 0%, #1e2a45 100%);
-        color: #e0e6f1;
+        color: white !important; /* Force default color */
         width: 100%;
         margin: 0;
     }
@@ -341,14 +341,20 @@
         color: white !important;
     }
 
+    .landing-footer a,
+    .landing-footer p,
+    .landing-footer span,
+    .landing-footer strong {
+        color: white !important;
+    }
+
     .landing-footer a {
-        color: #b8c5d9;
         text-decoration: none;
         transition: color 0.3s ease;
     }
 
     .landing-footer a:hover {
-        color: var(--light-primary);
+        color: var(--light-primary) !important; /* Ensure hover works */
     }
 
     /* Images */
@@ -473,7 +479,7 @@
 <section style="background-color: var(--light-surface);">
     <div class="container">
         <div class="text-center mb-5">
-            <span class="badge-gradient mb-3">POR QUE ESCOLHER</span>
+            <span class="badge-gradient" style="margin-bottom: 3rem; display: inline-block;">POR QUE ESCOLHER</span>
             <h2 class="display-5 fw-bold mb-3">Por que escolher o SimuladoApp?</h2>
             <p class="lead text-muted mx-auto" style="max-width: 700px;">Uma revolução na gestão educacional. Ajudamos professores e instituições a focarem no que realmente importa.</p>
         </div>
@@ -546,7 +552,7 @@
 <section id="funcionalidades" class="gradient-soft">
     <div class="container">
         <div class="text-center mb-5">
-            <span class="badge-gradient mb-3">FUNCIONALIDADES</span>
+            <span class="badge-gradient" style="margin-bottom: 3rem; display: inline-block;">FUNCIONALIDADES</span>
             <h2 class="display-5 fw-bold mb-3">Principais Funcionalidades</h2>
             <p class="lead text-muted mx-auto" style="max-width: 700px;">Ferramentas poderosas e intuitivas para otimizar todo o ciclo avaliativo.</p>
         </div>
@@ -625,7 +631,7 @@
 <section style="background-color: var(--light-surface);">
     <div class="container">
         <div class="text-center mb-5">
-            <span class="badge-gradient mb-3">RESULTADOS COMPROVADOS</span>
+            <span class="badge-gradient" style="margin-bottom: 3rem; display: inline-block;">RESULTADOS COMPROVADOS</span>
             <h2 class="display-5 fw-bold mb-3">Benefícios Exclusivos do SimuladoApp</h2>
         </div>
         <div class="row text-center">
@@ -652,7 +658,7 @@
 <section id="planos" class="gradient-soft">
     <div class="container">
         <div class="text-center mb-5">
-            <span class="badge-gradient mb-3">PLANOS</span>
+            <span class="badge-gradient" style="margin-bottom: 3rem; display: inline-block; font-size: 1.2rem; padding: 0.8rem 1.5rem;">PLANOS</span>
             <h2 class="display-5 fw-bold mb-3">Planos que se Adaptam às Suas Necessidades</h2>
             <p class="lead text-muted mx-auto" style="max-width: 700px;">Escolha o plano ideal para você ou sua instituição e comece a transformar suas avaliações.</p>
         </div>
@@ -759,7 +765,7 @@
 <section id="depoimentos" style="background-color: var(--light-surface);">
     <div class="container">
         <div class="text-center mb-5">
-            <span class="badge-gradient mb-3">DEPOIMENTOS</span>
+            <span class="badge-gradient" style="margin-bottom: 3rem; display: inline-block;">DEPOIMENTOS</span>
             <h2 class="display-5 fw-bold mb-3">O que nossos clientes dizem</h2>
             <p class="lead text-muted mx-auto" style="max-width: 700px;">Descubra como o SimuladoApp está transformando a educação</p>
         </div>
@@ -833,12 +839,12 @@
             <div class="col-lg-4">
                 <div class="d-flex align-items-center mb-3">
                     <i class="bi bi-display me-2" style="font-size: 2rem; color: var(--light-primary);"></i>
-                    <span style="font-family: 'Beatcarb', sans-serif; font-size: 1.5rem; color: white;">
+                    <span style="font-family: 'Beatcarb', sans-serif; font-size: 1.5rem; color: white !important;">
                         SimuladoApp
                     </span>
                 </div>
-                <p class="mb-3" style="color: #b8c5d9;">Simplificando Avaliações, Ampliando Resultados.</p>
-                <p style="color: #b8c5d9;">Junte-se a mais de <strong style="color: white;">150 instituições</strong> e milhares de professores em todo o Brasil!</p>
+                <p class="mb-3">Simplificando Avaliações, Ampliando Resultados.</p>
+                <p>Junte-se a mais de <strong style="color: white;">150 instituições</strong> e milhares de professores em todo o Brasil!</p>
             </div>
 
             <div class="col-lg-4">
@@ -854,7 +860,7 @@
                     </li>
                     <li class="mb-3">
                         <i class="bi bi-geo-alt-fill me-2" style="color: var(--light-primary);"></i>
-                        <span style="color: #b8c5d9;">Av. Gov. Agamenon Magalhães, 2615, Sala 0904<br>Recife, PE, CEP 50.050-290</span>
+                        <span style="color: white !important;">Av. Gov. Agamenon Magalhães, 2615, Sala 0904<br>Recife, PE, CEP 50.050-290</span>
                     </li>
                 </ul>
             </div>
@@ -875,7 +881,7 @@
 
         <div class="row mt-4">
             <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                <p class="mb-0" style="color: #b8c5d9;">&copy; 2024 SimuladoApp. Todos os direitos reservados.</p>
+                <p class="mb-0">&copy; 2024 SimuladoApp. Todos os direitos reservados.</p>
             </div>
             <div class="col-md-6 text-center text-md-end">
                 <a href="#" class="me-3">Política de Privacidade</a>
