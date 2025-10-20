@@ -738,10 +738,18 @@
                             </a>
                         </li>
 
+<<<<<<< Updated upstream
                         <li class="nav-item">
                             <a class="nav-link {% if 'creditos:' in request.resolver_match.view_name %}active{% endif %}"
                             href="{% url 'creditos:pagina_creditos' %}">
                                 <i class="bi bi-credit-card"></i> Créditos
+=======
+                        <!-- NOVO: Link para Assinaturas -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'payments:' in request.resolver_match.view_name %}active{% endif %}"
+                            href="{% url 'payments:subscription_detail' %}">
+                                <i class="bi bi-wallet2"></i> Assinaturas
+>>>>>>> Stashed changes
                             </a>
                         </li>
                     </ul>

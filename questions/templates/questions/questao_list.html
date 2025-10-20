@@ -63,21 +63,35 @@
     }
 
     /* Item da Lista de Questão */
-    .questao-card .card-body {
-        padding: 0.75rem 1rem;
-    }
     .questao-card {
         transition: all 0.3s ease;
         border-left: 3px solid var(--border-color);
+        height: 12.8rem; /* Altura reduzida em 20% (16rem - 20% = 12.8rem) */
     }
     .questao-card:hover {
         transform: translateY(-5px);
         border-left-color: var(--color-primary);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
     }
+    .questao-card .card-body {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
     .questao-info {
         flex-grow: 1;
+        display: flex;
+        flex-direction: column;
         min-width: 0;
+    }
+    .badges-container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        min-height: 32px; /* Altura mínima para manter os badges alinhados */
     }
 
     /* Badges de Categoria */
@@ -95,13 +109,32 @@
     .nivel-dificil { background-color: var(--color-danger) !important; color: var(--text-light) !important; }
 
     /* Preview do Enunciado */
-    .questao-preview {
-        font-size: 0.9rem;
-        color: #ffffff;
-        margin-top: 0.5rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .card .questao-preview {
+        font-size: 0.95rem;
+        color: var(--text-primary) !important;
+        line-height: 1.6;
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+        margin: 0;
+    }
+    
+    /* Scrollbar customizada para o preview */
+    .questao-preview::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .questao-preview::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .questao-preview::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+    }
+    
+    .questao-preview::-webkit-scrollbar-thumb:hover {
+        background: var(--color-primary);
     }
 
     /* Botões de Ação no Card */
@@ -109,47 +142,46 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        margin-top: 1rem;
     }
     .btn-action-icon {
-        background: transparent;
-        border: 1px solid var(--border-color);
-        color: var(--text-muted);
         padding: 0.4rem 0.7rem;
         border-radius: 4px;
         transition: all 0.2s ease-in-out;
+        font-weight: 600;
     }
     .btn-action-icon:hover {
-        color: var(--bg-dark);
-        background: var(--color-primary);
-        border-color: var(--color-primary);
         transform: scale(1.1);
     }
     .btn-action-icon.btn-add {
-        border-color: var(--color-success);
-        color: var(--color-success);
+        background-color: var(--color-success);
+        border: 1px solid var(--color-success);
+        color: white;
     }
     .btn-action-icon.btn-add:hover {
-        background-color: var(--color-success);
-        border-color: var(--color-success);
-        color: var(--bg-dark);
+        background-color: #0d9668;
+        border-color: #0d9668;
+        color: white;
     }
     .btn-action-icon.btn-edit-custom {
-        border-color: var(--border-color);
-        color: var(--color-primary);
+        background-color: var(--color-primary);
+        border: 1px solid var(--color-primary);
+        color: white;
     }
     .btn-action-icon.btn-edit-custom:hover {
-        background: var(--color-primary);
-        border-color: var(--color-primary);
-        color: var(--bg-dark);
+        background-color: #0082ad;
+        border-color: #0082ad;
+        color: white;
     }
     .btn-action-icon.btn-danger-custom {
-        border-color: var(--border-color);
-        color: var(--color-danger);
+        background-color: #ff044f;
+        border: 1px solid #ff004c;
+        color: white;
     }
     .btn-action-icon.btn-danger-custom:hover {
-        background: var(--color-danger);
-        border-color: var(--color-danger);
-        color: var(--text-light);
+        background-color: #6B0F2A;
+        border-color: #6B0F2A;
+        color: white;
     }
 
     /* Paginação */
@@ -216,10 +248,10 @@
 
     <div>
         {% for questao in questoes %}
-            <div class="card questao-card mb-1">
-                <div class="card-body d-flex justify-content-between align-items-center">
+            <div class="card questao-card mb-3">
+                <div class="card-body">
                     <div class="questao-info">
-                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <div class="badges-container">
                             <span class="badge badge-disciplina">{{ questao.disciplina }}</span>
                             <span class="badge badge-conteudo">{{ questao.conteudo }}</span>
                             <span class="badge nivel-badge
@@ -229,8 +261,8 @@
                                 {{ questao.get_nivel_dificuldade_display }}
                             </span>
                         </div>
-                        <div class="questao-preview" title="{{ questao.enunciado|striptags|escape }}" data-bs-toggle="tooltip" data-bs-placement="top">
-                            {{ questao.enunciado|striptags|safe|truncatechars:100 }}
+                        <div class="questao-preview">
+                            {{ questao.enunciado|striptags|safe|truncatechars:500 }}
                         </div>
                     </div>
                     <div class="actions-wrapper">
@@ -341,13 +373,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const textoCodificado = preview.textContent;
         const textoDecodificado = decodeHtmlEntities(textoCodificado);
         preview.textContent = textoDecodificado;
-
-        // Decodifica o título (tooltip)
-        const titleCodificado = preview.getAttribute('title');
-        if (titleCodificado) {
-            const titleDecodificado = decodeHtmlEntities(titleCodificado);
-            preview.setAttribute('title', titleDecodificado);
-        }
     });
 
     // ===================================================
@@ -441,14 +466,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
-    // ===================================================
-    // Inicializa os tooltips do Bootstrap
-    // ===================================================
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
 });
 </script>
 {% endblock %}

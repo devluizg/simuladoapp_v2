@@ -16,8 +16,25 @@ SECRET_KEY = config('SECRET_KEY', default='sua-chave-secreta')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
+<<<<<<< Updated upstream
 # Alterar para incluir explicitamente o domínio PythonAnywhere
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'simuladoapp.com.br', 'www.simuladoapp.com.br']
+=======
+ALLOWED_HOSTS = [
+    'localhost', 
+    '127.0.0.1',
+    '10.0.2.2',  # Para Android Emulator
+    '192.168.1.10',  # ⬅️ SEU IP
+    'simuladoapp.com.br', 
+    'www.simuladoapp.com.br',
+    '.pythonanywhere.com',
+    'lauric-nonparticipating-rhys.ngrok-free.dev',
+]
+
+# ========================================
+# SEGURANÇA
+# ========================================
+>>>>>>> Stashed changes
 
 # SECURE_SETTINGS para produção
 if not DEBUG:
@@ -42,7 +59,13 @@ INSTALLED_APPS = [
     'questions',
     'classes',
     'api',
+<<<<<<< Updated upstream
     'creditos',
+=======
+    'payments',  # Sistema de pagamentos
+    
+    # Apps de terceiros
+>>>>>>> Stashed changes
     'ckeditor',
     'ckeditor_uploader',
     'rest_framework',
