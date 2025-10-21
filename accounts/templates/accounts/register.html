@@ -4,6 +4,14 @@
 {% block title %}Registro - SimuladoApp{% endblock %}
 
 {% block content %}
+<style>
+    .login-link {
+        color: var(--color-primary) !important;
+    }
+    .resend-link:hover {
+        color: var(--color-primary) !important;
+    }
+</style>
 <div class="row justify-content-center">
     <div class="col-md-8">
         <!-- Mensagens -->
@@ -32,22 +40,26 @@
                     {% endif %}
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.first_name.id_for_label }}" class="form-label">Nome</label>
-                            {{ form.first_name }}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex flex-column">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">Nome</label>
+                                {{ form.first_name }}
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Sobrenome</label>
-                            {{ form.last_name }}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex flex-column">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Sobrenome</label>
+                                {{ form.last_name }}
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
                         {{ form.email }}
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <label for="{{ form.password1.id_for_label }}" class="form-label">Senha</label>
                         <div class="input-group">
                             {{ form.password1 }}
@@ -60,7 +72,7 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <label for="{{ form.password2.id_for_label }}" class="form-label">Confirme a Senha</label>
                         <div class="input-group">
                             {{ form.password2 }}
@@ -80,12 +92,12 @@
             <div class="card-footer text-center">
                 <p class="mb-0">
                     Já tem uma conta? 
-                    <a href="{% url 'accounts:login' %}" class="text-light">
+                    <a href="{% url 'accounts:login' %}" class="login-link">
                         Faça login
                     </a>
                 </p>
-                <p class="mt-2 mb-0">
-                    <a href="#" class="text-light" data-bs-toggle="modal" data-bs-target="#resendModal">
+                <p class="mt-1 mb-0">
+                    <a href="#" class="text-light resend-link" data-bs-toggle="modal" data-bs-target="#resendModal">
                         Não recebeu o email de ativação?
                     </a>
                 </p>
