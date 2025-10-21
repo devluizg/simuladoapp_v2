@@ -1,0 +1,933 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ plan.name }} - Detalhes do Plano - {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ======= CABEÇALHO DO PLANO ======= */
+.plan-detail-header {
+    background: var(--accent-gradient);
+    color: #fff !important;
+    padding: 70px 0;
+    margin-bottom: 50px;
+}
+
+.plan-detail-header h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+    color: #fff !important;
+}
+
+.plan-detail-header .plan-type {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.plan-detail-header .lead {
+    opacity: 0.9;
+}
+
+/* ======= HERO CTA BOX ======= */
+.hero-cta-box {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    margin-top: -80px;
+    position: relative;
+    z-index: 10;
+}
+
+[data-theme="dark"] .hero-cta-box {
+    background: var(--bg-surface);
+}
+
+.hero-price {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--color-primary);
+    line-height: 1;
+}
+
+.hero-period {
+    font-size: 1.3rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+.value-proposition {
+    background: var(--bg-secondary);
+    border-left: 4px solid var(--color-primary);
+    padding: 15px 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+.value-proposition strong {
+    color: var(--color-primary);
+    font-size: 1.1rem;
+}
+
+.trust-badges {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 25px 0;
+    padding: 20px 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.trust-badge {
+    text-align: center;
+    flex: 1;
+}
+
+.trust-badge i {
+    font-size: 2rem;
+    color: var(--color-success);
+    margin-bottom: 8px;
+}
+
+.trust-badge span {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* ======= SEÇÕES INTERNAS ======= */
+.features-section {
+    margin-bottom: 50px;
+}
+
+.features-section h2 {
+    font-size: 1.8rem;
+    color: var(--color-primary);
+    border-bottom: 3px solid var(--color-primary);
+    padding-bottom: 10px;
+    font-weight: 700;
+    margin-top: 30px;
+}
+
+.feature-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-primary);
+    box-shadow: 0 6px 18px rgba(0, 164, 217, 0.15);
+}
+
+.feature-card .icon {
+    width: auto;
+    height: auto;
+    background: none;       /* Remove o fundo azul */
+    border-radius: 0;       /* Remove o formato circular */
+    color: var(--color-primary); /* Mantém cor adaptável ao tema */
+    font-size: 2rem;
+    margin-bottom: 18px;
+    box-shadow: none;       /* Remove sombra */
+}
+
+
+.feature-card h4 {
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.feature-card p {
+    color: var(--text-muted);
+    margin-bottom: 0;
+}
+
+.feature-card .badge-unlimited {
+    display: inline-block;
+    background: var(--accent-gradient);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-top: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(0, 114, 255, 0.25);
+    animation: glowPulse 2s infinite ease-in-out;
+}
+
+.feature-card .badge-unlimited {
+    color: #fff !important;
+}
+
+[data-theme="dark"] .feature-card .badge-unlimited {
+    color: #fff !important;
+}
+
+
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(0,114,255,0.4); transform: scale(1); }
+    50% { box-shadow: 0 0 20px rgba(0,114,255,0.7); transform: scale(1.05); }
+}
+
+/* ======= FEATURE GRID ======= */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+/* ======= SEÇÃO CTA ======= */
+.cta-section {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border-radius: 18px;
+    padding: 60px 40px;
+    text-align: center;
+    color: #fff !important;
+    box-shadow: 0 8px 30px rgba(0, 164, 217, 0.25);
+    margin: 80px 0;
+}
+
+.cta-section h3 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: #fff !important;
+}
+
+.cta-section p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    margin-bottom: 35px;
+    color: #fff !important;
+}
+
+/* ======= BOTÃO PRINCIPAL ======= */
+.btn-subscribe {
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: #fff !important;
+    font-weight: 800;
+    font-size: 1.4rem;
+    padding: 20px 60px;
+    border-radius: 50px;
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 114, 255, 0.35);
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-subscribe::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.btn-subscribe:hover::before {
+    left: 100%;
+}
+
+.btn-subscribe:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 35px rgba(0, 114, 255, 0.5);
+    color: #fff;
+}
+
+/* ======= INFO BOX ======= */
+.info-box {
+    background: var(--bg-secondary);
+    border-left: 4px solid var(--color-info);
+    padding: 20px 25px;
+    border-radius: 8px;
+    margin: 30px 0;
+}
+
+.info-box h5 {
+    color: var(--color-info);
+    margin-bottom: 10px;
+}
+
+.info-box p {
+    margin-bottom: 0;
+}
+
+/* ======= POPULAR BADGE ======= */
+.popular-badge {
+    display: inline-block;
+    background: rgba(255, 215, 0, 0.9);
+    color: #000;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* ======= URGENCY BANNER ======= */
+.urgency-banner {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 8px;
+    margin: 20px 0;
+    text-align: center;
+    font-weight: 600;
+    animation: gentle-pulse 3s infinite;
+}
+
+@keyframes gentle-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.9; }
+}
+
+/* ======= CURRENT PLAN ALERT ======= */
+.current-plan-alert {
+    background: linear-gradient(135deg, var(--color-success), #28a745);
+    color: white;
+    padding: 25px 30px;
+    border-radius: 12px;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.current-plan-alert h4 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.current-plan-alert a {
+    color: white;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+/* ======= FAQ ======= */
+.faq-section {
+    margin: 60px 0;
+}
+
+.faq-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    padding: 20px 25px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.faq-item:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(0, 164, 217, 0.1);
+}
+
+.faq-item h5 {
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.faq-item p {
+    color: var(--text-muted);
+    margin-bottom: 0;
+}
+
+/* ======= COMPARISON TABLE ======= */
+.comparison-section {
+    margin: 60px 0;
+}
+
+.comparison-table {
+    background: var(--bg-surface);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.comparison-table table {
+    margin-bottom: 0;
+}
+
+.comparison-table thead {
+    background: var(--accent-gradient);
+    color: white;
+}
+
+.comparison-table th {
+    padding: 20px;
+    font-weight: 700;
+    border: none;
+    color: white !important;
+}
+
+.comparison-table td {
+    padding: 18px 20px;
+    border-color: var(--border-color);
+}
+
+.comparison-table .check {
+    color: var(--color-success);
+    font-size: 1.3rem;
+}
+
+.comparison-table .times {
+    color: var(--color-danger);
+    font-size: 1.3rem;
+}
+
+/* ======= STICKY CTA MOBILE ======= */
+@media (max-width: 768px) {
+    .sticky-cta-mobile {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 15px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+    }
+    
+    [data-theme="dark"] .sticky-cta-mobile {
+        background: var(--bg-surface);
+    }
+    
+    .sticky-cta-mobile .btn-subscribe {
+        width: 100%;
+        font-size: 1.1rem;
+        padding: 15px 30px;
+    }
+}
+
+/* ======= TEMA ESCURO ======= */
+[data-theme="dark"] .plan-detail-header {
+    background: var(--accent-gradient);
+}
+
+[data-theme="dark"] .feature-card {
+    background: var(--bg-surface);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .cta-section {
+    background: var(--accent-gradient);
+}
+
+[data-theme="dark"] .info-box {
+    background: rgba(0, 164, 217, 0.1);
+}
+
+[data-theme="dark"] .value-proposition {
+    background: rgba(0, 164, 217, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header do Plano -->
+<div class="plan-detail-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                {% if plan.is_popular %}
+                <div class="popular-badge">
+                    <i class="fas fa-fire"></i> PLANO MAIS POPULAR
+                </div>
+                {% endif %}
+                
+                <div class="plan-type">{{ plan.get_plan_type_display }}</div>
+                <h1>{{ plan.name }}</h1>
+                <p class="lead">{{ plan.description|default:"Ideal para professores que buscam praticidade e eficiência" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Alerta se for plano atual -->
+    {% if current_subscription and current_subscription.plan == plan %}
+    <div class="current-plan-alert">
+        <h4><i class="fas fa-check-circle"></i> Este é seu plano atual</h4>
+        <p class="mb-0">Você já possui este plano ativo. <a href="{% url 'payments:subscription_detail' %}">Ver detalhes da assinatura</a></p>
+    </div>
+    {% endif %}
+
+    <!-- HERO CTA BOX - CONVERSÃO PRINCIPAL -->
+    {% if not current_subscription or current_subscription.plan != plan %}
+    <div class="hero-cta-box">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="text-center text-md-left mb-4 mb-md-0">
+                    <div class="hero-price">
+                        R$ {{ plan.price|floatformat:0 }}
+                    </div>
+                    <div class="hero-period">
+                        por {{ plan.get_billing_period_display|lower }}
+                    </div>
+                    {% if plan.billing_period == 'semester' %}
+                    <div class="text-muted mt-2">
+                        <strong>Pagamento semestral</strong> - cancele quando quiser
+                    </div>
+                    {% elif plan.billing_period == 'annual' %}
+                    <div class="text-muted mt-2">
+                        12x de R$ {% widthratio plan.price 12 1 %} sem juros
+                    </div>
+                    {% endif %}
+                    
+                    <div class="value-proposition">
+                        <strong>✓ Correções ilimitadas</strong> durante todo o período<br>
+                        <strong>✓ 5 versões embaralhadas</strong> no padrão ENEM<br>
+                        <strong>✓ App móvel incluído</strong> para correção rápida
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="text-center">
+                    {% if current_subscription %}
+                    <a href="{% url 'payments:upgrade_subscription' %}" class="btn-subscribe d-block mb-3">
+                        <i class="fas fa-arrow-up"></i> MUDAR PARA ESTE PLANO
+                    </a>
+                    {% else %}
+                    <a href="{% url 'payments:checkout' plan.slug %}" class="btn-subscribe d-block mb-3">
+                        <i class="fas fa-rocket"></i> COMEÇAR AGORA
+                    </a>
+                    {% endif %}
+                    
+                    <div class="trust-badges">
+                        <div class="trust-badge">
+                            <i class="fas fa-shield-check"></i>
+                            <span>Pagamento<br>Seguro</span>
+                        </div>
+                        <div class="trust-badge">
+                            <i class="fas fa-undo"></i>
+                            <span>Garantia<br>7 dias</span>
+                        </div>
+                        <div class="trust-badge">
+                            <i class="fas fa-ban"></i>
+                            <span>Cancele<br>quando quiser</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-lock"></i> Seus dados estão 100% seguros • Certificado SSL
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Banner de Urgência -->
+    <div class="urgency-banner mt-4">
+        <i class="fas fa-clock"></i> <strong>Oferta por tempo limitado!</strong> Garanta esse preço especial hoje mesmo
+    </div>
+
+    <!-- Seção de Features em Cards -->
+    <div class="features-section mt-5">
+        <h2><i class="fas fa-star"></i> O que você vai receber</h2>
+        
+        <div class="feature-grid">
+    <div class="feature-card">
+        <div class="icon"><i class="fas fa-users"></i></div>
+        <h4>Até 5 Turmas Incluídas</h4>
+        <p>Cadastre até 5 turmas com seus alunos. Precisa de mais? Adicione turmas extras por apenas <strong>R$ 5,00/mês</strong> cada.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="icon"><i class="fas fa-infinity"></i></div>
+        <h4>Correções Ilimitadas</h4>
+        <p>Faça quantos testes, pré-testes e provas quiser durante todo o semestre sem limitações.</p>
+        <span class="badge-unlimited">Sem Limites</span>
+    </div>
+
+    <div class="feature-card">
+        <div class="icon"><i class="fas fa-random"></i></div>
+        <h4>5 Versões Embaralhadas</h4>
+        <p>Crie até 5 versões diferentes de cada simulado, todas formatadas no padrão ENEM profissional.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="icon"><i class="fas fa-mobile-alt"></i></div>
+        <h4>App de Correção</h4>
+        <p>Aplicativo móvel incluído para corrigir cartões-resposta de forma rápida e prática, direto do celular.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="icon"><i class="fas fa-chart-line"></i></div>
+        <h4>Dashboard Simplificado</h4>
+        <p>Visualize resultados dos alunos, notas e desempenho em tempo real num painel intuitivo.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="icon"><i class="fas fa-file-alt"></i></div>
+        <h4>Relatório Simplificado</h4>
+        <p>Obtenha relatórios práticos com notas e análises do desempenho geral da turma.</p>
+    </div>
+</div>
+
+    </div>
+
+    <!-- Info Box - Turmas Extras -->
+    <div class="info-box">
+        <h5><i class="fas fa-plus-circle"></i> Turmas Extras</h5>
+        <p>Precisa de mais turmas? Sem problemas! Adicione quantas turmas extras precisar por apenas <strong>R$ 5,00 por semestre</strong> cada. Ao fazer upgrade, você paga apenas a diferença proporcional do período.</p>
+    </div>
+
+    <!-- CTA Intermediário -->
+    {% if not current_subscription or current_subscription.plan != plan %}
+    <div class="cta-section">
+        <h3>Pronto para transformar suas avaliações?</h3>
+        <p>Junte-se a centenas de professores que já economizam horas de trabalho</p>
+        
+        {% if current_subscription %}
+        <a href="{% url 'payments:upgrade_subscription' %}" class="btn-subscribe">
+            <i class="fas fa-arrow-up"></i> MUDAR PARA ESTE PLANO
+        </a>
+        {% else %}
+        <a href="{% url 'payments:checkout' plan.slug %}" class="btn-subscribe">
+            <i class="fas fa-rocket"></i> ASSINAR AGORA
+        </a>
+        {% endif %}
+        
+        <p class="mt-4 mb-0" style="opacity: 0.9;">
+            <i class="fas fa-shield-alt"></i> Pagamento 100% seguro via Stripe • 
+            <i class="fas fa-undo"></i> 7 dias de garantia • 
+            <i class="fas fa-times-circle"></i> Cancele quando quiser
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Comparação com Plano Institucional -->
+    <div class="comparison-section">
+        <h3 class="text-center mb-4">Compare: Professor vs Institucional</h3>
+        <div class="comparison-table">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Recurso</th>
+                        <th>Plano Professor</th>
+                        <th>Plano Institucional</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Turmas Incluídas</strong></td>
+                        <td>Até 5 turmas<br><small class="text-muted">+R$ 5/turma extra</small></td>
+                        <td><i class="fas fa-infinity text-success"></i> Ilimitadas</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Correções</strong></td>
+                        <td><i class="fas fa-check check"></i> Ilimitadas</td>
+                        <td><i class="fas fa-check check"></i> Ilimitadas</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Versões Embaralhadas</strong></td>
+                        <td>Até 5 versões</td>
+                        <td>Até 5 versões</td>
+                    </tr>
+                    <tr>
+                        <td><strong>App de Correção</strong></td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dashboard</strong></td>
+                        <td>Simplificado</td>
+                        <td>Completo</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Relatórios</strong></td>
+                        <td>Simplificado<br><small class="text-muted">Notas e resultados</small></td>
+                        <td>Avançado<br><small class="text-success">Por disciplina, assuntos, médias</small></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Portal do Aluno</strong></td>
+                        <td><i class="fas fa-times times"></i></td>
+                        <td><i class="fas fa-check check"></i> App personalizado</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Banco de Questões</strong></td>
+                        <td><i class="fas fa-times times"></i></td>
+                        <td><i class="fas fa-check check"></i> Personalizado</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Suporte</strong></td>
+                        <td>Padrão</td>
+                        <td>Prioritário</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+        <h2 class="text-center mb-4">Perguntas Frequentes</h2>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="faq-item">
+                    <h5><i class="fas fa-question-circle text-primary"></i> Como funciona a cobrança semestral?</h5>
+                    <p>O pagamento é feito uma única vez a cada semestre no cartão de crédito. Você pode cancelar a qualquer momento sem taxas ou multas.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="faq-item">
+                    <h5><i class="fas fa-question-circle text-primary"></i> E se eu precisar de mais turmas?</h5>
+                    <p>Sem problemas! Você pode adicionar turmas extras por R$ 5,00 cada. Ao fazer o upgrade, cobramos apenas a diferença proporcional do período restante.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="faq-item">
+                    <h5><i class="fas fa-question-circle text-primary"></i> Quantas correções posso fazer?</h5>
+                    <p>Ilimitadas! Você pode fazer quantos testes, provas e simulados quiser durante todo o semestre sem nenhuma limitação.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="faq-item">
+                    <h5><i class="fas fa-question-circle text-primary"></i> Como funcionam as versões embaralhadas?</h5>
+                    <p>Você pode criar até 5 versões diferentes do mesmo simulado. O PDF vem formatado profissionalmente no padrão ENEM, pronto para imprimir.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="faq-item">
+                    <h5><i class="fas fa-question-circle text-primary"></i> Posso mudar para o plano Institucional?</h5>
+                    <p>Sim! Você pode fazer upgrade a qualquer momento. Cobramos apenas a diferença proporcional entre os planos.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="faq-item">
+                    <h5><i class="fas fa-question-circle text-primary"></i> Os dados ficam seguros?</h5>
+                    <p>Sim! Usamos criptografia de ponta e o Stripe (certificado PCI-DSS) para processar pagamentos. Seus dados estão 100% seguros.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Final -->
+    {% if not current_subscription or current_subscription.plan != plan %}
+    <div class="text-center mb-5 pb-5">
+        <h3 class="mb-4">Não perca mais tempo corrigindo provas manualmente</h3>
+        <p class="lead text-muted mb-4">Comece hoje e veja a diferença em suas avaliações</p>
+        
+        {% if current_subscription %}
+        <a href="{% url 'payments:upgrade_subscription' %}" class="btn-subscribe mb-3">
+            <i class="fas fa-arrow-up"></i> FAZER UPGRADE AGORA
+        </a>
+        {% else %}
+        <a href="{% url 'payments:checkout' plan.slug %}" class="btn-subscribe mb-3">
+            <i class="fas fa-rocket"></i> COMEÇAR AGORA
+        </a>
+        {% endif %}
+        
+        <br>
+        <a href="{% url 'payments:plans_list' %}" class="btn btn-outline-secondary btn-lg mt-3">
+            <i class="fas fa-th"></i> Ver Todos os Planos
+        </a>
+        
+        <p class="mt-4 text-muted">
+            <i class="fas fa-users"></i> Mais de 500 professores confiam em nossa plataforma
+        </p>
+    </div>
+    {% else %}
+    <!-- Botões de navegação para usuário com plano atual -->
+    <div class="text-center mb-5">
+        <a href="{% url 'payments:subscription_detail' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-cog"></i> Gerenciar Assinatura
+        </a>
+        <a href="{% url 'payments:plans_list' %}" class="btn btn-outline-secondary btn-lg ml-3">
+            <i class="fas fa-arrow-left"></i> Ver Outros Planos
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Sticky CTA Mobile -->
+{% if not current_subscription or current_subscription.plan != plan %}
+<div class="sticky-cta-mobile d-md-none">
+    {% if current_subscription %}
+    <a href="{% url 'payments:upgrade_subscription' %}" class="btn-subscribe">
+        <i class="fas fa-arrow-up"></i> MUDAR PLANO
+    </a>
+    {% else %}
+    <a href="{% url 'payments:checkout' plan.slug %}" class="btn-subscribe">
+        <i class="fas fa-rocket"></i> ASSINAR AGORA
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animação de entrada dos elementos
+    document.addEventListener('DOMContentLoaded', function() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        // Observa feature cards
+        document.querySelectorAll('.feature-card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = `all 0.5s ease ${index * 0.1}s`;
+            observer.observe(card);
+        });
+
+        // Observa FAQ items
+        document.querySelectorAll('.faq-item').forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(-20px)';
+            item.style.transition = `all 0.5s ease ${index * 0.1}s`;
+            observer.observe(item);
+        });
+    });
+
+    // Hero CTA Box entrance animation
+    window.addEventListener('load', function() {
+        const heroBox = document.querySelector('.hero-cta-box');
+        if (heroBox) {
+            heroBox.style.opacity = '0';
+            heroBox.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                heroBox.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                heroBox.style.opacity = '1';
+                heroBox.style.transform = 'translateY(0)';
+            }, 200);
+        }
+    });
+
+    // Pulsar botão CTA quando visível
+    const ctaSections = document.querySelectorAll('.cta-section');
+    if (ctaSections.length > 0) {
+        const ctaObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const btn = entry.target.querySelector('.btn-subscribe');
+                if (btn) {
+                    if (entry.isIntersecting) {
+                        btn.style.animation = 'gentle-pulse 2s infinite';
+                    } else {
+                        btn.style.animation = 'none';
+                    }
+                }
+            });
+        }, {
+            threshold: 0.3
+        });
+
+        ctaSections.forEach(section => {
+            ctaObserver.observe(section);
+        });
+    }
+
+    // Sticky CTA aparece ao scrollar
+    const stickyCtaMobile = document.querySelector('.sticky-cta-mobile');
+    if (stickyCtaMobile) {
+        let lastScroll = 0;
+        let ticking = false;
+
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    const currentScroll = window.pageYOffset;
+                    const heroBox = document.querySelector('.hero-cta-box');
+                    
+                    if (heroBox) {
+                        const heroBoxBottom = heroBox.getBoundingClientRect().bottom;
+                        
+                        if (heroBoxBottom < 0 && currentScroll > lastScroll) {
+                            // Scrolling down e hero box passou
+                            stickyCtaMobile.style.transform = 'translateY(0)';
+                        } else if (heroBoxBottom > 0) {
+                            // Hero box ainda visível
+                            stickyCtaMobile.style.transform = 'translateY(100%)';
+                        }
+                    }
+                    
+                    lastScroll = currentScroll;
+                    ticking = false;
+                });
+
+                ticking = true;
+            }
+        });
+    }
+
+    // Tracking de cliques nos CTAs (para analytics)
+    document.querySelectorAll('.btn-subscribe').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Aqui você pode adicionar tracking do Google Analytics, Facebook Pixel, etc.
+            console.log('CTA clicked:', this.textContent.trim());
+            
+            // Exemplo para Google Analytics (se disponível)
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'click', {
+                    'event_category': 'CTA',
+                    'event_label': 'Subscribe Button',
+                    'value': '{{ plan.price }}'
+                });
+            }
+        });
+    });
+
+    // Adiciona estilos de animação dinâmica
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes gentle-pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 8px 25px rgba(0, 114, 255, 0.35);
+            }
+            50% { 
+                transform: scale(1.03);
+                box-shadow: 0 12px 35px rgba(0, 114, 255, 0.5);
+            }
+        }
+        
+        .sticky-cta-mobile {
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

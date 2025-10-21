@@ -1,0 +1,1334 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Minha Assinatura - {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ========================================
+   ESTILOS GLOBAIS DA PÁGINA
+   ======================================== */
+.subscription-container {
+    padding-bottom: 100px !important;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-family: var(--font-title);
+    color: var(--text-primary);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--text-muted);
+}
+
+.breadcrumb-item a {
+    color: var(--color-primary);
+}
+
+.breadcrumb-item.active {
+    color: var(--text-muted);
+}
+
+/* ========================================
+   SEÇÃO: SEM ASSINATURA (Planos)
+   ======================================== */
+
+/* --- Cabeçalho superior --- */
+.subscription-header-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 4rem;
+}
+
+.subscription-info h1 {
+    font-family: var(--font-title);
+    color: var(--text-primary);
+}
+
+.subscription-info p.lead.text-primary {
+    color: var(--color-primary) !important;
+}
+
+/* --- Badge "PLANOS" --- */
+.badge-gradient {
+    display: inline-block;
+    padding: 0.8rem 2.2rem;
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff !important;
+    border-radius: 60px;
+    background: var(--accent-gradient);
+    box-shadow: 0 6px 18px rgba(0, 164, 217, 0.35);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.badge-gradient:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 164, 217, 0.45);
+}
+
+[data-theme="dark"] .badge-gradient,
+[data-theme="light"] .badge-gradient {
+    color: #fff !important;
+}
+
+/* --- Título dos planos --- */
+.plans-intro {
+    margin-bottom: 2rem;
+}
+
+.plans-title {
+    font-size: 2.2rem;
+    font-family: var(--font-title);
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* --- Cards de planos --- */
+.row.justify-content-center.g-4 {
+    align-items: stretch;
+}
+
+.pricing-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    border-radius: 20px;
+    padding: 2.5rem;
+    transition: all 0.3s ease;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.col-lg-5 {
+    display: flex;
+}
+
+.col-lg-5 > .pricing-card {
+    flex: 1;
+}
+
+.pricing-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--color-primary);
+    box-shadow: 0 10px 25px rgba(0, 164, 217, 0.15);
+}
+
+/* Plano Professor */
+.pricing-card:not(.featured) {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+/* Plano Institucional (Destaque) */
+.pricing-card.featured {
+    background: var(--accent-gradient);
+    border: none;
+    color: #fff !important;
+    box-shadow: 0 10px 25px rgba(0, 164, 217, 0.3);
+}
+
+.pricing-card.featured *,
+[data-theme="dark"] .pricing-card.featured * {
+    color: #fff !important;
+}
+
+.popular-badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+}
+
+/* Botões dos planos */
+.pricing-card .plan-button {
+    background: var(--accent-gradient);
+    color: white !important;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 12px;
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.pricing-card .plan-button:hover {
+    opacity: 0.9;
+    transform: translateY(-3px);
+    color: white !important;
+}
+
+.pricing-card.featured .plan-button {
+    background: #ffffff !important;
+    color: var(--color-primary) !important;
+    font-weight: 700;
+}
+
+.pricing-card.featured .plan-button:hover {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: var(--color-secondary) !important;
+}
+
+/* ========================================
+   SEÇÃO: COM ASSINATURA (Detalhes)
+   ======================================== */
+
+/* --- Visão geral da assinatura --- */
+.subscription-overview {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .subscription-overview {
+    background: linear-gradient(145deg, rgba(30, 32, 58, 0.5), rgba(30, 32, 58, 0.2));
+    backdrop-filter: blur(10px);
+}
+
+.subscription-overview h2 {
+    font-family: var(--font-title);
+    color: var(--color-primary) !important;
+    margin-bottom: 0.5rem;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.status-badge.active {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--color-success);
+    border: 1px solid var(--color-success);
+}
+
+.status-badge.trialing {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--color-info);
+    border: 1px solid var(--color-info);
+}
+
+.status-badge.past_due {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-warning);
+    border: 1px solid var(--color-warning);
+}
+
+.status-badge.canceled {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+}
+
+/* Grid de informações */
+.overview-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.overview-item {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--bg-main);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .overview-item {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.overview-item h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.75rem;
+}
+
+.overview-item .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary) !important;
+    margin-bottom: 0.25rem;
+}
+
+.overview-item small {
+    color: var(--text-muted) !important;
+    font-size: 0.85rem;
+}
+
+/* --- Cards de informação --- */
+.info-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .info-card {
+    background: linear-gradient(145deg, rgba(30, 32, 58, 0.5), rgba(30, 32, 58, 0.2));
+    backdrop-filter: blur(10px);
+}
+
+.info-card h3 {
+    font-family: var(--font-title);
+    color: var(--color-primary) !important;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.info-card h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary) !important;
+    margin-bottom: 1rem;
+}
+
+/* Detalhes do plano */
+.plan-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    padding: 1rem;
+    background: var(--bg-main);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .detail-item {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.detail-item .label {
+    font-size: 0.85rem;
+    color: var(--text-muted) !important;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-item .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary) !important;
+}
+
+/* Lista de recursos */
+.features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.features-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.features-list li:last-child {
+    border-bottom: none;
+}
+
+.features-list li i {
+    color: var(--color-success);
+    font-size: 1.2rem;
+}
+
+.features-list li span {
+    color: var(--text-primary) !important;
+}
+
+/* --- Estatísticas de uso --- */
+.usage-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.usage-stat {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--bg-main);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .usage-stat {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.usage-stat .icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1rem;
+    background: var(--accent-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.usage-stat .label {
+    font-size: 0.9rem;
+    color: var(--text-muted) !important;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.usage-stat .value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-primary) !important;
+    margin-bottom: 0.25rem;
+}
+
+.usage-stat .limit {
+    font-size: 0.85rem;
+    color: var(--text-muted) !important;
+    margin-bottom: 1rem;
+}
+
+/* Barra de progresso customizada */
+.progress-custom {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-surface);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.progress-bar-custom {
+    height: 100%;
+    background: var(--accent-gradient);
+    border-radius: 10px;
+    transition: width 0.6s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* --- Histórico de pagamentos --- */
+.table-responsive {
+    margin-top: 1.5rem;
+}
+
+.payment-history-table {
+    width: 100%;
+    background: var(--bg-surface);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.payment-history-table thead {
+    background: var(--bg-main);
+}
+
+.payment-history-table th {
+    padding: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.payment-history-table td {
+    padding: 1rem;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.payment-history-table tbody tr:hover {
+    background: var(--bg-surface-hover);
+}
+
+.payment-history-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.payment-status {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.payment-status.succeeded {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--color-success);
+}
+
+.payment-status.pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-warning);
+}
+
+.payment-status.failed {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+}
+
+/* --- Alertas customizados --- */
+.alert-custom {
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.alert-custom i {
+    font-size: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.alert-warning-custom {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--color-warning);
+    color: var(--text-primary) !important;
+}
+
+.alert-warning-custom i {
+    color: var(--color-warning);
+}
+
+.alert-danger-custom {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--color-danger);
+    color: var(--text-primary) !important;
+}
+
+.alert-danger-custom i {
+    color: var(--color-danger);
+}
+
+.alert-custom strong {
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.alert-custom p {
+    margin: 0;
+}
+
+.alert-custom a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+/* --- Botões de ação --- */
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-custom {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary-custom {
+    background: var(--accent-gradient);
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 164, 217, 0.25);
+}
+
+.btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 164, 217, 0.4);
+}
+
+.btn-danger-custom {
+    background: #8B1538;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(139, 21, 56, 0.25);
+}
+
+.btn-danger-custom:hover {
+    background: #6B0F2A;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 21, 56, 0.4);
+}
+
+.btn-success-custom {
+    background: var(--color-success);
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-success-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-outline-custom {
+    background: var(--bg-surface);
+    color: var(--text-primary) !important;
+    border: 2px solid var(--border-color-dark);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-outline-custom:hover {
+    background: var(--bg-main);
+    border-color: var(--color-primary);
+    color: var(--color-primary) !important;
+    transform: translateY(-2px);
+}
+
+/* --- Modais customizados --- */
+.modal-header-custom {
+    background: var(--accent-gradient);
+    color: white !important;
+    border-bottom: none;
+}
+
+.modal-header-custom .modal-title,
+.modal-header-custom i {
+    color: white !important;
+}
+
+.modal-header-custom .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+/* ========================================
+   RESPONSIVO
+   ======================================== */
+@media (max-width: 768px) {
+    .pricing-card {
+        height: auto;
+        padding: 2rem;
+    }
+
+    .overview-content {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .usage-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .btn-custom {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .payment-history-table {
+        font-size: 0.85rem;
+    }
+
+    .payment-history-table th,
+    .payment-history-table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+</style>
+{% endblock %}
+
+
+
+{% block content %}
+<div class="subscription-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'questions:questions_dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Minha Assinatura</li>
+            </ol>
+        </nav>
+        <h1><i class="fas fa-credit-card"></i> Minha Assinatura</h1>
+    </div>
+
+    {% if not subscription %}
+<!-- ==================== SEÇÃO SUPERIOR ==================== -->
+<div class="subscription-header-section text-center mb-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb justify-content-center mb-3">
+            <li class="breadcrumb-item"><a href="{% url 'questions:questions_dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Minha Assinatura</li>
+        </ol>
+    </nav>
+
+    <h1 class="fw-bold mb-2">Minha Assinatura</h1>
+    <p class="lead text-primary mb-2">Você não possui uma assinatura ativa</p>
+    <p class="text-muted mb-0">
+        Assine um de nossos planos para começar a usar todas as funcionalidades.
+    </p>
+</div>
+
+<!-- ==================== SEÇÃO DE PLANOS ==================== -->
+<div class="plans-intro text-center">
+    <span class="badge-gradient mb-3">PLANOS</span>
+    <h2 class="plans-title fw-bold mb-3 mt-4">Planos que se Adaptam às Suas Necessidades</h2>
+    <p class="lead text-muted mx-auto" style="max-width: 700px;">
+        Escolha o plano ideal para você ou sua instituição e comece a transformar suas avaliações.
+    </p>
+</div>
+
+<!-- ==================== CARDS DE PLANOS ==================== -->
+<div class="row justify-content-center g-4 mb-5 pb-5">
+    <!-- Plano Professor -->
+    <div class="col-lg-5">
+        <div class="pricing-card">
+            <h3 class="h2 fw-bold text-center mb-2">Plano Professor</h3>
+            <p class="text-center text-muted mb-4">Perfeito para professores independentes</p>
+
+            <div class="text-center mb-4">
+                <span class="display-4 fw-bold">R$59</span>
+                <span class="text-muted">/ semestre</span>
+                <div class="mt-2">
+                    <span class="fs-5 text-muted">ou R$99 por ano</span>
+                </div>
+            </div>
+
+            <ul class="list-unstyled mb-4">
+                <li class="mb-3">Cadastro de até <strong>5 turmas</strong></li>
+                <li class="mb-3">Banco de questões personalizável</li>
+                <li class="mb-3">Criação de simulados com até 5 versões</li>
+                <li class="mb-3">Correção automática via aplicativo</li>
+                <li class="mb-3">Dashboard de desempenho</li>
+                <li class="mb-3">Adicional de R$5,00 por turma extra</li>
+            </ul>
+
+            <a href="{% url 'payments:plan_detail' slug='professor' %}" class="plan-button">
+                <i class="bi bi-info-circle me-2"></i>Ver Detalhes e Assinar
+            </a>
+        </div>
+    </div>
+
+    <!-- Plano Institucional -->
+    <div class="col-lg-5">
+        <div class="pricing-card featured">
+            <div class="text-center mb-2">
+                <span class="popular-badge">MAIS POPULAR</span>
+            </div>
+            <h3 class="h2 fw-bold text-center mb-2">Plano Institucional</h3>
+            <p class="text-center mb-4" style="opacity: 0.9;">Ideal para escolas e instituições</p>
+
+            <div class="text-center mb-4">
+                <div class="mb-2" style="font-size: 1.1rem;">A partir de</div>
+                <span class="display-4 fw-bold">R$119</span>
+                <span>/ mês</span>
+                <div class="mt-2" style="font-size: 0.9rem; opacity: 0.9;">
+                    (Valor ajustado conforme número de turmas)
+                </div>
+            </div>
+
+            <ul class="list-unstyled mb-4">
+                <li class="mb-3"><strong>Tudo do Plano Professor, mais:</strong></li>
+                <li class="mb-3"><strong>Aplicativo do aluno personalizado</strong> com a identidade da instituição</li>
+                <li class="mb-3">Relatórios avançados de desempenho</li>
+                <li class="mb-3">Suporte prioritário e integração</li>
+                <li class="mb-3">Turmas ilimitadas</li>
+            </ul>
+
+            <a href="mailto:contato@simulaapp.com.br" class="plan-button">
+                <i class="bi bi-envelope me-2"></i>Solicitar Orçamento
+            </a>
+        </div>
+    </div>
+</div>
+{% else %}
+
+    <!-- Seção para usuários com assinatura ativa -->
+    <div class="subscription-overview">
+        <!-- Cabeçalho da assinatura -->
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h2 class="mb-2">{{ subscription.plan.name }}</h2>
+                <p class="mb-0" style="opacity: 0.9;">{{ subscription.plan.get_plan_type_display }}</p>
+            </div>
+            <div>
+                <!-- Indicadores de status -->
+                {% if subscription.status == 'active' %}
+                <span class="status-badge active">
+                    <i class="fas fa-check-circle"></i>
+                    Ativa
+                </span>
+                {% elif subscription.status == 'trialing' %}
+                <span class="status-badge trialing">
+                    <i class="fas fa-clock"></i>
+                    Em Teste
+                </span>
+                {% elif subscription.status == 'past_due' %}
+                <span class="status-badge past_due">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Vencida
+                </span>
+                {% elif subscription.status == 'canceled' %}
+                <span class="status-badge canceled">
+                    <i class="fas fa-times-circle"></i>
+                    Cancelada
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Detalhes da assinatura -->
+        <div class="overview-content">
+            <div class="overview-item">
+                <h4>Valor</h4>
+                <div class="value">R$ {{ subscription.plan.price }}</div>
+                <small>/ {{ subscription.plan.get_billing_period_display|lower }}</small>
+            </div>
+            
+            {% if subscription.current_period_end %}
+            <div class="overview-item">
+                <h4>Próxima Cobrança</h4>
+                <div class="value">{{ subscription.current_period_end|date:"d/m/Y" }}</div>
+                <small>{{ subscription.days_until_renewal }} dias</small>
+            </div>
+            {% endif %}
+            
+            <div class="overview-item">
+                <h4>Turmas</h4>
+                <div class="value">
+                    {% if subscription.plan.max_classes %}
+                        {{ subscription.total_classes_allowed }}
+                    {% else %}
+                        <i class="fas fa-infinity"></i>
+                    {% endif %}
+                </div>
+                <small>{{ subscription.extra_classes }} extras</small>
+            </div>
+            
+            <div class="overview-item">
+                <h4>Membro desde</h4>
+                <div class="value">{{ subscription.created_at|date:"m/Y" }}</div>
+                <small>{{ subscription.created_at|timesince }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas importantes -->
+    {% if subscription.cancel_at_period_end %}
+    <div class="alert-warning-custom alert-custom">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+            <strong>Assinatura Cancelada</strong>
+            <p class="mb-0">Sua assinatura será cancelada em {{ subscription.current_period_end|date:"d/m/Y" }}. 
+            Você pode <a href="#" onclick="reactivateSubscription()">reativar sua assinatura</a> a qualquer momento.</p>
+                </div>
+    </div>
+    {% endif %}
+
+    {% if subscription.status == 'past_due' %}
+    <div class="alert-danger-custom alert-custom">
+        <i class="fas fa-exclamation-circle"></i>
+        <div>
+            <strong>Pagamento Pendente</strong>
+            <p class="mb-0">Houve um problema com seu último pagamento. Por favor, atualize suas informações de pagamento.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Detalhes do plano ativo -->
+    <div class="info-card">
+        <h3><i class="fas fa-info-circle"></i> Detalhes do Plano</h3>
+        
+        <div class="plan-details-grid">
+            <div class="detail-item">
+                <div class="label">Versões de Simulado</div>
+                <div class="value">{{ subscription.plan.max_test_versions }}</div>
+            </div>
+        </div>
+        
+        <h4 class="mt-4 mb-3">Recursos Incluídos:</h4>
+        <ul class="features-list">
+            {% for feature in features %}
+            <li>
+                <i class="fas fa-check-circle"></i>
+                <span>{{ feature }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Uso do plano -->
+    <div class="info-card">
+        <h3><i class="fas fa-chart-bar"></i> Uso do Plano</h3>
+        
+        <div class="usage-stats">
+            <div class="usage-stat">
+                <div class="icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="label">Turmas Criadas</div>
+                <div class="value">5</div>
+                <div class="limit">de {{ subscription.total_classes_allowed }}</div>
+                <div class="progress-custom">
+                    <div class="progress-bar-custom" style="width: 100%;">100%</div>
+                </div>
+            </div>
+            
+            <div class="usage-stat">
+                <div class="icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="label">Simulados Criados</div>
+                <div class="value">12</div>
+                <div class="limit">este mês</div>
+            </div>
+            
+            <div class="usage-stat">
+                <div class="icon">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div class="label">Correções</div>
+                <div class="value">340</div>
+                <div class="limit">este mês</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Pagamentos -->
+    {% if recent_payments %}
+    <div class="info-card">
+        <h3><i class="fas fa-history"></i> Histórico de Pagamentos</h3>
+        
+        <div class="table-responsive">
+            <table class="payment-history-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in recent_payments %}
+                    <tr>
+                        <td>{{ payment.created_at|date:"d/m/Y H:i" }}</td>
+                        <td>{{ payment.description|default:"Pagamento de assinatura" }}</td>
+                        <td><strong>R$ {{ payment.amount }}</strong></td>
+                        <td>
+                            {% if payment.status == 'succeeded' %}
+                            <span class="payment-status succeeded">Pago</span>
+                            {% elif payment.status == 'pending' %}
+                            <span class="payment-status pending">Pendente</span>
+                            {% elif payment.status == 'failed' %}
+                            <span class="payment-status failed">Falhou</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'payments:payment_detail' payment.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="text-center mt-3">
+            <a href="{% url 'payments:payment_history' %}" class="btn-outline-custom btn-custom">
+                <i class="fas fa-list"></i>
+                Ver Histórico Completo
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Planos de Upgrade -->
+    {% if upgrade_plans %}
+    <div class="info-card">
+        <h3><i class="fas fa-arrow-up"></i> Faça Upgrade</h3>
+        <p class="text-muted">Desbloqueie mais recursos com um plano superior</p>
+        
+        <div class="row mt-4">
+            {% for upgrade_plan in upgrade_plans %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ upgrade_plan.name }}</h5>
+                        <p class="text-muted">{{ upgrade_plan.get_plan_type_display }}</p>
+                        
+                        <div class="my-3">
+                            <span class="h3 text-primary">R$ {{ upgrade_plan.price }}</span>
+                            <span class="text-muted">/ {{ upgrade_plan.get_billing_period_display|lower }}</span>
+                        </div>
+                        
+                        <ul class="list-unstyled mb-3">
+                            {% for feature in upgrade_plan.get_features_list|slice:":3" %}
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                {{ feature }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        
+                        <button class="btn btn-outline-primary w-100" onclick="upgradeToPlano('{{ upgrade_plan.slug }}')">
+                            <i class="fas fa-arrow-up"></i> Fazer Upgrade
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Ações da Assinatura -->
+    <div class="info-card">
+        <h3><i class="fas fa-cog"></i> Gerenciar Assinatura</h3>
+        
+        <div class="action-buttons">
+            <a href="{% url 'payments:customer_portal' %}" class="btn-primary-custom btn-custom">
+                <i class="fas fa-credit-card"></i>
+                Portal de Pagamentos
+            </a>
+            
+            {% if not subscription.cancel_at_period_end %}
+            <button class="btn-danger-custom btn-custom" onclick="showCancelModal()">
+                <i class="fas fa-times-circle"></i>
+                Cancelar Assinatura
+            </button>
+            {% else %}
+            <button class="btn-success-custom btn-custom" onclick="reactivateSubscription()">
+                <i class="fas fa-redo"></i>
+                Reativar Assinatura
+            </button>
+            {% endif %}
+            
+            <a href="{% url 'payments:payment_history' %}" class="btn-outline-custom btn-custom">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Histórico de Pagamentos
+            </a>
+        </div>
+        
+        <div class="mt-4 pt-4" style="border-top: 1px solid #e0e0e0;">
+            <p class="text-muted mb-2">
+                <i class="fas fa-shield-alt"></i>
+                <strong>Segurança:</strong> Todos os pagamentos são processados de forma segura pelo Stripe
+            </p>
+            <p class="text-muted mb-0">
+                <i class="fas fa-question-circle"></i>
+                <strong>Dúvidas?</strong> Entre em contato com nosso 
+                <a href="mailto:suporte@simuladoapp.com">suporte</a>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Cancelamento -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Cancelar Assinatura
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja cancelar sua assinatura?</p>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Atenção:</strong> Ao cancelar, você perderá acesso aos seguintes recursos:
+                    <ul class="mt-2 mb-0">
+                        <li>Criação de novos simulados</li>
+                        <li>Correção automática</li>
+                        <li>Dashboard de desempenho</li>
+                        <li>Todas as funcionalidades premium</li>
+                    </ul>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="cancelImmediately">
+                    <label class="form-check-label" for="cancelImmediately">
+                        Cancelar imediatamente (caso contrário, cancela no fim do período)
+                    </label>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Por que você está cancelando? (opcional)</label>
+                    <textarea class="form-control" id="cancelReason" rows="3" 
+                              placeholder="Sua opinião nos ajuda a melhorar..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Voltar
+                </button>
+                <button type="button" class="btn btn-danger" onclick="confirmCancel()">
+                    <i class="fas fa-times-circle"></i>
+                    Confirmar Cancelamento
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Upgrade -->
+<div class="modal fade" id="upgradeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title">
+                    <i class="fas fa-arrow-up"></i>
+                    Fazer Upgrade
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Deseja fazer upgrade para o plano <strong id="upgradePlanName"></strong>?</p>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    O valor será calculado proporcionalmente ao período restante da sua assinatura atual.
+                </div>
+                
+                <div id="upgradeDetails"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="confirmUpgrade()">
+                    <i class="fas fa-check"></i>
+                    Confirmar Upgrade
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let selectedUpgradePlan = null;
+    
+    // Mostra modal de cancelamento
+    function showCancelModal() {
+        const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+        modal.show();
+    }
+    
+    // Confirma cancelamento
+    async function confirmCancel() {
+        const immediately = document.getElementById('cancelImmediately').checked;
+        const reason = document.getElementById('cancelReason').value;
+        
+        try {
+            const response = await fetch('{% url "payments:cancel_subscription" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    immediately: immediately,
+                    reason: reason
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Assinatura cancelada com sucesso!');
+                location.reload();
+            } else {
+                alert('Erro: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao cancelar assinatura. Tente novamente.');
+        }
+    }
+    
+    // Reativa assinatura
+    async function reactivateSubscription() {
+        if (!confirm('Deseja realmente reativar sua assinatura?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('{% url "payments:reactivate_subscription" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Assinatura reativada com sucesso!');
+                location.reload();
+            } else {
+                alert('Erro: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao reativar assinatura. Tente novamente.');
+        }
+    }
+    
+    // Mostra modal de upgrade
+    function upgradeToPlano(planSlug) {
+        selectedUpgradePlan = planSlug;
+        const modal = new bootstrap.Modal(document.getElementById('upgradeModal'));
+        modal.show();
+    }
+    
+    // Confirma upgrade
+    async function confirmUpgrade() {
+        if (!selectedUpgradePlan) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('{% url "payments:upgrade_subscription" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    plan_slug: selectedUpgradePlan
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Upgrade realizado com sucesso!');
+                location.reload();
+            } else {
+                alert('Erro: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao fazer upgrade. Tente novamente.');
+        }
+    }
+    
+    // Animação de entrada dos elementos
+    document.addEventListener('DOMContentLoaded', function() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        entry.target.style.transition = 'all 0.5s ease';
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }, 100);
+                    
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        document.querySelectorAll('.info-card, .pricing-card').forEach(card => {
+            observer.observe(card);
+        });
+    });
+    
+    // Atualiza animação da barra de progresso
+    window.addEventListener('load', function() {
+        document.querySelectorAll('.progress-bar-custom').forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 300);
+        });
+    });
+</script>
+{% endblock %}

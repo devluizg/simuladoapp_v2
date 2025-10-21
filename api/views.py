@@ -1345,3 +1345,71 @@ def get_detalhes_resultado(request, resultado_id):
             {"error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def subscription_status(request):
+    """
+    Retorna o status da assinatura do usuário autenticado.
+    Integra com o sistema de pagamentos (payments app).
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    user = request.user
+    logger.info(f"🔍 Verificando assinatura para usuário: {user.email}")
+    
+    try:
+        from payments.models import Subscription
+        from django.utils import timezone
+        
+        # Buscar assinatura ativa do usuário
+        subscription = Subscription.objects.filter(
+            user=user,
+            status='active'
+        ).first()
+        
+        if subscription:
+            # Verificar se não expirou
+            is_active = subscription.current_period_end >= timezone.now() if subscription.current_period_end else True
+            
+            logger.info(f"✅ Assinatura encontrada: {subscription.plan.name}, Ativa: {is_active}")
+            
+            return Response({
+                'is_active': is_active,
+                'status': subscription.status,
+                'plan': subscription.plan.name,
+                'plan_type': subscription.plan.plan_type,
+                'current_period_end': subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+                'cancel_at_period_end': subscription.cancel_at_period_end,
+            })
+        else:
+            logger.warning(f"⚠️ Nenhuma assinatura ativa encontrada para {user.email}")
+            
+            return Response({
+                'is_active': False,
+                'status': 'inactive',
+                'plan': None,
+                'message': 'Nenhuma assinatura ativa encontrada'
+            })
+            
+    except ImportError:
+        # Se o app payments não estiver disponível
+        logger.warning("⚠️ App 'payments' não encontrado, considerando usuário como ativo")
+        return Response({
+            'is_active': True,
+            'status': 'active',
+            'plan': 'Sistema sem assinaturas',
+            'message': 'Sistema de assinatura não configurado - acesso liberado'
+        })
+    except Exception as e:
+        logger.error(f"❌ Erro ao verificar assinatura: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        
+        # Em caso de erro, permitir acesso (fail-open)
+        return Response({
+            'is_active': True,
+            'status': 'unknown',
+            'message': f'Erro ao verificar assinatura: {str(e)}'
+        })

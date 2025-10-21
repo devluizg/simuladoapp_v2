@@ -1,0 +1,1 @@
+ /home/luiz/Documentos/teste/leitor_cartao/.dart_tool/flutter_build/61245e58a272da36c25f224a5eceb364/native_assets.yaml: 

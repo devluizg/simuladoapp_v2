@@ -1,4 +1,5 @@
 from django.urls import path, include
+from . import views
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -46,4 +47,6 @@ urlpatterns = [
     path('classes/list/', list_all_classes, name='list_all_classes'),
     path('classes/<int:class_id>/students/', list_class_students, name='list_class_students'),
     path('classes/<int:class_id>/simulados/', list_class_simulados, name='list_class_simulados'),
+
+    path('subscription-status/', views.subscription_status, name='subscription_status'), 
 ]
